@@ -1,3 +1,7 @@
+#include <fcntl.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 #ifdef __WIN32__
 #include <windows.h>
 #include <winbase.h>
@@ -7,31 +11,76 @@
 #endif
 
 #include "cat.h"
+#include "aardlog.h"
+#include "maildir.h"
 
 int maildirgname(char **uniqname){
 #ifdef _POSIX_SOURCE
 
 #endif
+	*uniqname="foobar";
+
+}
+
+int maildirfind(char *maildir){
+	if (maildir) maildirpath=strdup(maildir);
+	else{
+		if ((maildirpath=getenv("MAILDIR"))==NULL){
+			if (getenv("HOME")==NULL){
+				logmsg(L_ERROR, F_GENERAL, "$MAILDIR not set, $HOME not found", NULL);
+				return -1;
+			} else {
+				if (cat(&maildirpath, getenv("HOME"), "/Maildir", NULL)) return -1;
+				else return 0;
+			}
+		} else {
+			maildirpath=strdup(getenv("MAILDIR"));
+			return 0;
+		}
+	}
 }
 
 // opens a file in maildir/ 
 int maildiropen(char *maildir, char **uniqname){
-	char *tmpname;
+	char *path=NULL;
 	int fd;
 
-	cat(&tmpname, maildir, 
+	if ((maildirfind(maildir)) == -1) return -1;
+
+	*uniqname="foobar";
+	if ((cat(&path, maildirpath, "/new/", *uniqname, NULL))) return -1;
+	logmsg(L_INFO, F_GENERAL, "spooling to ", path, NULL);
+	if ((fd=open(path, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0644)) == -1) {
+		logmsg(L_ERROR, F_GENERAL, "open ", path, " for writing failed: ", strerror(errno), NULL);
+		free(path);
+		return -1;
+	}
+	free(path);
+	return fd;
 }
 
 int maildirclose(char *maildir, char **uniqname, int fd){
-	char *tmpname;
-	int status;
+	char *oldpath=NULL, *newpath=NULL;
+	int status=0;
+	if ((maildirfind(maildir)) == -1) {
+		close(fd);
+		return -1;
+	}
+
+	cat(&oldpath, maildirpath, "/new/", *uniqname, NULL);
+	cat(&newpath, maildirpath, "/cur/", *uniqname, ":,2", NULL);
 
 	if (!close(fd)){
 #ifdef __WIN32__
-		status=MoveFile("", "");
+		status=MoveFile(oldpath, newpath);
 #else
-		status=link("uniqname", "");
-		unlink("uniqname");
+		status=link(oldpath, newpath);
+		unlink(oldpath);
 #endif
+	}
+
+	free(oldpath);
+	free(newpath);
+	return status;
 }
 

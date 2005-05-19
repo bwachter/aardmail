@@ -7,6 +7,7 @@
 #include "aardlog.h"
 #include "network.h"
 #include "cat.h"
+#include "maildir.h"
 
 struct {
 	char *username;
@@ -14,10 +15,13 @@ struct {
 	char *hostname;
 	char *service;
 	char *pipeto;
+	char *maildir;
 	int keepmail;
 	int msgcount;
 	int onlyget;
 } pop3c;
+
+char *uniqname;
 
 void pop3c_usage(char *program){
 	char *tmpstring=NULL;
@@ -164,7 +168,12 @@ long pop3c_getmessage(int sd, int fd, int msgnr, int size){
 		if (!(strcmp((char *)buf, ".\r\n"))){
 			write(fd, buf, strlen((char *)buf)-3);
 			if (pop3c.pipeto) pclose(fd);
-			else close(fd);
+			else {
+				if (pop3c.pipeto)
+					fclose(fd);
+				else
+					maildirclose(NULL, &uniqname, fd);
+			}
 			return(fsize);
 		} else {
 			if (delayrn){
@@ -191,14 +200,9 @@ int pop3c_openspoolfile(int msgnr){
 	int fd;
 
 	sprintf(msgnrbuf, "%i", msgnr);
-	if ((cat(&path, "/tmp/mail/", msgnrbuf, NULL))) return -1;
-	if ((fd=open(path, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0644)) == -1) {
-		logmsg(L_ERROR, F_GENERAL, "open ", path, " for writing failed: ", strerror(errno), NULL);
-		free(path);
-		return -1;
-	}
-	free(path);
-	return fd;
+	fd=maildiropen(NULL, &uniqname);
+	//logmsg(L_INFO, F_GENERAL, pop3c.maildir, uniqname, NULL);
+	return (fd);
 }
 
 int pop3c_spool2pipe(){
@@ -275,7 +279,7 @@ int main(int argc, char** argv){
 			break;
 #endif
 		case 'm':
-			pop3c_unimplemented();
+			pop3c.maildir = strdup(optarg);
 			break;
 		case 'n':
 			pop3c.onlyget = atoi(optarg);
