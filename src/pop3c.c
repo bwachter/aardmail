@@ -16,6 +16,7 @@ struct {
 	char *pipeto;
 	int keepmail;
 	int msgcount;
+	int onlyget;
 } pop3c;
 
 void pop3c_usage(char *program){
@@ -36,6 +37,7 @@ void pop3c_usage(char *program){
 					 "\t-l:\tuse starttls, exit on error (like -c 3)\n",
 #endif
 					 "\t-m:\tthe maildir for spooling; default (unless -x used) is ~/.aardmail/in\n",
+					 "\t-n:\tonly load number mails\n",
 					 "\t-p:\tthe password to use. Don't use this option.\n",
 					 "\t-s:\tthe service to connect to. Must be resolvable if non-numeric.\n",
 #ifdef HAVE_SSL
@@ -157,13 +159,9 @@ long pop3c_getmessage(int sd, int fd, int msgnr, int size){
 			logmsg(L_ERROR, F_NET, "unable to read line from network", NULL);
 			close(fd);
 		}
-		//sprintf(foobar, "%i", i);
-		//logmsg(L_INFO, F_GENERAL, "read ", foobar, " bytes", NULL);
 		//fsize+=i;
-
 		tmp=(char *)buf;
 		if (!(strcmp((char *)buf, ".\r\n"))){
-			//logmsg(L_INFO, F_GENERAL, "the end is nigh", NULL);
 			write(fd, buf, strlen((char *)buf)-3);
 			if (pop3c.pipeto) pclose(fd);
 			else close(fd);
@@ -216,6 +214,7 @@ int main(int argc, char** argv){
 
 	pop3c.keepmail = 0;
 	pop3c.msgcount = 0;
+	pop3c.onlyget = 0;
 #ifdef HAVE_SSL
 	int starttls=0;
 	use_tls = 0;
@@ -223,9 +222,9 @@ int main(int argc, char** argv){
 #endif
 
 #ifdef HAVE_SSL
-	while ((c=getopt(argc, argv, "c:dh:lm:p:s:tu:x:")) != EOF){
+	while ((c=getopt(argc, argv, "c:dh:lm:n:p:s:tu:x:")) != EOF){
 #else
-	while ((c=getopt(argc, argv, "dh:m:p:s:u:x:")) != EOF){
+	while ((c=getopt(argc, argv, "dh:m:n:p:s:u:x:")) != EOF){
 #endif
 		switch(c){
 #ifdef HAVE_SSL
@@ -277,6 +276,9 @@ int main(int argc, char** argv){
 #endif
 		case 'm':
 			pop3c_unimplemented();
+			break;
+		case 'n':
+			pop3c.onlyget = atoi(optarg);
 			break;
 		case 'p':
 			logmsg(L_WARNING, F_GENERAL, "do not use -p password, it's unsecure. use .authinfo", NULL);
@@ -334,7 +336,9 @@ int main(int argc, char** argv){
 	if ((pop3c.msgcount=pop3c_getstat(sd)) == -1)
 		exit(-1);
 
-	for (i=1;i<=pop3c.msgcount;i++){
+	if (pop3c.onlyget == 0 || pop3c.onlyget > pop3c.msgcount) pop3c.onlyget = pop3c.msgcount;
+
+	for (i=1;i<=pop3c.onlyget;i++){
 		if (pop3c.pipeto)
 			fd=(int)popen(pop3c.pipeto, "w");
 		else
@@ -348,7 +352,13 @@ int main(int argc, char** argv){
 					if ((pop3c_oksendline(sd, tmpstring)) == -1)
 						exit (-1);
 					else 
-						pop3c_getmessage(sd, fd, i, 0);
+						if (pop3c_getmessage(sd, fd, i, 0) >= 0){
+							if (!pop3c.keepmail){
+								if (!cat(&tmpstring, "dele ", pop3_msgnrbuf, "\r\n", NULL))
+									if ((pop3c_oksendline(sd, tmpstring)) == -1)
+										exit (-1);
+							}
+						}
 				}
 			}
 		}

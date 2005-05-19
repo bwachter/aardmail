@@ -43,9 +43,15 @@ int netreadline(int sd, char *buf){
 #endif
 			i=recv(sd, tmpbuf, 1, 0);
 		if (i == 1){
+			//FIXME: add proper nullbyte handling
+			if (tmpbuf[0] == '\0'){
+				logmsg(L_ERROR, F_NET, "nullbyte detected, mail might be corrupted", NULL);
+				return cnt;
+			} else {
 			strncat(buf, tmpbuf, 1);
 			if (buf[cnt] == '\n' && buf[cnt-1]=='\r'){
 				return cnt; 
+			}
 			}
 		}
 	}
