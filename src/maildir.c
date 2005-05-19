@@ -2,23 +2,37 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <stdio.h>
 #ifdef __WIN32__
 #include <windows.h>
 #include <winbase.h>
 #include <io.h>
+#include <ws2tcpip.h>
 #else 
 #include <unistd.h>
+#include <netdb.h>
 #endif
 
 #include "cat.h"
 #include "aardlog.h"
 #include "maildir.h"
 
+static int deliveries=0;
+
 int maildirgname(char **uniqname){
+	char tmpbuf[512];
+	char *myhost[NI_MAXHOST];
+	int myhost_len;
+
+	gethostname((char *)myhost, myhost_len);
+
+	deliveries++;
+	sprintf(tmpbuf, "%i.%i", time(NULL), deliveries);
 #ifdef _POSIX_SOURCE
 
 #endif
-	*uniqname="foobar";
+	cat(&*uniqname, tmpbuf, ".", myhost, NULL);
 
 }
 
@@ -47,7 +61,7 @@ int maildiropen(char *maildir, char **uniqname){
 
 	if ((maildirfind(maildir)) == -1) return -1;
 
-	*uniqname="foobar";
+	maildirgname(uniqname);
 	if ((cat(&path, maildirpath, "/new/", *uniqname, NULL))) return -1;
 	logmsg(L_INFO, F_GENERAL, "spooling to ", path, NULL);
 	if ((fd=open(path, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0644)) == -1) {
