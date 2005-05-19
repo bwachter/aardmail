@@ -22,6 +22,9 @@ struct {
 } pop3c;
 
 char *uniqname;
+#ifndef __WIN32__
+static int pipefd[2];
+#endif
 
 void pop3c_usage(char *program){
 	char *tmpstring=NULL;
@@ -150,6 +153,8 @@ int pop3c_getsize(int sd, int msgnr){
 	return 0;
 }
 
+#ifdef __WIN32__
+
 long pop3c_getmessage(int sd, int fd, int msgnr, int size){
 	(void) msgnr;
 	(void) size;
@@ -193,6 +198,81 @@ long pop3c_getmessage(int sd, int fd, int msgnr, int size){
 		}
 	}
 }
+#else
+long pop3c_getmessage(int sd, int fd, int msgnr, int size){
+	(void) msgnr;
+	(void) size;
+	char *tmp;
+	char *buf[MAXNETBUF];
+	int i, delayrn=0;
+	long fsize=0;
+
+	for(;;){
+		if ((i=netreadline(sd, (char *)buf)) == -1) {
+			logmsg(L_ERROR, F_NET, "unable to read line from network", NULL);
+			close(fd);
+		}
+		//fsize+=i;
+		tmp=(char *)buf;
+		if (!(strcmp((char *)buf, ".\r\n"))){
+			write(fd, buf, i-2);
+			if (pop3c.pipeto){
+					close(fd);
+					wait(NULL);
+			} else
+				maildirclose(NULL, &uniqname, fd);
+			return(fsize);
+		} else {
+			if (delayrn){
+				write(fd, "\n", 1); 
+				delayrn=0;
+			}
+			// we'll delay writing \r\n till we get here the next time in case of \r\n.\r\n as ending
+			if (!strcmp((char *)buf, "\r\n")) delayrn=1;
+			else {
+				tmp=(char *)buf;
+				if (!strncmp(tmp+i-1, "\r\n", 2)){
+					strncpy(tmp+i-1, "\n", 1);
+					i--;
+				}
+				if (!strncmp((char *)buf, ".", 1)){
+					tmp=(char *)buf;
+					*tmp++;
+					write(fd, tmp, i);
+				} else
+					write(fd, buf, i+1);
+			}
+		}
+	}
+}
+
+int pop3c_pipe(){
+	pid_t pid;
+	int fd;
+	if (pipe(pipefd)==-1){
+		logmsg(L_ERROR, F_GENERAL, "pipe() failed: ", strerror(errno), NULL);
+		return -1;
+	}
+
+		if ((pid=fork())==-1){
+			logmsg(L_ERROR, F_GENERAL, "fork() failed: ", strerror(errno), NULL);
+			return -1;
+		}
+
+		if (pid == 0){
+			close(0);
+			fd=dup(pipefd[0]);
+			close(pipefd[0]);
+			close(pipefd[1]);
+			execlp("/usr/bin/procmail", "procmail", 0);
+			logmsg(L_DEADLY, F_GENERAL, "execlp() failed: ", strerror(errno), NULL);
+		} else {
+			close(pipefd[0]);
+			return pipefd[1];
+		}
+		return -1;
+}
+#endif
 
 int pop3c_openspoolfile(int msgnr){
 	char msgnrbuf[1024];
@@ -344,7 +424,7 @@ int main(int argc, char** argv){
 
 	for (i=1;i<=pop3c.onlyget;i++){
 		if (pop3c.pipeto)
-			fd=(int)popen(pop3c.pipeto, "w");
+			fd=pop3c_pipe();
 		else
 			fd=pop3c_openspoolfile(i);
 		if (fd != -1){
