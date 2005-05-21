@@ -23,7 +23,7 @@ static int deliveries=0;
 int maildirgname(char **uniqname){
 	char tmpbuf[512];
 	char *myhost[NI_MAXHOST];
-	int myhost_len;
+	int myhost_len=0;
 
 	gethostname((char *)myhost, myhost_len);
 
@@ -33,10 +33,11 @@ int maildirgname(char **uniqname){
 
 #endif
 	cat(&*uniqname, tmpbuf, ".", myhost, NULL);
-
+	return 0; // FIXME, kludge
 }
 
 int maildirfind(char *maildir){
+	// TODO: maybe look what's in maildirpath. check if directory exists
 	if (maildir) maildirpath=strdup(maildir);
 	else{
 		if ((maildirpath=getenv("MAILDIR"))==NULL){
@@ -52,6 +53,7 @@ int maildirfind(char *maildir){
 			return 0;
 		}
 	}
+	return 0;//FIXME
 }
 
 // opens a file in maildir/ 

@@ -1,0 +1,5 @@
+- add some more information to the maildir name
+- add authinfo parsing
+- add parsing of -x arguments for exec()
+- fix windows/obsolete networking code kludge
+- fix getmessage for win32

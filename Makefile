@@ -6,8 +6,13 @@ LD=gcc
 AR=ar
 RM=/bin/rm -f
 INSTALL=install
+DESTDIR=
+BINDIR=/usr/bin
 
 # set up some basic flags
+VERSION=aardmail-$(shell head -1 CHANGES|sed 's/://')
+CURNAME=$(notdir $(shell pwd))
+
 ifneq ($(DEBUG),)
 CFLAGS=-g -Wall -W -pipe -Os -D_LINUX_SOURCE
 LDFLAGS=-g
@@ -26,17 +31,16 @@ LIBS+=-lws2_32 -lwsock32 -lgdi32
 EXE=.exe
 endif
 
-
 ARFLAGS=cru
 Q=@
-ALL=miniclient$(EXE) aardmail-pop3c$(EXE)
+ALL=aardmail-miniclient$(EXE) aardmail-pop3c$(EXE)
 
 # you should not need to touch anything below this line
 
 OBJDIR=obj
 SRCDIR=src
 PREFIX?=/usr
-.PHONY: clean 
+.PHONY: clean install tar rename upload
 
 all: $(ALL)
 
@@ -46,7 +50,7 @@ aardmail-pop3c$(EXE): $(OBJDIR)/pop3c.o $(OBJDIR)/cat.o \
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-miniclient$(EXE): $(OBJDIR)/network.o $(OBJDIR)/netssl.o $(OBJDIR)/miniclient.o \
+aardmail-miniclient$(EXE): $(OBJDIR)/network.o $(OBJDIR)/netssl.o $(OBJDIR)/miniclient.o \
 	$(OBJDIR)/aardlog.o $(OBJDIR)/cat.o $(OBJDIR)/maildir.o
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
@@ -63,3 +67,18 @@ endif
 clean:
 	$(Q)echo "cleaning up"
 	$(Q)$(RM) $(ALL) $(OBJDIR)/*.o
+
+install: all
+	install -d $(DESTDIR)$(BINDIR)
+	install -m 755 $(ALL) $(DESTDIR)$(BINDIR)
+
+tar: clean rename
+	$(Q)echo "building archive ($(VERSION).tar.bz2)"
+	$(Q)cd .. && tar cvvf $(VERSION).tar.bz2 $(VERSION) --use=bzip2 --exclude CVS
+	$(Q)cd .. && rm -Rf $(VERSION)
+
+rename:
+	$(Q)if test $(CURNAME) != $(VERSION); then cd .. && cp -a $(CURNAME) $(VERSION); fi
+
+upload: tar
+	scp ../$(VERSION).tar.bz2 bwachter@lart.info:/home/bwachter/public_html/projects/download/snapshots

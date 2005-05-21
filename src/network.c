@@ -34,7 +34,6 @@ int netreadline(int sd, char *buf){
 	char tmpbuf[1];
 
 	buf[0]='\0';
-	//		i=SSL_read(ssl, buf, MAXNETBUF);
 	for (cnt=0; cnt<MAXNETBUF-2; cnt++){
 #ifdef HAVE_SSL
 		if (use_tls)
@@ -132,10 +131,10 @@ int netnameinfo(const struct sockaddr *sa, socklen_t salen,
 
 int netaddrinfo(const char *node, const char *service, 
 								const struct addrinfo *hints, struct addrinfo **res){
+	int err;
 #ifdef __WIN32__
 	HINSTANCE _hInstance = LoadLibrary( "ws2_32" );
 	int (WSAAPI *pfn_getaddrinfo) (const char*, const char*, const struct addrinfo*, struct addrinfo **);
-	int err;
 
 	pfn_getaddrinfo =	GetProcAddress( _hInstance, "getaddrinfo" );
 
@@ -158,6 +157,8 @@ int netaddrinfo(const char *node, const char *service,
 			__write2("gethostbyneme() failed\n");
 			return -1;
 		}
+
+		sent=malloc(sizeof(struct sockaddr_in));
 		if (!(err=strtol(service, (char **)NULL, 10))) {
 			if ((sent = getservbyname(service, NULL)) == NULL) {
 				__write2("getservbyname() failed\n");
@@ -170,13 +171,14 @@ int netaddrinfo(const char *node, const char *service,
 		memcpy(&saddr.sin_addr, hent->h_addr, sizeof(saddr.sin_addr));
 		saddr.sin_family = hent->h_addrtype;
 		//ai->ai_flags = 
-		ai.ai_family = hent->h_addrtype;
-		ai.ai_socktype = 0;
-		ai.ai_protocol = 0;
+		//ai.ai_family = hent->h_addrtype;
+		ai.ai_family = PF_INET;
+		ai.ai_socktype = SOCK_STREAM;
+		ai.ai_protocol = IPPROTO_TCP;
 		ai.ai_addrlen = sizeof(saddr);
 		ai.ai_addr = (struct sockaddr *) &saddr;
 		//ai->ai_canonname
-		ai.ai_next = NULL;
+		ai.ai_next = 0;
 		//*aic=&(ai);
 		if (!*aic) *aic=&ai; 
 		else exit(0);
@@ -192,6 +194,7 @@ int netaddrinfo(const char *node, const char *service,
 	}
 #endif
 #else
+	(void)err;
 	return (getaddrinfo(node, service, hints, res));
 #endif
 }
@@ -250,6 +253,8 @@ int netconnect(char *hostname, char *servicename){
 		while (res){
 			if ((sd=netsocket(&*res)) > 0)
 				return sd;
+			if(res->ai_next==NULL)
+				logmsg(L_INFO, F_NET, "res->ai_next is NULL", NULL);
 			res=res->ai_next;
 		}
 	}

@@ -1,8 +1,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-
 #include <fcntl.h>
+
+#ifdef __WIN32__
+#else
+#include <sys/wait.h>
+#endif
+
 #include "aardmail.h"
 #include "aardlog.h"
 #include "network.h"
@@ -43,7 +48,7 @@ void pop3c_usage(char *program){
 #ifdef HAVE_SSL
 					 "\t-l:\tuse starttls, exit on error (like -c 3)\n",
 #endif
-					 "\t-m:\tthe maildir for spooling; default (unless -x used) is ~/.aardmail/in\n",
+					 "\t-m:\tthe maildir for spooling; default (unless -x used) is ~/Maildir\n",
 					 "\t-n:\tonly load number mails\n",
 					 "\t-p:\tthe password to use. Don't use this option.\n",
 					 "\t-s:\tthe service to connect to. Must be resolvable if non-numeric.\n",
@@ -276,7 +281,6 @@ int pop3c_pipe(){
 
 int pop3c_openspoolfile(int msgnr){
 	char msgnrbuf[1024];
-	char *path=NULL;
 	int fd;
 
 	sprintf(msgnrbuf, "%i", msgnr);
@@ -387,6 +391,9 @@ int main(int argc, char** argv){
 
 	if (!pop3c.hostname)
 		pop3c_usage(argv[0]);
+
+	if (!pop3c.service)
+		pop3c.service=strdup("110");
 
 	if ((sd=netconnect(pop3c.hostname, pop3c.service)) == -1)
 		exit(-1);
