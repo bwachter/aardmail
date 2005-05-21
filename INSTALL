@@ -1,0 +1,29 @@
+
+1. Building
+
+Just type `make', specifying options using environement variables:
+
+SSL=0|1
+	Enable/Disable SSL-Support and link against OpenSSL (or any 
+	compatible library). Default is 0.
+DEBUG=0|1
+	Do a debug build and don't strip binaries. Default is 0.
+WIN32=0|1
+	Build for Windows. Adds .exe to the binaries and links to 
+	libws2_32, libwsock32 and libgdi32
+CROSS=
+	Crosscompile by prefixing the toolchain with CROSS. Example:
+	make CROSS=i386-pc-mingw32-
+DIET=
+	Set to the dietwrapper if you want to link against dietlibc
+
+2. Installing
+
+Type `Make install', specifying options using environement varibles:
+
+BINDIR=
+	The directory to put binaries into, default is /usr/bin
+DESTDIR=
+	A prefix added to all installation pathnames, useful for 
+	creating packages
+	
