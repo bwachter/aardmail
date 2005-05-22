@@ -46,12 +46,12 @@ all: $(ALL)
 
 aardmail-pop3c$(EXE): $(OBJDIR)/pop3c.o $(OBJDIR)/cat.o \
 	$(OBJDIR)/aardlog.o $(OBJDIR)/network.o $(OBJDIR)/netssl.o \
-	$(OBJDIR)/maildir.o
+	$(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o $(OBJDIR)/fs.o 
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 aardmail-miniclient$(EXE): $(OBJDIR)/network.o $(OBJDIR)/netssl.o $(OBJDIR)/miniclient.o \
-	$(OBJDIR)/aardlog.o $(OBJDIR)/cat.o $(OBJDIR)/maildir.o
+	$(OBJDIR)/aardlog.o $(OBJDIR)/cat.o $(OBJDIR)/maildir.o 
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 

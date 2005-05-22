@@ -24,11 +24,13 @@ int maildirgname(char **uniqname){
 	char tmpbuf[512];
 	char *myhost[NI_MAXHOST];
 	int myhost_len=0;
+	time_t mytime=time(NULL);
+	pid_t mypid=getpid();
 
 	gethostname((char *)myhost, myhost_len);
 
 	deliveries++;
-	sprintf(tmpbuf, "%i.%i", time(NULL), deliveries);
+	sprintf(tmpbuf, "%li.P%iQ%i", (unsigned long)mytime, (int) mypid, deliveries);
 #ifdef _POSIX_SOURCE
 
 #endif
@@ -84,7 +86,7 @@ int maildirclose(char *maildir, char **uniqname, int fd){
 	}
 
 	cat(&oldpath, maildirpath, "/new/", *uniqname, NULL);
-	cat(&newpath, maildirpath, "/cur/", *uniqname, ":,2", NULL);
+	cat(&newpath, maildirpath, "/cur/", *uniqname, ":2,", NULL);
 
 	if (!close(fd)){
 #ifdef __WIN32__

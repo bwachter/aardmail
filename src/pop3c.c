@@ -10,6 +10,7 @@
 
 #include "aardmail.h"
 #include "aardlog.h"
+#include "authinfo.h"
 #include "network.h"
 #include "cat.h"
 #include "maildir.h"
@@ -293,10 +294,80 @@ int pop3c_spool2pipe(){
 	return 0;
 }
 
+int pop3c_session(){
+	int sd, fd, i;
+	char *pop3_msgnrbuf[1024];
+	char buf[1024];
+	char *tmpstring=NULL;
+
+	if ((sd=netconnect(pop3c.hostname, pop3c.service)) == -1)
+		exit(-1);
+
+	if ((i=netreadline(sd, buf)) == -1)
+		exit(-1);
+	else
+		logmsg(L_INFO, F_NET, buf, NULL);
+
+#ifdef HAVE_SSL
+	if (starttls){
+		if ((pop3c_oksendline(sd, "stls\r\n")) == -1)
+			exit (-1);
+
+		if ((i=netsslstart(sd))) {
+			logmsg(L_ERROR, F_SSL, "unable to open tls-connection using starttls", NULL);
+		} else {
+			logmsg(L_INFO, F_SSL, "SSL-connection using ", (SSL_get_cipher(ssl)), NULL);
+		}
+	}
+#endif
+
+	if (!cat(&tmpstring, "user ", pop3c.username, "\r\n", NULL))
+		if ((pop3c_oksendline(sd, tmpstring)) == -1) 
+			exit(-1);
+
+	if (!cat(&tmpstring, "pass ", pop3c.password, "\r\n", NULL))
+		if ((pop3c_oksendline(sd, tmpstring)) == -1)
+			exit (-1);
+
+	if ((pop3c.msgcount=pop3c_getstat(sd)) == -1)
+		exit(-1);
+
+	if (pop3c.onlyget == 0 || pop3c.onlyget > pop3c.msgcount) pop3c.onlyget = pop3c.msgcount;
+
+	for (i=1;i<=pop3c.onlyget;i++){
+		if (pop3c.pipeto)
+			fd=pop3c_pipe();
+		else
+			fd=pop3c_openspoolfile(i);
+		if (fd != -1){
+			if (sprintf((char *)pop3_msgnrbuf, "%i", i)==0)
+				logmsg(L_ERROR, F_SSL, "problem with sprintf()", NULL);
+			else {
+				//pop3c_getsize(sd, i);
+				if (!cat(&tmpstring, "retr ", pop3_msgnrbuf, "\r\n", NULL)){
+					if ((pop3c_oksendline(sd, tmpstring)) == -1)
+						exit (-1);
+					else 
+						if (pop3c_getmessage(sd, fd, i, 0) >= 0){
+							if (!pop3c.keepmail){
+								if (!cat(&tmpstring, "dele ", pop3_msgnrbuf, "\r\n", NULL))
+									if ((pop3c_oksendline(sd, tmpstring)) == -1)
+										exit (-1);
+							}
+						}
+				}
+			}
+		}
+	}
+	if ((pop3c_oksendline(sd, "quit\r\n")) == -1)
+		return (-1);
+}
+
 int main(int argc, char** argv){
 	char *tmpstring=NULL;
 	char buf[1024];
 	int i, sd, c, fd;
+	authinfo defaultauth;
 	//, pop3c_msgsize=0;
 	char *pop3_msgnrbuf[1024];
 
@@ -395,67 +466,7 @@ int main(int argc, char** argv){
 	if (!pop3c.service)
 		pop3c.service=strdup("110");
 
-	if ((sd=netconnect(pop3c.hostname, pop3c.service)) == -1)
-		exit(-1);
-
-	if ((i=netreadline(sd, buf)) == -1)
-		exit(-1);
-	else
-		logmsg(L_INFO, F_NET, buf, NULL);
-
-#ifdef HAVE_SSL
-	if (starttls){
-		if ((pop3c_oksendline(sd, "stls\r\n")) == -1)
-			exit (-1);
-
-		if ((i=netsslstart(sd))) {
-			logmsg(L_ERROR, F_SSL, "unable to open tls-connection using starttls", NULL);
-		} else {
-			logmsg(L_INFO, F_SSL, "SSL-connection using ", (SSL_get_cipher(ssl)), NULL);
-		}
-	}
-#endif
-
-	if (!cat(&tmpstring, "user ", pop3c.username, "\r\n", NULL))
-		if ((pop3c_oksendline(sd, tmpstring)) == -1) 
-			exit(-1);
-
-	if (!cat(&tmpstring, "pass ", pop3c.password, "\r\n", NULL))
-		if ((pop3c_oksendline(sd, tmpstring)) == -1)
-			exit (-1);
-
-	if ((pop3c.msgcount=pop3c_getstat(sd)) == -1)
-		exit(-1);
-
-	if (pop3c.onlyget == 0 || pop3c.onlyget > pop3c.msgcount) pop3c.onlyget = pop3c.msgcount;
-
-	for (i=1;i<=pop3c.onlyget;i++){
-		if (pop3c.pipeto)
-			fd=pop3c_pipe();
-		else
-			fd=pop3c_openspoolfile(i);
-		if (fd != -1){
-			if (sprintf((char *)pop3_msgnrbuf, "%i", i)==0)
-				logmsg(L_ERROR, F_SSL, "problem with sprintf()", NULL);
-			else {
-				//pop3c_getsize(sd, i);
-				if (!cat(&tmpstring, "retr ", pop3_msgnrbuf, "\r\n", NULL)){
-					if ((pop3c_oksendline(sd, tmpstring)) == -1)
-						exit (-1);
-					else 
-						if (pop3c_getmessage(sd, fd, i, 0) >= 0){
-							if (!pop3c.keepmail){
-								if (!cat(&tmpstring, "dele ", pop3_msgnrbuf, "\r\n", NULL))
-									if ((pop3c_oksendline(sd, tmpstring)) == -1)
-										exit (-1);
-							}
-						}
-				}
-			}
-		}
-	}
-	if ((pop3c_oksendline(sd, "quit\r\n")) == -1)
-		exit (-1);
-
+	authinfo_init();
+	pop3c_session();
 	return 0;  
 }

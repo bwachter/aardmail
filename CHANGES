@@ -1,4 +1,5 @@
 0.1-pre:
 	Can retrieve mails via pop3 and spool to Maildir or pipe (hardcoded)
 	Supports TLS with/without starttls
+	Added license foo, install hints, install target, ...
 	
