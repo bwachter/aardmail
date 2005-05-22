@@ -1,5 +1,6 @@
 0.1-pre:
+	Added -v switch to control logging
 	Can retrieve mails via pop3 and spool to Maildir or pipe (hardcoded)
 	Supports TLS with/without starttls
 	Added license foo, install hints, install target, ...
-	
+	Added authinfo support	

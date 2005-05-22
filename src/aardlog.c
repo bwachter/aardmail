@@ -6,6 +6,8 @@
 #include "aardmail.h"
 #include "aardlog.h"
 
+static int current_loglevel=L_ERROR;
+
 static void logwrite (char *msg){
 	char *tmp = strdup(msg);
 
@@ -16,11 +18,19 @@ static void logwrite (char *msg){
 	return;
 }
 
+int loglevel(int loglevel){
+	if (loglevel != 0)
+		current_loglevel = loglevel;
+	return current_loglevel; 
+}
+
 int logmsg(int loglevel, int facility, char *msg, ...) {
 	(void) facility;
 	va_list ap;
 	char *tmp;
 	int die=0;
+
+	if (loglevel > current_loglevel) return 0;
 
 	switch(loglevel){
 	case L_DEADLY:
@@ -35,6 +45,24 @@ int logmsg(int loglevel, int facility, char *msg, ...) {
 		break;
 	case L_INFO:
 		__write1("[INFO]");
+		break;
+	default:
+		__write1("[UNKNOWN]");
+		break;
+	}
+
+	switch(facility){
+	case F_GENERAL:
+		__write1("[GENERAL] ");
+		break;
+	case F_NET:
+		__write1("[NET] ");
+		break;
+	case F_SSL:
+		__write1("[SSL] ");
+		break;
+	default:
+		__write1("[UNKNOWN] ");
 		break;
 	}
 

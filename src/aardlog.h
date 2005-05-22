@@ -8,6 +8,7 @@ enum facilities {
 };
 
 enum loglevel {
+	L_UNSPEC,
 	L_DEADLY,
 	L_ERROR,
 	L_WARNING,
@@ -15,5 +16,6 @@ enum loglevel {
 };
 
 int logmsg(int loglevel, int facility, char *msg, ...);
+int loglevel(int loglevel);
 
 #endif

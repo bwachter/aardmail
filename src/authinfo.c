@@ -64,7 +64,7 @@ int authinfo_init(){
 				logmsg(L_INFO, F_GENERAL, "found a key: ", key->name, NULL);
 				l+=strlen(key->name)+1;
 				if (key->hasargs){
-					authinfo_tmp.password="foobar";
+					//authinfo_tmp.password="foobar";
 					for (tmp=authinfo_content+l;*tmp!=' ' && *tmp!='\n';*tmp++,l++) 
 						write(1, tmp, 1);
 				} else l--;

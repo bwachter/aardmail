@@ -57,6 +57,7 @@ void pop3c_usage(char *program){
 					 "\t-t:\tuse tls. If tls is not possible the program will exit (like -c 1)\n",
 #endif
 					 "\t-u:\tthe username to use. You usually don't need this option.\n",
+					 "\t-v:\tset the loglevel, from 0 (no logging) over 2 (default) to 4 (very much)\n",
 					 "\t-x:\tthe program to popen() for each received mail\n",
 					 NULL)) {
 		__write2(tmpstring);
@@ -381,9 +382,9 @@ int main(int argc, char** argv){
 #endif
 
 #ifdef HAVE_SSL
-	while ((c=getopt(argc, argv, "c:dh:lm:n:p:s:tu:x:")) != EOF){
+	while ((c=getopt(argc, argv, "c:dh:lm:n:p:s:tu:v:x:")) != EOF){
 #else
-	while ((c=getopt(argc, argv, "dh:m:n:p:s:u:x:")) != EOF){
+	while ((c=getopt(argc, argv, "dh:m:n:p:s:u:v:x:")) != EOF){
 #endif
 		switch(c){
 #ifdef HAVE_SSL
@@ -453,6 +454,9 @@ int main(int argc, char** argv){
 #endif
 		case 'u':
 			pop3c.username = strdup(optarg);
+			break;
+		case 'v':
+			loglevel(atoi(optarg));
 			break;
 		case 'x':
 			pop3c.pipeto = strdup(optarg);
