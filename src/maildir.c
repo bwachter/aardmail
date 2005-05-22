@@ -22,12 +22,14 @@ static int deliveries=0;
 
 int maildirgname(char **uniqname){
 	char tmpbuf[512];
-	char *myhost[NI_MAXHOST];
-	int myhost_len=0;
+	char myhost[NI_MAXHOST];
 	time_t mytime=time(NULL);
 	pid_t mypid=getpid();
 
-	gethostname((char *)myhost, myhost_len);
+	if (gethostname(myhost, NI_MAXHOST)==-1){
+		logmsg(L_WARNING, F_GENERAL, "unable to get hostname, setting to localhost.localdomain", NULL);
+		strcpy(myhost, "localhost.localdomain");
+	}
 
 	deliveries++;
 	sprintf(tmpbuf, "%li.P%iQ%i", (unsigned long)mytime, (int) mypid, deliveries);
@@ -35,6 +37,7 @@ int maildirgname(char **uniqname){
 
 #endif
 	cat(&*uniqname, tmpbuf, ".", myhost, NULL);
+
 	return 0; // FIXME, kludge
 }
 
