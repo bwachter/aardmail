@@ -33,7 +33,7 @@ static char *tmpstring;
 static int pipefd[2];
 #endif
 
-int pop3c_pipe();
+int pop3c_pipe(char *pipeto);
 
 void pop3c_usage(char *program){
 	char *tmpstring=NULL;
@@ -167,7 +167,7 @@ int pop3c_openspool(){
 	int fd;
 
 	if (pop3c.pipeto)
-		fd=pop3c_pipe();
+		fd=pop3c_pipe(pop3c.pipeto);
 	else
 		fd=maildiropen(NULL, &uniqname);
 	if (fd == -1){
@@ -227,31 +227,46 @@ long pop3c_getmessage(int sd, int fd, int size){
 	}
 }
 
-int pop3c_pipe(){
+int pop3c_pipe(char *pipeto){
 	pid_t pid;
 	int fd;
+	char **buf, **bufptr, *ptr;
+
 	if (pipe(pipefd)==-1){
 		logmsg(L_ERROR, F_GENERAL, "pipe() failed: ", strerror(errno), NULL);
 		return -1;
 	}
 
-		if ((pid=fork())==-1){
-			logmsg(L_ERROR, F_GENERAL, "fork() failed: ", strerror(errno), NULL);
-			return -1;
-		}
+	if ((buf=malloc(strlen(pipeto)+2))==NULL) return -1;
 
-		if (pid == 0){
-			close(0);
-			fd=dup(pipefd[0]);
-			close(pipefd[0]);
-			close(pipefd[1]);
-			execlp("/usr/bin/procmail", "procmail", 0);
-			logmsg(L_DEADLY, F_GENERAL, "execlp() failed: ", strerror(errno), NULL);
-		} else {
-			close(pipefd[0]);
-			return pipefd[1];
+	bufptr=buf;
+	*bufptr++=pipeto;
+	for (ptr=pipeto;*ptr;ptr++){
+		if (*ptr==' '){
+			*ptr=0;
+			*bufptr++=ptr+1;
 		}
+	}
+
+	if ((pid=fork())==-1){
+		logmsg(L_ERROR, F_GENERAL, "fork() failed: ", strerror(errno), NULL);
 		return -1;
+	}
+
+	if (pid == 0){
+		close(0);
+		fd=dup(pipefd[0]);
+		close(pipefd[0]);
+		close(pipefd[1]);
+
+		execvp(buf[0], buf);
+		logmsg(L_DEADLY, F_GENERAL, "execvp() failed: ", strerror(errno), NULL);
+	} else {
+		free(buf);
+		close(pipefd[0]);
+		return pipefd[1];
+	}
+	return -1;
 }
 
 int pop3c_connectauth(){
@@ -362,8 +377,7 @@ int main(int argc, char** argv){
 		switch(c){
 #ifdef HAVE_SSL
 		case 'c':
-			i=atoi(optarg);
-			pop3c.crypto = i;
+			pop3c.crypto = atoi(optarg);
 			break;
 #endif
 		case 'd':
@@ -414,7 +428,7 @@ int main(int argc, char** argv){
 
 	//authinfo_init();
 	if ((sd=pop3c_connectauth())==-1) exit(-1);
-	pop3c_session(sd);
+	if (pop3c_session(sd)==-1) exit(-1);
 	if (pop3c_quitclose(sd)==-1) exit(-1);
 	return 0;  
 }

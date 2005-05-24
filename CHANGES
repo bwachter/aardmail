@@ -1,4 +1,5 @@
 0.1-pre:
+	Fixed pipe-stuff (-x switch)
 	Added -v switch to control logging
 	Can retrieve mails via pop3 and spool to Maildir or pipe (hardcoded)
 	Supports TLS with/without starttls
