@@ -16,16 +16,14 @@
 #include "maildir.h"
 
 static struct {
-	char *username;
-	char *password;
-	char *hostname;
-	char *service;
+	serverinfo server;
 	char *pipeto;
 	char *maildir;
 	int keepmail;
 	int msgcount;
 	int onlyget;
-	int sd;
+	// change everything to fit that variable, or rethink it
+	int crypto;
 } pop3c;
 
 char *uniqname;
@@ -34,6 +32,8 @@ static char *tmpstring;
 #ifndef __WIN32__
 static int pipefd[2];
 #endif
+
+int pop3c_pipe();
 
 void pop3c_usage(char *program){
 	char *tmpstring=NULL;
@@ -163,54 +163,30 @@ int pop3c_getsize(int sd, int msgnr){
 	return 0;
 }
 
-#ifdef __WIN32__
+int pop3c_openspool(){
+	int fd;
 
-long pop3c_getmessage(int sd, int fd, int msgnr, int size){
-	(void) msgnr;
-	(void) size;
-	char *tmp;
-	char *buf[MAXNETBUF];
-	int i, delayrn=0;
-	long fsize=0;
-
-	for(;;){
-		if ((i=netreadline(sd, (char *)buf)) == -1) {
-			logmsg(L_ERROR, F_NET, "unable to read line from network", NULL);
-			close(fd);
-		}
-		//fsize+=i;
-		tmp=(char *)buf;
-		if (!(strcmp((char *)buf, ".\r\n"))){
-			write(fd, buf, strlen((char *)buf)-3);
-			if (pop3c.pipeto) pclose(fd);
-			else {
-				if (pop3c.pipeto)
-					fclose(fd);
-				else
-					maildirclose(NULL, &uniqname, fd);
-			}
-			return(fsize);
-		} else {
-			if (delayrn){
-				write(fd, "\r\n", 2); 
-				delayrn=0;
-			}
-			// we'll delay writing \r\n till we get here the next time in case of \r\n.\r\n as ending
-			if (!strcmp((char *)buf, "\r\n")) delayrn=1;
-			else {
-				if (!strncmp((char *)buf, ".", 1)){
-					tmp=(char *)buf;
-					*tmp++;
-					write(fd, tmp, strlen((char *)buf)-1);
-				} else
-					write(fd, buf, strlen((char *)buf));
-			}
-		}
+	if (pop3c.pipeto)
+		fd=pop3c_pipe();
+	else
+		fd=maildiropen(NULL, &uniqname);
+	if (fd == -1){
+		logmsg(L_ERROR, F_GENERAL, "opening spool failed", NULL);
+		return -1;
 	}
+	return fd;
 }
-#else
-long pop3c_getmessage(int sd, int fd, int msgnr, int size){
-	(void) msgnr;
+
+int pop3c_closespool(int fd){
+	if (pop3c.pipeto){
+		close(fd);
+		wait(NULL);
+	} else
+		maildirclose(NULL, &uniqname, fd);
+	return 0;
+}
+
+long pop3c_getmessage(int sd, int fd, int size){
 	(void) size;
 	char *tmp;
 	char *buf[MAXNETBUF];
@@ -220,17 +196,12 @@ long pop3c_getmessage(int sd, int fd, int msgnr, int size){
 	for(;;){
 		if ((i=netreadline(sd, (char *)buf)) == -1) {
 			logmsg(L_ERROR, F_NET, "unable to read line from network", NULL);
-			close(fd);
+			return -1;
 		}
 		//fsize+=i;
 		tmp=(char *)buf;
 		if (!(strcmp((char *)buf, ".\r\n"))){
 			write(fd, buf, i-2);
-			if (pop3c.pipeto){
-					close(fd);
-					wait(NULL);
-			} else
-				maildirclose(NULL, &uniqname, fd);
 			return(fsize);
 		} else {
 			if (delayrn){
@@ -282,39 +253,24 @@ int pop3c_pipe(){
 		}
 		return -1;
 }
-#endif
-
-int pop3c_openspoolfile(int msgnr){
-	char msgnrbuf[1024];
-	int fd;
-
-	sprintf(msgnrbuf, "%i", msgnr);
-	fd=maildiropen(NULL, &uniqname);
-	//logmsg(L_INFO, F_GENERAL, pop3c.maildir, uniqname, NULL);
-	return (fd);
-}
-
-int pop3c_spool2pipe(){
-	return 0;
-}
 
 int pop3c_connectauth(){
-	int i;
+	int i, sd;
 	char buf[1024];
 
-	if ((pop3c.sd=netconnect(pop3c.hostname, pop3c.service)) == -1)
-		return(-1);
-	if ((i=netreadline(pop3c.sd, buf)) == -1)
-		return(-1);
+	if ((sd=netconnect(pop3c.server.hostname, pop3c.server.service)) == -1)
+		return -1;
+	if ((i=netreadline(sd, buf)) == -1)
+		return -1;
 	else logmsg(L_INFO, F_NET, buf, NULL);
 
 #ifdef HAVE_SSL
 	// FIXME, don't attempt to continue on error
-	if (starttls){
-		if ((pop3c_oksendline(pop3c.sd, "stls\r\n")) == -1)
-			return(-1);
+	if (pop3c.crypto == 3 || pop3c.crypto == 4){ // do we have to use starttls?
+		if ((pop3c_oksendline(sd, "stls\r\n")) == -1)
+			return -1;
 
-		if ((i=netsslstart(pop3c.sd))) {
+		if ((i=netsslstart(sd))) {
 			logmsg(L_ERROR, F_SSL, "unable to open tls-connection using starttls", NULL);
 		} else {
 			logmsg(L_INFO, F_SSL, "SSL-connection using ", (SSL_get_cipher(ssl)), NULL);
@@ -322,62 +278,72 @@ int pop3c_connectauth(){
 	}
 #endif
 
-	if (!cat(&tmpstring, "user ", pop3c.username, "\r\n", NULL))
-		if ((pop3c_oksendline(pop3c.sd, tmpstring)) == -1) 
-			return(-1);
+	if (!cat(&tmpstring, "user ", pop3c.server.username, "\r\n", NULL))
+		if ((pop3c_oksendline(sd, tmpstring)) == -1) 
+			return -1;
 
-	if (!cat(&tmpstring, "pass ", pop3c.password, "\r\n", NULL)){
-		if ((pop3c_oksendline(pop3c.sd, tmpstring)) == -1)
-			return(-1);
-		else return(0);
+	if (!cat(&tmpstring, "pass ", pop3c.server.password, "\r\n", NULL)){
+		if ((pop3c_oksendline(sd, tmpstring)) == -1)
+			return -1;
+		else return sd;
 	}
 
 	return -1; // we should'nt get here...
 }
 
-int pop3c_session(){
-	int fd, i;
+int pop3c_quitclose(int sd){
+	if ((pop3c_oksendline(sd, "quit\r\n")) == -1)
+		return -1;
+	return (close(sd));
+}
+
+int pop3c_session(int sd){
+	int fd=0, i;
 	char *pop3_msgnrbuf[1024];
 
-	if ((pop3c.msgcount=pop3c_getstat(pop3c.sd)) == -1)
+	if ((pop3c.msgcount=pop3c_getstat(sd)) == -1)
 		exit(-1);
 
 	if (pop3c.onlyget == 0 || pop3c.onlyget > pop3c.msgcount) pop3c.onlyget = pop3c.msgcount;
 
 	for (i=1;i<=pop3c.onlyget;i++){
-		if (pop3c.pipeto)
-			fd=pop3c_pipe();
-		else
-			fd=pop3c_openspoolfile(i);
-		if (fd != -1){
-			if (sprintf((char *)pop3_msgnrbuf, "%i", i)==0)
-				logmsg(L_ERROR, F_SSL, "problem with sprintf()", NULL);
-			else {
-				//pop3c_getsize(sd, i);
-				if (!cat(&tmpstring, "retr ", pop3_msgnrbuf, "\r\n", NULL)){
-					if ((pop3c_oksendline(pop3c.sd, tmpstring)) == -1)
-						exit (-1);
-					else 
-						if (pop3c_getmessage(pop3c.sd, fd, i, 0) >= 0){
-							if (!pop3c.keepmail){
-								if (!cat(&tmpstring, "dele ", pop3_msgnrbuf, "\r\n", NULL))
-									if ((pop3c_oksendline(pop3c.sd, tmpstring)) == -1)
-										exit (-1);
-							}
-						}
-				}
-			}
+		if (sprintf((char *)pop3_msgnrbuf, "%i", i)==0){
+			logmsg(L_ERROR, F_GENERAL, "sprintf() failed", NULL);
+			return -1;
 		}
+		if ((fd=pop3c_openspool())==-1) return -1;
+		//pop3c_getsize(sd, i);
+		if (!cat(&tmpstring, "retr ", pop3_msgnrbuf, "\r\n", NULL)){
+			if ((pop3c_oksendline(sd, tmpstring)) == -1)
+				return -1;
+			else 
+				if (pop3c_getmessage(sd, fd, 0) < 0) goto errclose;
+				else {
+					if (!pop3c.keepmail) {
+						if (cat(&tmpstring, "dele ", pop3_msgnrbuf, "\r\n", NULL))
+							goto errclose;
+						else 
+							if ((pop3c_oksendline(sd, tmpstring)) == -1)
+								goto errclose;
+					}
+				}
+		}
+		pop3c_closespool(fd);
 	}
-	if ((pop3c_oksendline(pop3c.sd, "quit\r\n")) == -1)
-		return (-1);
+	return 0;
+ errclose:
+	pop3c_closespool(fd);
+	return -1;
 }
 
 int main(int argc, char** argv){
-	int c;
+	int c, sd;
 	authinfo defaultauth;
 	//, pop3c_msgsize=0;
 	//char *pop3_msgnrbuf[1024];
+
+	// initialize with sane values
+	strcpy(pop3c.server.service, "110");
 
 	pop3c.keepmail = 0;
 	pop3c.msgcount = 0;
@@ -397,46 +363,18 @@ int main(int argc, char** argv){
 #ifdef HAVE_SSL
 		case 'c':
 			i=atoi(optarg);
-			switch(i){
-			case 0:
-				use_tls = 0;
-				allow_plaintext = 0;
-				starttls = 0;
-				break;
-			case 1:
-				use_tls = 1;
-				allow_plaintext = 0;
-				starttls = 0;
-				break;
-			case 2:
-				use_tls = 1;
-				allow_plaintext = 1;
-				starttls = 0;
-				break;
-			case 3:
-				use_tls = 0; // we'll use plaintext first, then STLS
-				allow_plaintext = 0;
-				starttls = 1;
-				break;
-			case 4:
-				use_tls = 0;
-				allow_plaintext = 1;
-				starttls = 1;
-				break;
-			default:
-				pop3c_usage(argv[0]);
-			}
+			pop3c.crypto = i;
 			break;
 #endif
 		case 'd':
 			pop3c.keepmail = 1;
 			break;
 		case 'h':
-			if ((pop3c.hostname = strdup(optarg)) == NULL)
-				pop3c_usage(argv[0]);
+			strncpy(pop3c.server.hostname, optarg, NI_MAXHOST);
 			break;
 #ifdef HAVE_SSL
 		case 'l':
+			pop3c.crypto=3;
 			use_tls=0;
 			starttls=1;
 			break;
@@ -449,10 +387,10 @@ int main(int argc, char** argv){
 			break;
 		case 'p':
 			logmsg(L_WARNING, F_GENERAL, "do not use -p password, it's unsecure. use .authinfo", NULL);
-			pop3c.password = strdup(optarg);
+			strncpy(pop3c.server.password, optarg, AM_MAXPASS);
 			break;
 		case 's':
-			pop3c.service = strdup(optarg);
+			strncpy(pop3c.server.service, optarg, NI_MAXSERV);
 			break;
 #ifdef HAVE_SSL
 		case 't':
@@ -460,7 +398,7 @@ int main(int argc, char** argv){
 			break;
 #endif
 		case 'u':
-			pop3c.username = strdup(optarg);
+			strncpy(pop3c.server.username, optarg, AM_MAXUSER);
 			break;
 		case 'v':
 			loglevel(atoi(optarg));
@@ -471,14 +409,12 @@ int main(int argc, char** argv){
 		}
 	}
 
-	if (!pop3c.hostname)
+	if (!strcmp(pop3c.server.hostname,""))
 		pop3c_usage(argv[0]);
 
-	if (!pop3c.service)
-		pop3c.service=strdup("110");
-
 	//authinfo_init();
-	if (pop3c_connectauth()==-1) exit(-1);
-	pop3c_session();
+	if ((sd=pop3c_connectauth())==-1) exit(-1);
+	pop3c_session(sd);
+	if (pop3c_quitclose(sd)==-1) exit(-1);
 	return 0;  
 }

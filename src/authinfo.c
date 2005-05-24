@@ -83,6 +83,7 @@ int authinfo_init(){
 }
 
 static int authinfo_append(authinfo *authinfo_add){
+	(void)authinfo_add;
 	authinfo *p, *p1;
 
 	if ((authinfo_end = NULL)){

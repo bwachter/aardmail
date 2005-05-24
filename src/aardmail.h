@@ -5,7 +5,12 @@
 #include <write12.h>
 #else
 #include <string.h>
+#ifdef __WIN32__
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
+
 static inline int __write1(const char *s){
 	write(1, s, strlen(s));
 	return 0;
@@ -16,6 +21,9 @@ static inline int __write2(const char *s){
 	return 0;
 }
 #endif
+
+#define AM_MAXUSER 1025
+#define AM_MAXPASS 1025
 
 int debuglevel;
 

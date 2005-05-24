@@ -6,6 +6,8 @@
 #include <netdb.h>
 #endif
 
+#include "aardmail.h"
+
 #define MAXNETBUF 1024
 
 #ifdef HAVE_SSL
@@ -14,6 +16,14 @@ SSL *ssl;
 int use_tls;
 int allow_plaintext;
 #endif
+
+typedef struct _serverinfo serverinfo;
+struct _serverinfo {
+	char hostname[NI_MAXHOST];
+	char service[NI_MAXSERV];
+	char username[AM_MAXUSER];
+	char password[AM_MAXPASS];
+};
 
 int netconnect(char *hostname, char *servicename);
 int netread(int sd, char *buf);
