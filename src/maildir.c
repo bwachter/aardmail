@@ -9,6 +9,7 @@
 #include <winbase.h>
 #include <io.h>
 #include <ws2tcpip.h>
+#include <process.h>
 #else 
 #include <unistd.h>
 #include <netdb.h>

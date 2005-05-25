@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <getopt.h>
 
 #ifdef __WIN32__
 #else
@@ -227,7 +228,7 @@ long pop3c_getmessage(int sd, int fd, int size){
 	}
 }
 
-#if !(defined(__WIN32__)) || !(defined _BROKEN_IO)
+#if (!defined(__WIN32__)) && (!defined _BROKEN_IO)
 int pop3c_pipe(char *pipeto){
 	pid_t pid;
 	int fd;
