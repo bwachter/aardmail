@@ -15,12 +15,11 @@
 #include "aardlog.h"
 #include "network.h"
 #include "cat.h"
-//#define _OBSOLETE_NETWORKING
 
 int netread(int sd, char *buf){
 	int i;
 #ifdef HAVE_SSL
-	if (use_tls){
+	if (am_sslconf & AM_SSL_USETLS){
 		i=SSL_read(ssl, buf, MAXNETBUF);
 	} else 
 #endif
@@ -36,7 +35,7 @@ int netreadline(int sd, char *buf){
 	buf[0]='\0';
 	for (cnt=0; cnt<MAXNETBUF-2; cnt++){
 #ifdef HAVE_SSL
-		if (use_tls)
+		if (am_sslconf & AM_SSL_USETLS)
 			i=SSL_read(ssl, tmpbuf, 1);
 		else
 #endif
@@ -63,7 +62,7 @@ int netreadline(int sd, char *buf){
 int netwriteline(int sd, char *buf){
 	int i;
 #ifdef HAVE_SSL
-	if (use_tls){
+	if (am_sslconf & AM_SSL_USETLS){
 		i=SSL_write(ssl, buf, strlen(buf));
 	} else
 #endif
@@ -98,7 +97,7 @@ int netnameinfo(const struct sockaddr *sa, socklen_t salen,
 		return (pfn_getnameinfo(sa, salen, hostname, hostlen, servname, servlen, flags));
 	} else {
 #endif
-#if (defined( __WIN32__)) || (defined(_OBSOLETE_NETWORKING))
+#if (defined( __WIN32__)) || (defined(_BROKEN_IO))
 		(void) flags;
 		(void) salen;
 		char *tmp;
@@ -144,8 +143,8 @@ int netaddrinfo(const char *node, const char *service,
 		return (err=pfn_getaddrinfo(node, service, hints, res));
 	} else {
 #endif
-#if (defined( __WIN32__)) || (defined(_OBSOLETE_NETWORKING))
-#warning using obsolete networking code
+#if (defined( __WIN32__)) || (defined(_BROKEN_IO))
+#warning my getaddrinfo-emulation is currently broken. Your build should be working under Windows XP -- but nowhere else.
 		struct addrinfo **aic;
 		struct addrinfo ai;
 		struct hostent *hent;
@@ -221,12 +220,12 @@ static int netsocket(struct addrinfo *ai){
 	}
 
 #ifdef HAVE_SSL
-	if (use_tls == 1){
-		if ((err=netsslstart(sd)) && allow_plaintext){
+	if (am_sslconf & AM_SSL_USETLS){
+		if ((err=netsslstart(sd)) && (am_sslconf & AM_SSL_ALLOWPLAIN)){
 			logmsg(L_WARNING, F_NET, "no ssl available, continuing from start", NULL);
 			close(sd);
 			return netsocket(ai);
-		} else if (err && !allow_plaintext){
+		} else if (err && !(am_sslconf & AM_SSL_ALLOWPLAIN)){
 			logmsg(L_DEADLY, F_NET, "unable to open ssl connection, plaintext fallback disabled.", NULL);
 		}
 	}

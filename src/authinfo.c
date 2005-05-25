@@ -82,6 +82,10 @@ int authinfo_init(){
 	return 0;
 }
 
+int authinfo_lookup(authinfo *authinfo_lookup){
+	(void)authinfo_lookup;
+}
+
 static int authinfo_append(authinfo *authinfo_add){
 	(void)authinfo_add;
 	authinfo *p, *p1;

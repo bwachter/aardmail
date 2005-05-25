@@ -9,12 +9,14 @@
 #include "aardmail.h"
 
 #define MAXNETBUF 1024
+#define AM_SSL_ALLOWPLAIN 1
+#define AM_SSL_USETLS 2
+#define AM_SSL_STARTTLS 4
 
 #ifdef HAVE_SSL
 #include <openssl/ssl.h>
 SSL *ssl;
-int use_tls;
-int allow_plaintext;
+int am_sslconf;
 #endif
 
 typedef struct _serverinfo serverinfo;

@@ -25,5 +25,6 @@ struct _authinfo_key {
 };
 
 int authinfo_init();
+int authinfo_lookup(authinfo *authinfo_lookup);
 
 #endif

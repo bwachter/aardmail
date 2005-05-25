@@ -21,7 +21,7 @@ int main(int argc, char** argv){
 
 	//debuglevel=1;
 #ifdef HAVE_SSL
-	use_tls=1;	
+	am_sslconf = AM_SSL_USETLS;	
 #endif
 	sd=netconnect(argv[1], argv[2]);
 	i=netreadline(sd, buf);

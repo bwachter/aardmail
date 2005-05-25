@@ -23,8 +23,6 @@ static struct {
 	int keepmail;
 	int msgcount;
 	int onlyget;
-	// change everything to fit that variable, or rethink it
-	int crypto;
 } pop3c;
 
 char *uniqname;
@@ -35,6 +33,7 @@ static int pipefd[2];
 #endif
 
 int pop3c_pipe(char *pipeto);
+int pop3c_quitclose(int sd);
 
 void pop3c_usage(char *program){
 	char *tmpstring=NULL;
@@ -283,13 +282,18 @@ int pop3c_connectauth(){
 	else logmsg(L_INFO, F_NET, buf, NULL);
 
 #ifdef HAVE_SSL
-	// FIXME, don't attempt to continue on error
-	if (pop3c.crypto == 3 || pop3c.crypto == 4){ // do we have to use starttls?
+	// FIXME, reconnect on error if ALLOWPLAIN is set
+	// check if we have to use starttls. abort if USETLS is already set
+	if ((am_sslconf & AM_SSL_STARTTLS) && !(am_sslconf & AM_SSL_USETLS)){
 		if ((pop3c_oksendline(sd, "stls\r\n")) == -1)
 			return -1;
 
+		am_sslconf ^= AM_SSL_USETLS;
 		if ((i=netsslstart(sd))) {
 			logmsg(L_ERROR, F_SSL, "unable to open tls-connection using starttls", NULL);
+			pop3c_quitclose(sd);
+			close(sd);
+			return -1;
 		} else {
 			logmsg(L_INFO, F_SSL, "SSL-connection using ", (SSL_get_cipher(ssl)), NULL);
 		}
@@ -305,7 +309,6 @@ int pop3c_connectauth(){
 			return -1;
 		else return sd;
 	}
-
 	return -1; // we should'nt get here...
 }
 
@@ -366,19 +369,13 @@ int pop3c_session(int sd){
 int main(int argc, char** argv){
 	int c, sd;
 	authinfo defaultauth;
-	//, pop3c_msgsize=0;
-	//char *pop3_msgnrbuf[1024];
 
 	// initialize with sane values
-	strcpy(pop3c.server.service, "110");
-
 	pop3c.keepmail = 0;
 	pop3c.msgcount = 0;
 	pop3c.onlyget = 0;
 #ifdef HAVE_SSL
-	int starttls=0;
-	use_tls = 0;
-	allow_plaintext = 0;
+	am_sslconf = 0;
 #endif
 
 #ifdef HAVE_SSL
@@ -392,7 +389,13 @@ int main(int argc, char** argv){
 			break;
 #ifdef HAVE_SSL
 		case 'c':
-			pop3c.crypto = atoi(optarg);
+			switch(atoi(optarg)){
+			case 0: am_sslconf=0; break;
+			case 1: am_sslconf=AM_SSL_USETLS; break;
+			case 2: am_sslconf=AM_SSL_USETLS & AM_SSL_ALLOWPLAIN; break;
+			case 3: am_sslconf=AM_SSL_STARTTLS; break;
+			case 4: am_sslconf=AM_SSL_STARTTLS & AM_SSL_ALLOWPLAIN; break;
+			}
 			break;
 #endif
 		case 'd':
@@ -403,9 +406,7 @@ int main(int argc, char** argv){
 			break;
 #ifdef HAVE_SSL
 		case 'l':
-			pop3c.crypto=3;
-			use_tls=0;
-			starttls=1;
+			am_sslconf = AM_SSL_STARTTLS;
 			break;
 #endif
 		case 'm':
@@ -426,7 +427,7 @@ int main(int argc, char** argv){
 			break;
 #ifdef HAVE_SSL
 		case 't':
-			use_tls=1;
+			am_sslconf = AM_SSL_USETLS;
 			break;
 #endif
 		case 'u':
@@ -444,7 +445,12 @@ int main(int argc, char** argv){
 	if (!strcmp(pop3c.server.hostname,""))
 		pop3c_usage(argv[0]);
 
+	if (!strcmp(pop3c.server.service,""))
+		strcpy(pop3c.server.service, "110");
+
 	//authinfo_init();
+	//authinfo_lookup(&defaultauth);
+
 	if ((sd=pop3c_connectauth())==-1) exit(-1);
 	if (pop3c_session(sd)==-1) exit(-1);
 	if (pop3c_quitclose(sd)==-1) exit(-1);
