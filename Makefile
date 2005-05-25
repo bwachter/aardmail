@@ -21,6 +21,10 @@ CFLAGS=-Wall -W -pipe  -Os -D_LINUX_SOURCE
 LDFLAGS=-s
 endif
 
+ifdef BROKEN
+CFLAGS+=-D_BROKEN_IO
+endif
+
 ifdef SSL
 LIBS+=-lssl -lcrypto
 CFLAGS+=-DHAVE_SSL

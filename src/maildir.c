@@ -62,36 +62,64 @@ int maildirfind(char *maildir){
 }
 
 // opens a file in maildir/ 
+#if (defined(__WIN32__)) || (defined _BROKEN_IO)
+FILE *maildiropen(char *maildir, char **uniqname){
+	FILE *fd;
+#else
 int maildiropen(char *maildir, char **uniqname){
-	char *path=NULL;
 	int fd;
+#endif
+	char *path=NULL;
 
-	if ((maildirfind(maildir)) == -1) return -1;
+	if ((maildirfind(maildir)) == -1) goto errexit;
 
 	maildirgname(uniqname);
-	if ((cat(&path, maildirpath, "/new/", *uniqname, NULL))) return -1;
+	if ((cat(&path, maildirpath, "/new/", *uniqname, NULL))) goto errexit;
 	logmsg(L_INFO, F_GENERAL, "spooling to ", path, NULL);
+#if (defined(__WIN32__)) || (defined _BROKEN_IO)
+	if ((fd=fopen(path, "w+")) == NULL) {
+#else
 	if ((fd=open(path, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0644)) == -1) {
+#endif
 		logmsg(L_ERROR, F_GENERAL, "open ", path, " for writing failed: ", strerror(errno), NULL);
 		free(path);
-		return -1;
+		goto errexit;
 	}
 	free(path);
 	return fd;
+ errexit: // with supporting windows-crap / stdio that's easier than many ifdefs
+#if (defined(__WIN32__)) || (defined _BROKEN_IO)
+	return (FILE*)NULL;
+#else
+	return -1;
+#endif
 }
 
+#if (defined(__WIN32__)) || (defined _BROKEN_IO)
+int maildirclose(char *maildir, char **uniqname, FILE *fd){
+#else
 int maildirclose(char *maildir, char **uniqname, int fd){
+#endif
 	char *oldpath=NULL, *newpath=NULL;
 	int status=0;
 	if ((maildirfind(maildir)) == -1) {
+#if (defined(__WIN32__)) || (defined _BROKEN_IO)
+		fflush(fd);
+		fclose(fd);
+#else
 		close(fd);
+#endif
 		return -1;
 	}
 
 	cat(&oldpath, maildirpath, "/new/", *uniqname, NULL);
 	cat(&newpath, maildirpath, "/cur/", *uniqname, ":2,", NULL);
 
-	if (!close(fd)){
+#if (defined(__WIN32__)) || (defined _BROKEN_IO)
+	if (!(status=fclose(fd))){
+#else
+	if (!(status==close(fd))){
+#endif
 #ifdef __WIN32__
 		status=MoveFile(oldpath, newpath);
 #else
