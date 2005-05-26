@@ -38,8 +38,9 @@ int pop3c_quitclose(int sd);
 void pop3c_usage(char *program){
 	char *tmpstring=NULL;
 #ifdef HAVE_SSL
-	if (!cat(&tmpstring, "Usage: ", program, " [-b program] [-c option] [-d] -h hostname [-l] [-m maildir] [-n number]\n",
-					 "\t\t[-p password] [-r number] [-s service] [-t] [-u user] [-v level] [-x program]","\n",
+	if (!cat(&tmpstring, "Usage: ", program, " [-b program] [-c option] [-d] -h hostname [-l]\n",
+					 "\t\t[-m maildir] [-n number] [-p password] [-r number]\n",
+					 "\t\t[-s service] [-t] [-u user] [-v level] [-x program]","\n",
 #else
 	if (!cat(&tmpstring, "Usage: ", program, " [-b program] [-d] -h hostname [-m maildir] [-p password]\n",
 					 "\t\t[-r number] [-s service] [-t] [-u user] [-x program]","\n",
@@ -47,8 +48,8 @@ void pop3c_usage(char *program){
 					 "\t-b:\tonly fetch mail if program exits with zero status\n",
 #ifdef HAVE_SSL
 					 "\t-c:\tcrypto options. Options may be: 0 (off), 1 (tls, like -t),\n",
-					 "\t\t 2 (tls, fallback to plain on error), 3 (starttls, no fallback) and\n",
-					 "\t\t 4 (starttls, fallback to plain on error)\n",
+					 "\t\t2 (tls, fallback to plain on error), 3 (starttls, no fallback)\n",
+					 "\t\tand 4 (starttls, fallback to plain on error)\n",
 #endif
 					 "\t-d:\tdon't delete mail after retrieval (default is to delete)\n",
 					 "\t-h:\tspecify the hostname to connect to\n",
@@ -64,7 +65,8 @@ void pop3c_usage(char *program){
 					 "\t-t:\tuse tls. If tls is not possible the program will exit (like -c 1)\n",
 #endif
 					 "\t-u:\tthe username to use. You usually don't need this option.\n",
-					 "\t-v:\tset the loglevel, from 0 (no logging) over 2 (default) to 4 (very much)\n",
+					 "\t-v:\tset the loglevel, valid values are 0 (no logging), 1 (deadly),\n",
+					 "\t\t2 (errors, default), 3 (warnings) and 4 (info, very much)\n",
 					 "\t-x:\tthe program to popen() for each received mail\n",
 					 NULL)) {
 		__write2(tmpstring);
