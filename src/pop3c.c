@@ -227,6 +227,46 @@ long pop3c_getmessage(int sd, int fd, int size){
 	}
 }
 
+int pop3c_checkprogram(char *program){
+#ifndef __WIN32__
+	pid_t pid;
+	int status, i;
+	char **buf, **bufptr, *ptr;
+
+	if ((buf=malloc(strlen(program)+2))==NULL) return -1;
+
+	bufptr=buf;
+	*bufptr++=program;
+	for (ptr=program;*ptr;ptr++){
+		if (*ptr==' '){
+			*ptr=0;
+			*bufptr++=ptr+1;
+		}
+	}
+
+	if ((pid=fork())==-1){
+		logmsg(L_ERROR, F_GENERAL, "fork() failed: ", strerror(errno), NULL);
+		return -1;
+	}
+
+	if (pid==0){
+		execvp(buf[0], buf);
+		logmsg(L_DEADLY, F_GENERAL, "execvp() failed: ", strerror(errno), NULL);
+	} else {
+		free(buf);
+		waitpid(pid, &status, 0);
+		if (WIFEXITED(status)){
+			i=WEXITSTATUS(status);
+			if (i==0) return 0;
+			else return -1;
+		}
+	}
+	return -1; // should never happen... ;)
+#else
+	return 0;
+#endif
+}
+
 #if (!defined(__WIN32__)) && (!defined _BROKEN_IO)
 int pop3c_pipe(char *pipeto){
 	pid_t pid;
@@ -379,13 +419,16 @@ int main(int argc, char** argv){
 #endif
 
 #ifdef HAVE_SSL
-	while ((c=getopt(argc, argv, "c:dh:lm:n:p:s:tu:v:x:")) != EOF){
+	while ((c=getopt(argc, argv, "b:c:dh:lm:n:p:r:s:tu:v:x:")) != EOF){
 #else
-	while ((c=getopt(argc, argv, "dh:m:n:p:s:u:v:x:")) != EOF){
+	while ((c=getopt(argc, argv, "b:dh:m:n:p:r:s:u:v:x:")) != EOF){
 #endif
 		switch(c){
 		case 'b':
-			pop3c_unimplemented();
+			if (pop3c_checkprogram(optarg)!=0) {
+				logmsg(L_INFO, F_GENERAL, "not polling because program evaluated to false", NULL);
+				exit(0);
+			}
 			break;
 #ifdef HAVE_SSL
 		case 'c':
