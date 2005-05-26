@@ -7,16 +7,19 @@
 #include <netdb.h>
 #endif
 
+#include "aardmail.h"
+
 typedef struct _authinfo authinfo;
 typedef struct _authinfo_key authinfo_key;
 
 struct _authinfo {
 	char machine[NI_MAXHOST];
-	char service[NI_MAXSERV];
-	char *login;
-	char *password;
+	char port[NI_MAXSERV];
+	char login[AM_MAXUSER];
+	char password[AM_MAXPASS];
+	int defaultauth;
+	int force;
 	authinfo *next;
-	authinfo *prev;
 };
 
 struct _authinfo_key {
@@ -26,5 +29,6 @@ struct _authinfo_key {
 
 int authinfo_init();
 int authinfo_lookup(authinfo *authinfo_lookup);
+int authinfo_lookup(authinfo *authinfo_keys);
 
 #endif

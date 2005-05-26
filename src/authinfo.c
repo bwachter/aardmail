@@ -14,7 +14,7 @@
 
 static int authinfo_append(authinfo *authinfo_add);
 
-static authinfo *authinfo_start, *authinfo_end;
+static authinfo *authinfo_storage;
 static int i=0;
 
 static authinfo_key authinfo_keys[] = {
@@ -22,14 +22,14 @@ static authinfo_key authinfo_keys[] = {
 	{"login", 1},
 	{"password", 1},
 	{"default", 0},
-	{"force", 0},
+	{"force", 1},
 	{"port", 1},
 	{NULL, 0}
 };
 
 int authinfo_init(){
-	int err, iskey=0;
-	char *home, *authinfo_content=0, *tmp;
+	int err, nextrecord=0;
+	char *home, *authinfo_content=0, *tmp, *tmp1;
 	char *path=NULL;
 	unsigned long authinfo_len, l;
 	authinfo authinfo_tmp;
@@ -57,75 +57,88 @@ int authinfo_init(){
 
 	tmp=authinfo_content;
 	l=0;
+	memset(&authinfo_tmp, 0, sizeof(authinfo));
 	while (l<authinfo_len){
-		iskey=0;
-		for (key=authinfo_keys; key->name && !iskey; key++){
+		for (key=authinfo_keys; key->name; key++){
 			if (!strncmp(authinfo_content+l, key->name, strlen(key->name))){
-				logmsg(L_INFO, F_GENERAL, "found a key: ", key->name, NULL);
 				l+=strlen(key->name)+1;
 				if (key->hasargs){
-					//authinfo_tmp.password="foobar";
-					for (tmp=authinfo_content+l;*tmp!=' ' && *tmp!='\n';*tmp++,l++) 
-						write(1, tmp, 1);
-				} else l--;
-				iskey=1;
+					for (tmp=authinfo_content+l,tmp1=tmp;*tmp!=' ' && *tmp!='\n';*tmp++,l++);
+					if (*tmp=='\n') nextrecord=1;
+					*tmp=0;
+					if (!strcmp(key->name, "machine")) strcpy(authinfo_tmp.machine, tmp1);
+					if (!strcmp(key->name, "port")) strcpy(authinfo_tmp.port, tmp1);
+					if (!strcmp(key->name, "login")) strcpy(authinfo_tmp.login, tmp1);
+					if (!strcmp(key->name, "password")) strcpy(authinfo_tmp.password, tmp1);
+					if (!strcmp(key->name, "force")) 
+						if (!strcmp(tmp1, "yes")) authinfo_tmp.force=1;
+				} else {
+					if (!strcmp(key->name, "default")) authinfo_tmp.defaultauth=1;
+					l--;
+				}
 				break;
 			}
 		}
-		if (!strncmp(authinfo_content+l, "\n", 1)){
-			logmsg(L_INFO, F_GENERAL, "record completed", NULL);
+		if ((!strncmp(authinfo_content+l, "\n", 1)) || nextrecord){
 			authinfo_append(&authinfo_tmp);
 			memset(&authinfo_tmp, 0, sizeof(authinfo));
+			nextrecord=0;
 		}
 		l++;
 	}
 	return 0;
 }
 
-int authinfo_lookup(authinfo *authinfo_lookup){
-	(void)authinfo_lookup;
+int authinfo_lookup(authinfo *authinfo_keys){
+	authinfo *p, defaultauth;
+	memset(&defaultauth, 0, sizeof(authinfo));
+	for (p=authinfo_storage; p!=NULL; p=p->next){
+		if (p->defaultauth){
+			memcpy(&defaultauth, p, sizeof(authinfo));
+			continue;
+		}
+		if (strcmp(authinfo_keys->machine, ""))
+			if (strcmp(authinfo_keys->machine, p->machine))
+				continue;
+		if (strcmp(authinfo_keys->port, ""))
+			if (strcmp(authinfo_keys->port, p->port))
+				continue;
+		if (strcmp(authinfo_keys->login, ""))
+			if (strcmp(authinfo_keys->login, p->login))
+				continue;
+		if (strcmp(authinfo_keys->password, ""))
+			if (strcmp(authinfo_keys->password, p->password))
+				continue;
+		// if we got that far we either found a valid key, or
+		// all fields are set to NULL
+		memcpy(authinfo_keys, p, sizeof(authinfo));
+		authinfo_keys->next=NULL;
+		return 0;
+	}
+	return -1; // we did not find a key
 }
 
 static int authinfo_append(authinfo *authinfo_add){
-	(void)authinfo_add;
-	authinfo *p, *p1;
+	authinfo *p;
 
-	if ((authinfo_end = NULL)){
-		if ((authinfo_end = malloc(sizeof(authinfo))) == NULL) {
-			logmsg(L_ERROR, F_GENERAL, "unable to malloc() memory for authinfo structures", NULL);
-			return -1;
-		}
-	}
-
-	// is there already an element?
-	if (authinfo_start == NULL){
-		if ((authinfo_start = malloc(sizeof(authinfo))) == NULL) {
+	if (authinfo_storage == NULL){
+		if ((authinfo_storage = malloc(sizeof(authinfo))) == NULL) {
 			logmsg(L_ERROR, F_GENERAL, "unable to malloc() memory for first authinfo element", NULL);
 			return -1;
 		}
 		i++;
-		// set up elements
-		authinfo_start->next=NULL;
-		authinfo_end=authinfo_start;
-		authinfo_end->prev=NULL;
+		memcpy(authinfo_storage, authinfo_add, sizeof(authinfo));
+		authinfo_storage->next=NULL;
 	} else {
-		p=authinfo_start;
+		p=authinfo_storage;
 		while (p->next != NULL) p=p->next;
 
 		if ((p->next=malloc(sizeof(authinfo))) == NULL) {
 			logmsg(L_ERROR, F_GENERAL, "unable to malloc() memory for new authinfo element", NULL);
 			return -1;
 		}
-
-		p1=p;
-		p=p->next; //pointer to newly allocated memory
+		memcpy(p->next, authinfo_add, sizeof(authinfo));
 		i++;
-		// set up elements
-
-		//set up pointers
-		authinfo_end=p;
-		p->prev=p1;
-		p1->next=p;
 	}
 	return 0;
 }

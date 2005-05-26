@@ -19,14 +19,6 @@ SSL *ssl;
 int am_sslconf;
 #endif
 
-typedef struct _serverinfo serverinfo;
-struct _serverinfo {
-	char hostname[NI_MAXHOST];
-	char service[NI_MAXSERV];
-	char username[AM_MAXUSER];
-	char password[AM_MAXPASS];
-};
-
 int netconnect(char *hostname, char *servicename);
 int netread(int sd, char *buf);
 int netreadline(int sd, char *buf);

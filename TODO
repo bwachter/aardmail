@@ -1,5 +1,4 @@
 - add some more information to the maildir name
-- add authinfo parsing
 - fix windows/obsolete networking code kludge
 - do some more testing to the SSL-code (currently it's only confirmed to be working with gmail)
 - reconnect if starttls failed and we're allowed to use plaintext (low prio, since that's generally a bad idea)

@@ -17,7 +17,6 @@
 #include "maildir.h"
 
 static struct {
-	serverinfo server;
 	char *pipeto;
 	char *maildir;
 	int keepmail;
@@ -235,7 +234,7 @@ int pop3c_checkprogram(char *program){
 	int status, i;
 	char **buf, **bufptr, *ptr;
 
-	if ((buf=malloc(strlen(program)+2))==NULL) return -1;
+	if ((buf=malloc(sizeof(char*)*(strlen(program)+2)))==NULL) return -1;
 
 	bufptr=buf;
 	*bufptr++=program;
@@ -275,7 +274,7 @@ int pop3c_pipe(char *pipeto){
 	int fd;
 	char **buf, **bufptr, *ptr;
 
-	if ((buf=malloc(strlen(pipeto)+2))==NULL) return -1;
+	if ((buf=malloc(sizeof(char*)*(strlen(pipeto)+2)))==NULL) return -1;
 
 	bufptr=buf;
 	*bufptr++=pipeto;
@@ -313,11 +312,11 @@ int pop3c_pipe(char *pipeto){
 }
 #endif
 
-int pop3c_connectauth(){
+int pop3c_connectauth(authinfo *auth){
 	int i, sd;
 	char buf[1024];
 
-	if ((sd=netconnect(pop3c.server.hostname, pop3c.server.service)) == -1)
+	if ((sd=netconnect(auth->machine, auth->port)) == -1)
 		return -1;
 	if ((i=netreadline(sd, buf)) == -1)
 		return -1;
@@ -342,11 +341,11 @@ int pop3c_connectauth(){
 	}
 #endif
 
-	if (!cat(&tmpstring, "user ", pop3c.server.username, "\r\n", NULL))
+	if (!cat(&tmpstring, "user ", auth->login, "\r\n", NULL))
 		if ((pop3c_oksendline(sd, tmpstring)) == -1) 
 			return -1;
 
-	if (!cat(&tmpstring, "pass ", pop3c.server.password, "\r\n", NULL)){
+	if (!cat(&tmpstring, "pass ", auth->password, "\r\n", NULL)){
 		if ((pop3c_oksendline(sd, tmpstring)) == -1)
 			return -1;
 		else return sd;
@@ -412,6 +411,7 @@ int main(int argc, char** argv){
 	int c, sd;
 	authinfo defaultauth;
 
+	memset(&defaultauth, 0, sizeof(authinfo));
 	// initialize with sane values
 	pop3c.keepmail = 0;
 	pop3c.msgcount = 0;
@@ -447,7 +447,7 @@ int main(int argc, char** argv){
 			pop3c.keepmail = 1;
 			break;
 		case 'h':
-			strncpy(pop3c.server.hostname, optarg, NI_MAXHOST);
+			strncpy(defaultauth.machine, optarg, NI_MAXHOST);
 			break;
 #ifdef HAVE_SSL
 		case 'l':
@@ -462,13 +462,13 @@ int main(int argc, char** argv){
 			break;
 		case 'p':
 			logmsg(L_WARNING, F_GENERAL, "do not use -p password, it's unsecure. use .authinfo", NULL);
-			strncpy(pop3c.server.password, optarg, AM_MAXPASS);
+			strncpy(defaultauth.password, optarg, AM_MAXPASS);
 			break;
 		case 'r':
 			pop3c_unimplemented();
 			break;
 		case 's':
-			strncpy(pop3c.server.service, optarg, NI_MAXSERV);
+			strncpy(defaultauth.port, optarg, NI_MAXSERV);
 			break;
 #ifdef HAVE_SSL
 		case 't':
@@ -476,7 +476,7 @@ int main(int argc, char** argv){
 			break;
 #endif
 		case 'u':
-			strncpy(pop3c.server.username, optarg, AM_MAXUSER);
+			strncpy(defaultauth.login, optarg, AM_MAXUSER);
 			break;
 		case 'v':
 			loglevel(atoi(optarg));
@@ -487,16 +487,21 @@ int main(int argc, char** argv){
 		}
 	}
 
-	if (!strcmp(pop3c.server.hostname,""))
+	if (!strcmp(defaultauth.machine,""))
 		pop3c_usage(argv[0]);
 
-	if (!strcmp(pop3c.server.service,""))
-		strcpy(pop3c.server.service, "110");
+	if (!authinfo_init())
+		if (authinfo_lookup(&defaultauth)==-1)
+			logmsg(L_WARNING, F_GENERAL, "no record found in authinfo", NULL);
 
-	//authinfo_init();
-	//authinfo_lookup(&defaultauth);
+	if (!strcmp(defaultauth.port,""))
+		strcpy(defaultauth.port, "110");
 
-	if ((sd=pop3c_connectauth())==-1) exit(-1);
+	logmsg(L_INFO, F_GENERAL, "connecting to machine ", defaultauth.machine, ", port ", defaultauth.port, NULL);
+	if (strcmp(defaultauth.login, "")) logmsg(L_INFO, F_GENERAL, "using login-name: ", defaultauth.login, NULL);
+	if (strcmp(defaultauth.login, "")) logmsg(L_INFO, F_GENERAL, "using password: yes", NULL);
+
+	if ((sd=pop3c_connectauth(&defaultauth))==-1) exit(-1);
 	if (pop3c_session(sd)==-1) exit(-1);
 	if (pop3c_quitclose(sd)==-1) exit(-1);
 	return 0;  
