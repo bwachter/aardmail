@@ -243,7 +243,7 @@ int pop3c_checkprogram(char *program){
 			*ptr=0;
 			*bufptr++=ptr+1;
 		}
-	}
+	} *bufptr++=NULL;
 
 	if ((pid=fork())==-1){
 		logmsg(L_ERROR, F_GENERAL, "fork() failed: ", strerror(errno), NULL);
@@ -283,7 +283,7 @@ int pop3c_pipe(char *pipeto){
 			*ptr=0;
 			*bufptr++=ptr+1;
 		}
-	}
+	} *bufptr++=NULL;
 
 	if (pipe(pipefd)==-1){
 		logmsg(L_ERROR, F_GENERAL, "pipe() failed: ", strerror(errno), NULL);
