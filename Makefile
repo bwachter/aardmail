@@ -55,6 +55,7 @@ ifeq ($(shell uname),IRIX64)
 ifeq ($(DEBUG),)
 STRIP=
 CFLAGS=-Wall -W -Os 
+LDFLAGS=-g
 else
 STRIP=
 CFLAGS=-g -Wall -W -Os
