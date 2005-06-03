@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <getopt.h>
 
 #ifdef __WIN32__
 #else
