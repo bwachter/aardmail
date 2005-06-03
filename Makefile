@@ -8,19 +8,11 @@ RM=/bin/rm -f
 INSTALL=install
 DESTDIR=
 BINDIR=/usr/bin
-STRIP=strip -x -R .comment -R .note
+STRIP=
 
 # set up some basic flags
 VERSION=aardmail-$(shell head -1 CHANGES|sed 's/://')
 CURNAME=$(notdir $(shell pwd))
-
-ifneq ($(DEBUG),)
-CFLAGS=-g -Wall -W -pipe -Os -D_LINUX_SOURCE
-LDFLAGS=-g
-else
-CFLAGS=-Wall -W -pipe  -Os -D_LINUX_SOURCE
-LDFLAGS=-s
-endif
 
 ifdef BROKEN
 CFLAGS+=-D_BROKEN_IO
@@ -41,13 +33,32 @@ LIBS+=-lssl -lcrypto
 CFLAGS+=-DHAVE_SSL
 endif
 
+ifneq ($(DEBUG),)
+CFLAGS=-g -Wall -W -pipe -Os
+LDFLAGS=-g
+else
+CFLAGS=-Wall -W -pipe  -Os
+LDFLAGS=-s
+endif
+
 ifdef WIN32
 LIBS+=-lws2_32 -lwsock32 -lgdi32
 EXE=.exe
 else
 ifeq ($(shell uname),SunOS)
 LIBS+=-lresolv -lsocket
+ifeq ($(DEBUG),)
 STRIP=strip -x
+endif
+endif
+ifeq ($(shell uname),IRIX64)
+ifeq ($(DEBUG),)
+STRIP=
+CFLAGS=-Wall -W -Os 
+else
+STRIP=
+CFLAGS=-g -Wall -W -Os
+endif
 endif
 endif
 
@@ -63,7 +74,7 @@ PREFIX?=/usr
 .PHONY: clean install tar rename upload
 
 all: $(ALL)
-
+ 
 aardmail-pop3c$(EXE): $(OBJDIR)/pop3c.o $(OBJDIR)/cat.o \
 	$(OBJDIR)/aardlog.o $(OBJDIR)/network.o $(OBJDIR)/netssl.o \
 	$(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o $(OBJDIR)/fs.o 
@@ -84,9 +95,7 @@ aardmail-miniclient$(EXE): $(OBJDIR)/network.o $(OBJDIR)/netssl.o $(OBJDIR)/mini
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(Q)echo "CC $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(CFLAGS) -c $< -o $@
-ifneq ($(DEBUG),)
-	$(Q)echo "Don't stripping objects"
-else
+ifneq ($(STRIP),)
 	$(Q)$(COMMENT) -$(CROSS)$(STRIP) $@
 endif
 
