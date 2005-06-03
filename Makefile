@@ -8,6 +8,7 @@ RM=/bin/rm -f
 INSTALL=install
 DESTDIR=
 BINDIR=/usr/bin
+STRIP=strip -x -R .comment -R .note
 
 # set up some basic flags
 VERSION=aardmail-$(shell head -1 CHANGES|sed 's/://')
@@ -43,6 +44,13 @@ endif
 ifdef WIN32
 LIBS+=-lws2_32 -lwsock32 -lgdi32
 EXE=.exe
+endif
+
+ifndef WIN32
+ifeq ($(shell uname),SunOS)
+LIBS+=-lresolv -lsocket
+STRIP=strip -x
+endif
 endif
 
 ARFLAGS=cru
@@ -81,7 +89,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 ifneq ($(DEBUG),)
 	$(Q)echo "Don't stripping objects"
 else
-	$(Q)$(COMMENT) -$(CROSS)strip -x -R .comment -R .note $@
+	$(Q)$(COMMENT) -$(CROSS)$(STRIP) $@
 endif
 
 clean:
