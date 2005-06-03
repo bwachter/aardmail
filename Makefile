@@ -44,9 +44,7 @@ endif
 ifdef WIN32
 LIBS+=-lws2_32 -lwsock32 -lgdi32
 EXE=.exe
-endif
-
-ifndef WIN32
+else
 ifeq ($(shell uname),SunOS)
 LIBS+=-lresolv -lsocket
 STRIP=strip -x
