@@ -25,6 +25,16 @@ ifdef BROKEN
 CFLAGS+=-D_BROKEN_IO
 endif
 
+ifdef MATRIXSSL
+LIBS+=-lmatrixsslstatic
+CFLAGS+=-DHAVE_SSL
+endif
+
+ifdef GNUTLS
+LIBS+=-lgnutls-openssl -lgnutls -ltasn1 -lgcrypt -lgpg-error -lz
+CFLAGS+=-DHAVE_SSL
+endif
+
 ifdef SSL
 LIBS+=-lssl -lcrypto
 CFLAGS+=-DHAVE_SSL
@@ -37,7 +47,7 @@ endif
 
 ARFLAGS=cru
 Q=@
-ALL=aardmail-miniclient$(EXE) aardmail-pop3c$(EXE)
+ALL=aardmail-miniclient$(EXE) aardmail-pop3c$(EXE) aardmail-smtpc$(EXE)
 
 # you should not need to touch anything below this line
 
@@ -54,8 +64,14 @@ aardmail-pop3c$(EXE): $(OBJDIR)/pop3c.o $(OBJDIR)/cat.o \
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
+aardmail-smtpc$(EXE): $(OBJDIR)/smtpc.o $(OBJDIR)/cat.o \
+	$(OBJDIR)/aardlog.o $(OBJDIR)/network.o $(OBJDIR)/netssl.o \
+	$(OBJDIR)/fs.o $(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o 
+	$(Q)echo "LD $@"
+	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+
 aardmail-miniclient$(EXE): $(OBJDIR)/network.o $(OBJDIR)/netssl.o $(OBJDIR)/miniclient.o \
-	$(OBJDIR)/aardlog.o $(OBJDIR)/cat.o $(OBJDIR)/maildir.o 
+	$(OBJDIR)/aardlog.o $(OBJDIR)/cat.o $(OBJDIR)/maildir.o $(OBJDIR)/fs.o
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 

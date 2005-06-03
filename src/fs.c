@@ -1,6 +1,8 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <dirent.h>
+#include <sys/stat.h>
 #ifdef __WIN32__
 #include <stdio.h>
 #include <io.h>
@@ -14,6 +16,13 @@ int tf(char *name){
 	if ((fd=open(name, O_RDONLY))==-1) return errno;
 	close(fd);
 	return 0;
+}
+
+int td(char *name){
+	struct stat dirstat;
+	if (!stat(name, &dirstat))
+		if (S_ISDIR(dirstat.st_mode)) return 0;
+	return -1;
 }
 
 int openreadclose(char *fn, char **buf, unsigned long *len) {

@@ -4,6 +4,7 @@
 #include <string.h>
 #include <time.h>
 #include <stdio.h>
+#include <dirent.h>
 #ifdef __WIN32__
 #include <windows.h>
 #include <winbase.h>
@@ -18,8 +19,14 @@
 #include "cat.h"
 #include "aardlog.h"
 #include "maildir.h"
+#include "fs.h"
 
 static int deliveries=0;
+static maildir *maildir_storage;
+static int maildir_cnt=0;
+static int maildir_harddelete=0; // shall we delete the mails, or just mark them deleted and remove them on cleanup?
+
+static int maildir_sappend(maildir *maildir_add);
 
 int maildirgname(char **uniqname){
 	char tmpbuf[512];
@@ -44,22 +51,25 @@ int maildirgname(char **uniqname){
 
 int maildirfind(char *maildir){
 	// TODO: maybe look what's in maildirpath. check if directory exists
-	if (maildir) maildirpath=strdup(maildir);
-	else{
-		if ((maildirpath=getenv("MAILDIR"))==NULL){
-			if (getenv("HOME")==NULL){
-				logmsg(L_ERROR, F_GENERAL, "$MAILDIR not set, $HOME not found", NULL);
-				return -1;
-			} else {
-				if (cat(&maildirpath, getenv("HOME"), "/Maildir", NULL)) return -1;
-				else return 0;
-			}
+	if (maildir) {
+		maildirpath=strdup(maildir);
+		if (!td(maildirpath)) return 0; 
+	} 
+
+	if ((maildirpath=getenv("MAILDIR"))==NULL){
+		if (getenv("HOME")==NULL){
+			logmsg(L_ERROR, F_GENERAL, "$MAILDIR not set, $HOME not found", NULL);
+			return -1;
 		} else {
-			maildirpath=strdup(getenv("MAILDIR"));
-			return 0;
+			if (cat(&maildirpath, getenv("HOME"), "/Maildir", NULL)) return -1;
+			else if (!td(maildirpath)) return 0;
 		}
+	} else {
+		maildirpath=strdup(getenv("MAILDIR"));
+		if (!td(maildirpath)) return 0;
 	}
-	return 0;//FIXME
+
+	return -1; // if we got that far we did not find a usable maildir
 }
 
 // opens a file in maildir/ 
@@ -134,3 +144,55 @@ int maildirclose(char *maildir, char **uniqname, int fd){
 	return status;
 }
 
+int maildir_init(char *maildir, char *subdir, int harddelete){
+	(void) harddelete;
+	// maybe add a flag to recurse into subdirs
+	DIR *dirptr;
+	struct dirent *tmpdirent;
+	char *mymaildir=NULL;
+
+	if (maildirfind(maildir)){
+		logmsg(L_ERROR, F_GENERAL, "unable to find maildir", NULL);
+		return -1;
+	}
+
+	if (subdir != NULL) cat(&mymaildir, maildirpath, "/", subdir, "/cur", NULL);
+	else cat(&mymaildir, maildirpath, "/cur", NULL);
+
+	if ((dirptr=opendir(mymaildir))==NULL){
+		logmsg(L_ERROR, F_GENERAL, "unable to open maildir ", mymaildir, ": ", strerror(errno), NULL);
+		return -1;
+	}
+
+	for (tmpdirent=readdir(dirptr); tmpdirent!=NULL; tmpdirent=readdir(dirptr)){
+		if (!strncmp(tmpdirent->d_name, ".", 1)) continue;
+		if (!strncmp(tmpdirent->d_name, "..", 2)) continue;
+		logmsg(L_ERROR, F_GENERAL, "adding ", tmpdirent->d_name, " to struct", NULL);
+	}
+	return 0; //FIXME
+}
+
+static int maildir_sappend(maildir *maildir_add){
+	maildir *p;
+
+	if (maildir_storage == NULL){
+		if ((maildir_storage = malloc(sizeof(maildir))) == NULL) {
+			logmsg(L_ERROR, F_GENERAL, "unable to malloc() memory for first maildir element", NULL);
+			return -1;
+		}
+		maildir_cnt++;
+		memcpy(maildir_storage, maildir_add, sizeof(maildir));
+		maildir_storage->next=NULL;
+	} else {
+		p=maildir_storage;
+		while (p->next != NULL) p=p->next;
+
+		if ((p->next=malloc(sizeof(maildir))) == NULL) {
+			logmsg(L_ERROR, F_GENERAL, "unable to malloc() memory for new maildir element", NULL);
+			return -1;
+		}
+		memcpy(p->next, maildir_add, sizeof(maildir));
+		maildir_cnt++;
+	}
+	return 0;
+}

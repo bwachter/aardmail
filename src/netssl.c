@@ -1,4 +1,4 @@
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 #include <errno.h>
 #include <string.h>
 #include "network.h"
