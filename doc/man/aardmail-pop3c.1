@@ -1,0 +1,59 @@
+.TH "aardmail-pop3c" 1 "June 4, 2005"
+.SH NAME
+aardmail-pop3c \- client to retrieve mail via pop3
+.SH "SYNOPSIS"
+\fBaardmail-pop3c\fR [\fB\-b\ \fIprogram\fR\fR] [\fB\-c\ \fIoption\fR\fR] [\fB\-d\fR\fR] \fB\-h\ \fIhostname\fR\fR [\fB\-l\fR\fR] [\fB\-m\ \fImaildir\fR\fR] [\fB\-n\ \fInumber\fR\fR] [\fB\-p\ \fIpassword\fR\fR] [\fB\-r\ \fInumber\fR\fR] [\fB\-s\ \fIservice\fR\fR] [\fB\-t\fR\fR] [\fB\-u\ \fIuser\fR\fR] [\fB\-v\ \fIlevel\fR\fR] [\fB\-x\ \fIprogram\fR\fR]
+.SH "DESCRIPTION"
+.PP
+\fBaardmail-pop3c\fR is a simple client to retrieve mail via pop3. If compiled with SSL-support it's possible to use TLS-encrypted connections, with or without starttls. It can either deliver into a \fBMaildir\fR (default) or to an external program using a pipe (like \fBprocmail\fR). It should be able to replace \fBfetchmail\fR if you just want to get mails from a pop3-server.
+.SH "OPTIONS"
+.PP
+When called without arguments aardmail-pop3c will give a short overview of the available options.
+.TP
+.B \-b program
+Execute the program and only poll mails if it exits with zero exit status. That's useful if you poll mail on your notebook via cron but only want to get mail in special environements. You can specify parameters, but since the string gets parsed in the client you need to quote the spaces.
+.TP
+.B \-c option
+General option to control cryptography settings. Valid options are 0 for no encryption, 1 for TLS with exit on error (like -t), 2 for TLS with fallback to no encryption on error, 3 for TLS using starttls and exit on error (like -l) and 4 for TLS using starttls with fallback to no encryption on error.
+.TP
+.B \-d
+Don't delete the mails after retrieval. The default is to delete successfully retrieved mails.
+.TP
+.B \-h hostname
+The hostname to connect to. This can be either a name resolvable via DNS or a numeric IP
+.TP
+.B \-l
+Use TLS with starttls and exit if an error occurs (like -c 3)
+.TP
+.B \-m maildir
+Use maildir for spooling. Unless the -x parameter is used the default is to spool into ~/Maildir
+.TP
+.B \-n number
+Only download number mails
+.TP
+.B \-p password
+Authentify using the given password. Don't use this option, use a .authinfo file instead
+.TP
+.B \-r number
+Send a QUIT and reconnect after number mails. That's useful when you try to get many mails over a bad connection -- the server stores the delete requests till the client issues a QUIT. If the connection dies mail won't get deleted.
+.TP
+.B \-s service
+The service to connect to. This can be either a string which is resolvable via /etc/services or a numeric portnumber. The default is 110.
+.TP
+.B \-t
+Use TLS and exit on error. Same like -c 1.
+.TP
+.B \-u username
+Specify the username to use. When setting up .authinfo properly you usually only need this option if you want to poll mail for different users from the same server.
+.TP
+.B \-v level
+Set the verbosity. Valid values are 0 (no logging), 1 (deadly), 2 (error), 3 (warning) and 4 (info). The default is 2. It does not matter if you specify levels bigger than 4.
+.TP
+.B \-x program
+Specifies a program which will get the retrieved mails using a pipe. A new pipe will be opened for every mail, procmail is known to work fine.
+.SH "SEE ALSO"
+.PP
+aardmail (1).
+.SH "AUTHOR"
+.PP
+aardmail was written by Bernd 'Aard' Wachter <bwachter@lart\&.info>. It can be obtained at \fIhttp://bwachter.lart.info/projects/aardmail/\fP

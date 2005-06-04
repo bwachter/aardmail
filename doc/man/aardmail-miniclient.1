@@ -1,0 +1,38 @@
+.TH "aardmail-miniclient" 1 "June 4, 2005"
+.SH NAME
+aardmail-miniclient \- client to track down connection problems
+.SH "SYNOPSIS"
+\fBaardmail-miniclient\fR [\fB\-c\ \fIoption\fR\fR] [\fB\-f\ \fIcertificate\fR\fR] \fB\-h\ \fIhostname\fR\fR \fB\-s\ \fIservice\fR\fR [\fB\-t\fR\fR] [\fB\-v\ \fIlevel\fR\fR]
+.SH "DESCRIPTION"
+.PP
+\fBaardmail-miniclient\fR is a small minimalistic client to help finding problems on getting/sending mail. It can be used to connect and talk to any text-based tcp-service. It can do an initial SSL-handshake, or initiate a SSL connection after the user typed STLS or STARTTLS. The TLS-connection for STARTTLS gets only started on positive return code, currently recognized are +OK (pop3) and 220 (SMTP).
+.SH "OPTIONS"
+.PP
+When called without arguments aardmail-miniclient will give a short overview of the available options.
+.TP
+.B \-c option
+General option to control cryptography settings. Valid options are 0 for no encryption, 1 for TLS with exit on error (like -t), 2 for TLS with fallback to no encryption on error, 3 for TLS using starttls and exit on error (like -l) and 4 for TLS using starttls with fallback to no encryption on error.
+.TP
+.B \-f certificate
+A PEM-formatted certificate file which is used to authentificate to the server if it asks for a certificate
+.TP
+.B \-h hostname
+The hostname to connect to. This can be either a name resolvable via DNS or a numeric IP
+.TP
+.B \-s service
+The service to connect to. This can be either a string which is resolvable via /etc/services or a numeric portnumber. The default is 110.
+.TP
+.B \-t
+Use TLS and exit on error. Same like -c 1.
+.TP
+.B \-v level
+Set the verbosity. Valid values are 0 (no logging), 1 (deadly), 2 (error), 3 (warning) and 4 (info). The default is 2. It does not matter if you specify levels bigger than 4.
+.SH "BUGS"
+.PP
+\fBaardmail-miniclient\fR uses poll() for asynchronous IO for terminal and network and therefore does not work under Windows at the moment
+.SH "SEE ALSO"
+.PP
+aardmail (1).
+.SH "AUTHOR"
+.PP
+aardmail was written by Bernd 'Aard' Wachter <bwachter@lart\&.info>. It can be obtained at \fIhttp://bwachter.lart.info/projects/aardmail/\fP

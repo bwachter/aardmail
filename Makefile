@@ -8,6 +8,7 @@ RM=/bin/rm -f
 INSTALL=install
 DESTDIR=
 BINDIR=/usr/bin
+MANDIR=/usr/share/man
 STRIP=
 
 # set up some basic flags
@@ -106,7 +107,9 @@ clean:
 
 install: all
 	install -d $(DESTDIR)$(BINDIR)
+	install -d $(DESTDIR)$(MANDIR)/man1
 	install -m 755 $(ALL) $(DESTDIR)$(BINDIR)
+	install -m 644 doc/man/*.1 $(DESTDIR)$(MANDIR)/man1
 
 tar: clean rename
 	$(Q)echo "building archive ($(VERSION).tar.bz2)"
@@ -118,3 +121,6 @@ rename:
 
 upload: tar
 	scp ../$(VERSION).tar.bz2 bwachter@lart.info:/home/bwachter/public_html/projects/download/snapshots
+
+deb: rename
+	$(Q)cd ../$(VERSION) && dpkg-buildpackage -rfakeroot
