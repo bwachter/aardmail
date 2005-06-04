@@ -4,6 +4,7 @@
 #include <fcntl.h>
 
 #ifdef __WIN32__
+#include <getopt.h>
 #else
 #include <sys/wait.h>
 #endif

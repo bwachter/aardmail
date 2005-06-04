@@ -18,6 +18,7 @@
 #include <openssl/ssl.h>
 SSL *ssl;
 int am_sslconf;
+char am_sslkey[1024];
 #endif
 
 int netconnect(char *hostname, char *servicename);
@@ -29,5 +30,9 @@ int netnameinfo(const struct sockaddr *sa, socklen_t salen,
 						char *hostname, size_t hostlen, 
 						char *servname, size_t servlen, int flags);
 
+#ifdef HAVE_SSL
 int netsslstart(int sd);
+int netsslread(SSL *ssl_handle, char *buf, int len);
+int netsswrite(SSL *ssl_handle, char *buf, int len);
+#endif
 #endif

@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #ifdef __WIN32__
+#include <windows.h>
 #include <winbase.h>
+#include <getopt.h>
 #else
 #include <unistd.h>
 #include <sys/poll.h>
@@ -55,7 +57,7 @@ int main(int argc, char** argv){
 
 	memset(&defaultauth, 0, sizeof(authinfo));
 
-	while ((i=getopt(argc, argv, "c:h:s:tv:")) != EOF){
+	while ((i=getopt(argc, argv, "c:f:h:s:tv:")) != EOF){
 		switch(i){
 #ifdef HAVE_SSL
 		case 'c':
@@ -64,6 +66,9 @@ int main(int argc, char** argv){
 			case 1: am_sslconf=AM_SSL_USETLS; break;
 			case 2: am_sslconf=AM_SSL_USETLS & AM_SSL_ALLOWPLAIN; break;
 			}
+			break;
+		case 'f':
+			strncpy(am_sslkey, optarg, 1024);
 			break;
 #endif
 		case 'h':

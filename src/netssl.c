@@ -5,6 +5,43 @@
 #include "aardmail.h"
 #include "aardlog.h"
 
+int netsslread(SSL *ssl_handle, char *buf, int len){
+	int i=0;
+	while (i<0){
+		i=SSL_read(ssl_handle, buf, len);
+		switch (i){
+		case SSL_ERROR_WANT_READ:
+			continue;
+		default:
+			return i;
+		}
+	}
+	return i;
+}
+
+int netsslwrite(SSL *ssl_handle, char *buf, int len){
+	int i=0;
+	while (i<0){
+		i=SSL_write(ssl_handle, buf, len);
+		switch (i){
+		case SSL_ERROR_WANT_WRITE:
+			continue;
+		default: 
+			return i;
+		}
+	}
+	return i;
+}
+
+static int provide_client_cert(SSL *ssl, X509 **cert, EVP_PKEY **pkey)
+{
+	(void)ssl;
+	(void)cert;
+	(void)pkey;
+  logmsg(L_ERROR, F_SSL, "The server requested a client certificate, but you did not specify one\n", NULL);
+  return 0;
+}
+
 int netsslstart(int sd){
 	int err;
 	SSL_CTX *ctx;
@@ -21,6 +58,20 @@ int netsslstart(int sd){
 		am_sslconf ^= AM_SSL_USETLS; // remove usetls-bits
 		return  -1;
 	}
+
+	if (strcmp(am_sslkey, "")){
+		if ((SSL_CTX_use_certificate_chain_file(ctx, am_sslkey))!=1){
+			logmsg(L_ERROR, F_SSL, "problem with SSL certfoo", NULL);
+			am_sslconf ^= AM_SSL_USETLS; 
+			return  -1;
+		} 
+		if ((SSL_CTX_use_PrivateKey_file(ctx, am_sslkey, SSL_FILETYPE_PEM))!=1){
+			logmsg(L_ERROR, F_SSL, "problem with SSL certfoo", NULL);
+			am_sslconf ^= AM_SSL_USETLS; 
+			return  -1;
+		}
+	} else
+		SSL_CTX_set_client_cert_cb(ctx, provide_client_cert);
 
 	ssl = SSL_new(ctx);
 	if (!ssl) {

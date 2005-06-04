@@ -22,7 +22,7 @@ int netread(int sd, char *buf){
 	int i;
 #ifdef HAVE_SSL
 	if (am_sslconf & AM_SSL_USETLS){
-		i=SSL_read(ssl, buf, MAXNETBUF);
+		i=netsslread(ssl, buf, MAXNETBUF);
 	} else 
 #endif
 		i=recv(sd, buf, MAXNETBUF, 0);
@@ -37,9 +37,9 @@ int netreadline(int sd, char *buf){
 	buf[0]='\0';
 	for (cnt=0; cnt<MAXNETBUF-2; cnt++){
 #ifdef HAVE_SSL
-		if (am_sslconf & AM_SSL_USETLS)
-			i=SSL_read(ssl, tmpbuf, 1);
-		else
+		if (am_sslconf & AM_SSL_USETLS){
+			i=netsslread(ssl, tmpbuf, 1);
+		} else
 #endif
 			i=recv(sd, tmpbuf, 1, 0);
 		if (i == -1) return -1;
@@ -65,7 +65,7 @@ int netwriteline(int sd, char *buf){
 	int i;
 #ifdef HAVE_SSL
 	if (am_sslconf & AM_SSL_USETLS){
-		i=SSL_write(ssl, buf, strlen(buf));
+		i=netsslwrite(ssl, buf, strlen(buf));
 	} else
 #endif
 		i=send(sd, buf, strlen(buf), 0);
