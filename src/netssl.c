@@ -5,6 +5,7 @@
 #include "aardmail.h"
 #include "aardlog.h"
 
+#ifdef HAVE_SSL
 int netsslread(SSL *ssl_handle, char *buf, int len){
 	int i=0;
 	while (i<0){
@@ -90,5 +91,22 @@ int netsslstart(int sd){
 	logmsg(L_INFO, F_SSL, "SSL-connection using ", (SSL_get_cipher(ssl)), NULL);
 	return 0;
 }
+#endif
+
+#ifdef HAVE_MATRIXSSL
+int netsslread(SSL *ssl_handle, char *buf, int len){
+}
+
+int netsslwrite(SSL *ssl_handle, char *buf, int len){
+}
+
+int netsslstart(int sd){
+	if (matrixSslOpen() < 0) {
+		logmsg(L_ERROR, F_SSL, "matrixSslOpen() failed", NULL);
+		am_sslconf ^= AM_SSL_USETLS; // remove usetls-bits
+		return  -1;
+	}
+}
+#endif
 
 #endif

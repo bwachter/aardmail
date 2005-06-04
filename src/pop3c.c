@@ -36,7 +36,7 @@ int pop3c_quitclose(int sd);
 
 void pop3c_usage(char *program){
 	char *tmpstring=NULL;
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	if (!cat(&tmpstring, "Usage: ", program, " [-b program] [-c option] [-d] -h hostname [-l]\n",
 					 "\t\t[-m maildir] [-n number] [-p password] [-r number]\n",
 					 "\t\t[-s service] [-t] [-u user] [-v level] [-x program]","\n",
@@ -45,14 +45,14 @@ void pop3c_usage(char *program){
 					 "\t\t[-r number] [-s service] [-t] [-u user] [-x program]","\n",
 #endif
 					 "\t-b:\tonly fetch mail if program exits with zero status\n",
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 					 "\t-c:\tcrypto options. Options may be: 0 (off), 1 (tls, like -t),\n",
 					 "\t\t2 (tls, fallback to plain on error), 3 (starttls, no fallback)\n",
 					 "\t\tand 4 (starttls, fallback to plain on error)\n",
 #endif
 					 "\t-d:\tdon't delete mail after retrieval (default is to delete)\n",
 					 "\t-h:\tspecify the hostname to connect to\n",
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 					 "\t-l:\tuse starttls, exit on error (like -c 3)\n",
 #endif
 					 "\t-m:\tthe maildir for spooling; default (unless -x used) is ~/Maildir\n",
@@ -60,7 +60,7 @@ void pop3c_usage(char *program){
 					 "\t-p:\tthe password to use. Don't use this option.\n",
 					 "\t-r:\treconnect after number mails (see FAQ)\n",
 					 "\t-s:\tthe service to connect to. Must be resolvable if non-numeric.\n",
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 					 "\t-t:\tuse tls. If tls is not possible the program will exit (like -c 1)\n",
 #endif
 					 "\t-u:\tthe username to use. You usually don't need this option.\n",
@@ -322,7 +322,7 @@ int pop3c_connectauth(authinfo *auth){
 		return -1;
 	else logmsg(L_INFO, F_NET, buf, NULL);
 
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	// FIXME, reconnect on error if ALLOWPLAIN is set
 	// check if we have to use starttls. abort if USETLS is already set
 	if ((am_sslconf & AM_SSL_STARTTLS) && !(am_sslconf & AM_SSL_USETLS)){
@@ -416,11 +416,11 @@ int main(int argc, char** argv){
 	pop3c.keepmail = 0;
 	pop3c.msgcount = 0;
 	pop3c.onlyget = 0;
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	am_sslconf = 0;
 #endif
 
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	while ((c=getopt(argc, argv, "b:c:dh:lm:n:p:r:s:tu:v:x:")) != EOF){
 #else
 	while ((c=getopt(argc, argv, "b:dh:m:n:p:r:s:u:v:x:")) != EOF){
@@ -432,7 +432,7 @@ int main(int argc, char** argv){
 				exit(0);
 			}
 			break;
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 		case 'c':
 			switch(atoi(optarg)){
 			case 0: am_sslconf=0; break;
@@ -449,7 +449,7 @@ int main(int argc, char** argv){
 		case 'h':
 			strncpy(defaultauth.machine, optarg, NI_MAXHOST);
 			break;
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 		case 'l':
 			am_sslconf = AM_SSL_STARTTLS;
 			break;
@@ -470,7 +470,7 @@ int main(int argc, char** argv){
 		case 's':
 			strncpy(defaultauth.port, optarg, NI_MAXSERV);
 			break;
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 		case 't':
 			am_sslconf = AM_SSL_USETLS;
 			break;

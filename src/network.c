@@ -20,7 +20,7 @@
 
 int netread(int sd, char *buf){
 	int i;
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	if (am_sslconf & AM_SSL_USETLS){
 		i=netsslread(ssl, buf, MAXNETBUF);
 	} else 
@@ -36,7 +36,7 @@ int netreadline(int sd, char *buf){
 
 	buf[0]='\0';
 	for (cnt=0; cnt<MAXNETBUF-2; cnt++){
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 		if (am_sslconf & AM_SSL_USETLS){
 			i=netsslread(ssl, tmpbuf, 1);
 		} else
@@ -63,7 +63,7 @@ int netreadline(int sd, char *buf){
 
 int netwriteline(int sd, char *buf){
 	int i;
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	if (am_sslconf & AM_SSL_USETLS){
 		i=netsslwrite(ssl, buf, strlen(buf));
 	} else
@@ -204,7 +204,7 @@ int netaddrinfo(const char *node, const char *service,
 
 static int netsocket(struct addrinfo *ai){
 	int sd;
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	int err;
 #endif
 
@@ -221,7 +221,7 @@ static int netsocket(struct addrinfo *ai){
 		return -1;
 	}
 
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	if (am_sslconf & AM_SSL_USETLS){
 		if ((err=netsslstart(sd)) && (am_sslconf & AM_SSL_ALLOWPLAIN)){
 			logmsg(L_WARNING, F_NET, "no ssl available, continuing from start", NULL);

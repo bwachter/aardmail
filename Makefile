@@ -29,7 +29,7 @@ endif
 
 ifdef MATRIXSSL
 LIBS+=-lmatrixsslstatic
-CFLAGS+=-DHAVE_SSL
+#CFLAGS+=-DHAVE_SSL
 endif
 
 ifdef GNUTLS

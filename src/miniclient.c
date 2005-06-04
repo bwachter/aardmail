@@ -21,18 +21,18 @@
 
 void miniclient_usage(char *program){
 	char *tmpstring=NULL;
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	if (!cat(&tmpstring, "Usage: ", program, " [-c option] -h hostname -s service [-t] [-v level]\n",
 #else
 	if (!cat(&tmpstring, "Usage: ", program, " -h hostname -s service [-v level]\n",
 #endif
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 					 "\t-c:\tcrypto options. Options may be: 0 (off), 1 (tls, like -t),\n",
 					 "\t\tand 2 (tls, fallback to plain on error)\n",
 #endif
 					 "\t-h:\tspecify the hostname to connect to\n",
 					 "\t-s:\tthe service to connect to. Must be resolvable if non-numeric.\n",
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 					 "\t-t:\tuse tls. If tls is not possible the program will exit (like -c 1)\n",
 #endif
 					 "\t-v:\tset the loglevel, valid values are 0 (no logging), 1 (deadly),\n",
@@ -59,7 +59,7 @@ int main(int argc, char** argv){
 
 	while ((i=getopt(argc, argv, "c:f:h:s:tv:")) != EOF){
 		switch(i){
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 		case 'c':
 			switch(atoi(optarg)){
 			case 0: am_sslconf=0; break;
@@ -77,7 +77,7 @@ int main(int argc, char** argv){
 		case 's':
 			strncpy(defaultauth.port, optarg, NI_MAXSERV);
 			break;
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 		case 't':
 			am_sslconf = AM_SSL_USETLS;
 			break;
@@ -111,7 +111,7 @@ int main(int argc, char** argv){
 		if (pfd[0].revents & (POLLRDNORM | POLLIN)){
 			if ((i=read(pfd[0].fd,buf,1024))==-1) return -1;
 			buf[i]='\0';
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 			if ((!strcasecmp(buf, "STLS\n")) || (!strcasecmp(buf, "STARTTLS\n")))
 				am_sslconf=AM_SSL_STARTTLS;
 #endif
@@ -120,7 +120,7 @@ int main(int argc, char** argv){
 		if (pfd[1].revents & (POLLRDNORM | POLLIN)){
 			if ((i=netreadline(pfd[1].fd,buf))==-1) return -1;
 			__write1(buf);
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 			if (am_sslconf==AM_SSL_STARTTLS) {
 				if ((!strncmp(buf, "+OK", 3)) || (!strncmp(buf, "220", 3))) {
 					am_sslconf = AM_SSL_USETLS;
