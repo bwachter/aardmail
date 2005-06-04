@@ -73,7 +73,7 @@ ALL=aardmail-miniclient$(EXE) aardmail-pop3c$(EXE) aardmail-smtpc$(EXE)
 OBJDIR=obj
 SRCDIR=src
 PREFIX?=/usr
-.PHONY: clean install tar rename upload
+.PHONY: clean install tar rename upload deb maintainer-deb
 
 all: $(ALL)
  
@@ -122,5 +122,10 @@ rename:
 upload: tar
 	scp ../$(VERSION).tar.bz2 bwachter@lart.info:/home/bwachter/public_html/projects/download/snapshots
 
+maintainer-deb: rename
+	$(Q)cd ../$(VERSION) && dpkg-buildpackage -rfakeroot -us -uc
+	$(Q)cd .. && rm -Rf $(VERSION)
+
 deb: rename
-	$(Q)cd ../$(VERSION) && dpkg-buildpackage -rfakeroot
+	$(Q)cd ../$(VERSION) && dpkg-buildpackage -rfakeroot -us -uc
+	$(Q)cd .. && rm -Rf $(VERSION)
