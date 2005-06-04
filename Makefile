@@ -14,6 +14,14 @@ STRIP=
 VERSION=aardmail-$(shell head -1 CHANGES|sed 's/://')
 CURNAME=$(notdir $(shell pwd))
 
+ifneq ($(DEBUG),)
+CFLAGS=-g -Wall -W -pipe -Os
+LDFLAGS=-g
+else
+CFLAGS=-Wall -W -pipe  -Os
+LDFLAGS=-s
+endif
+
 ifdef BROKEN
 CFLAGS+=-D_BROKEN_IO
 endif
@@ -31,14 +39,6 @@ endif
 ifdef SSL
 LIBS+=-lssl -lcrypto
 CFLAGS+=-DHAVE_SSL
-endif
-
-ifneq ($(DEBUG),)
-CFLAGS=-g -Wall -W -pipe -Os
-LDFLAGS=-g
-else
-CFLAGS=-Wall -W -pipe  -Os
-LDFLAGS=-s
 endif
 
 ifdef WIN32

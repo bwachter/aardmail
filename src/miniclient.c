@@ -106,11 +106,27 @@ int main(int argc, char** argv){
 		if (pfd[0].revents & (POLLRDNORM | POLLIN)){
 			if ((i=read(pfd[0].fd,buf,1024))==-1) return -1;
 			buf[i]='\0';
+#ifdef HAVE_SSL
+			if ((!strcasecmp(buf, "STLS\n")) || (!strcasecmp(buf, "STARTTLS\n")))
+				am_sslconf=AM_SSL_STARTTLS;
+#endif
 			netwriteline(pfd[1].fd, buf);
 		}
 		if (pfd[1].revents & (POLLRDNORM | POLLIN)){
 			if ((i=netreadline(pfd[1].fd,buf))==-1) return -1;
 			__write1(buf);
+#ifdef HAVE_SSL
+			if (am_sslconf==AM_SSL_STARTTLS) {
+				if ((!strncmp(buf, "+OK", 3)) || (!strncmp(buf, "220", 3))) {
+					am_sslconf = AM_SSL_USETLS;
+					if (netsslstart(pfd[1].fd)){
+						logmsg(L_ERROR, F_SSL, "unable to start ssl negotiation", NULL);
+						close(pfd[1].fd);
+						return -1;
+					}
+				} else am_sslconf=0;
+			}
+#endif
 		}
 	}
 #endif

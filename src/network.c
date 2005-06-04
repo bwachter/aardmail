@@ -145,7 +145,7 @@ int netaddrinfo(const char *node, const char *service,
 		return (err=pfn_getaddrinfo(node, service, hints, res));
 	} else {
 #endif
-#if (defined( __WIN32__)) || (defined(_BROKEN_IO))
+#if (defined(__WIN32__)) || (defined(_BROKEN_IO))
 #warning my getaddrinfo-emulation is currently broken. Your build should be working under Windows XP -- but nowhere else.
 		struct addrinfo **aic;
 		struct addrinfo ai;
@@ -153,6 +153,7 @@ int netaddrinfo(const char *node, const char *service,
 		struct servent *sent;
 		struct sockaddr_in saddr;
 		memset(&saddr, 0, sizeof saddr);
+		//memset(&ai, 0, sizeof(struct addrinfo));
 		aic=res; 
 		*res=0;
 		
@@ -175,21 +176,20 @@ int netaddrinfo(const char *node, const char *service,
 		saddr.sin_family = hent->h_addrtype;
 		//ai->ai_flags = 
 		//ai.ai_family = hent->h_addrtype;
-		ai.ai_family = PF_INET;
+		ai.ai_family = AF_INET;
 		ai.ai_socktype = SOCK_STREAM;
 		ai.ai_protocol = IPPROTO_TCP;
 		ai.ai_addrlen = sizeof(saddr);
 		ai.ai_addr = (struct sockaddr *) &saddr;
-		//ai->ai_canonname
-		ai.ai_next = 0;
+		//ai.ai_canonname = "foo";
+		ai.ai_next = (struct addrinfo*)NULL;
 		//*aic=&(ai);
+		*aic=malloc(sizeof(struct addrinfo));
 		if (!*aic) *aic=&ai; 
 		else exit(0);
 		//else (*aic)->ai_next=&ai;
-		//memcpy(*res, ai, sizeof(struct addrinfo));
-		//*res=ai;
-		//		if ((sd=netsocket(&hints)) > 0)
-		//return sd;
+		//memcpy(&*res, &ai, sizeof(struct addrinfo));
+		//*res=&ai;
 		//netlogportservice(ai.ai_addr, ai.ai_addrlen, "Connection: ");
 		//exit (0);
 		return 0;
@@ -258,6 +258,8 @@ int netconnect(char *hostname, char *servicename){
 				return sd;
 			if(res->ai_next==NULL)
 				logmsg(L_INFO, F_NET, "res->ai_next is NULL", NULL);
+			else 
+				logmsg(L_INFO, F_NET, "trying next element", NULL);
 			res=res->ai_next;
 		}
 	}
