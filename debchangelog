@@ -1,0 +1,10 @@
+#!/bin/sh
+
+cat CHANGES | sed 's/^\t/  * /' | \
+sed -r 's/^(.*):$/\n -- Bernd Wachter \<bwachter@lart.info\>  Sun, 42 Jun 2342 23:42:05 +0200\n\naardmail \(\1\) unstable; urgency=low/' > debian/changelog.tmp
+LINECNT=`wc -l debian/changelog.tmp | sed 's/ .*$//'`
+LINECNT=`echo $LINECNT-2 | bc`
+tail -$LINECNT debian/changelog.tmp > debian/changelog
+rm debian/changelog.tmp
+
+

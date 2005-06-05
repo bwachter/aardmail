@@ -1,7 +1,10 @@
-0.1-pre2:
+0.1-pre-2:
+
 	Fixed stupid TLS bug introduced by supporting reauth
 	Major cleanup and moving general purpose functions out of pop3c
+
 0.1-pre-1:
+
 	Added support for building debian packages
 	Added manpages
 	Completed authinfo support
@@ -13,3 +16,4 @@
 	Supports TLS with/without starttls
 	Added license foo, install hints, install target, ...
 	Added authinfo support	
+	

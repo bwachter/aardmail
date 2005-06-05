@@ -5,8 +5,13 @@
 
 #ifdef __WIN32__
 #include <getopt.h>
+#include <windows.h>
+#include <winbase.h>
+#include <io.h>
+#include <ws2tcpip.h>
 #else
 #include <sys/wait.h>
+#include <unistd.h>
 #endif
 
 #include "aardmail.h"
@@ -24,12 +29,18 @@ static struct {
 static void smtpc_usage(char *program);
 static int smtpc_oksendline(int sd, char *msg);
 static int smtpc_connectauth(authinfo *auth);
+static int smtpc_session(int sd);
 static int smtpc_quitclose(int sd);
-//int smtpc_connectauth(){
 
 static int smtpc_connectauth(authinfo *auth){
 	int i, sd;
 	char buf[1024];
+	char myhost[NI_MAXHOST];
+
+	if (gethostname(myhost, NI_MAXHOST)==-1){
+		logmsg(L_WARNING, F_GENERAL, "unable to get hostname, setting to localhost.localdomain", NULL);
+		strcpy(myhost, "localhost.localdomain");
+	}
 
 	if ((sd=netconnect(auth->machine, auth->port)) == -1)
 		return -1;
@@ -53,13 +64,16 @@ static int smtpc_connectauth(authinfo *auth){
 		} 
 	}
 #endif
-	if ((smtpc_oksendline(sd, "helo foobar\r\n"))==-1)
+	if ((smtpc_oksendline(sd, cati("helo ", myhost, "\r\n", NULL)))==-1)
 		return -1;
 	else return sd;
 
 	// FIXME, add cram-md5-foo and authentificate, if wanted
 
 	return -1; // we should'nt get here...
+}
+
+static int smtpc_session(int sd){
 }
 
 static int smtpc_quitclose(int sd){
@@ -175,6 +189,7 @@ int main(int argc, char **argv){
 	if (strcmp(defaultauth.login, "")) logmsg(L_INFO, F_GENERAL, "using password: yes", NULL);
 
 	if ((sd=smtpc_connectauth(&defaultauth))==-1) exit(-1);
+	if (smtpc_session(sd)==-1) exit(-1);
 	if (smtpc_quitclose(sd)==-1) exit(-1);
 	return 0;
 }

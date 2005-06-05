@@ -12,6 +12,7 @@ MANDIR=/usr/share/man
 STRIP=
 
 # set up some basic flags
+VERSIONNR=$(shell head -1 CHANGES|sed 's/://')
 VERSION=aardmail-$(shell head -1 CHANGES|sed 's/://')
 CURNAME=$(notdir $(shell pwd))
 
@@ -125,8 +126,9 @@ upload: tar
 	scp ../$(VERSION).tar.bz2 bwachter@lart.info:/home/bwachter/public_html/projects/download/snapshots
 
 maintainer-deb: rename
-	$(Q)cd ../$(VERSION) && dpkg-buildpackage -rfakeroot -us -uc
+	$(Q)cd ../$(VERSION) && ./debchangelog && dpkg-buildpackage -rfakeroot
 	$(Q)cd .. && rm -Rf $(VERSION)
 
 deb: rename
-	$(Q)cd ../$(VERSION) && dpkg-buildpackage -rfakeroot -us -uc
+	$(Q)cd ../$(VERSION) && ./debchangelog && dpkg-buildpackage -rfakeroot -us -uc
+	$(Q)cd .. && rm -Rf $(VERSION)
