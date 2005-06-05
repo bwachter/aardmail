@@ -22,11 +22,11 @@
 #include "fs.h"
 
 static int deliveries=0;
-static maildir *maildir_storage;
+static maildirent *maildir_storage;
 static int maildir_cnt=0;
 static int maildir_harddelete=0; // shall we delete the mails, or just mark them deleted and remove them on cleanup?
 
-static int maildir_sappend(maildir *maildir_add);
+static int maildir_sappend(maildirent *maildir_add);
 
 int maildirgname(char **uniqname){
 	char tmpbuf[512];
@@ -35,7 +35,7 @@ int maildirgname(char **uniqname){
 	pid_t mypid=getpid();
 
 	if (gethostname(myhost, NI_MAXHOST)==-1){
-		logmsg(L_WARNING, F_GENERAL, "unable to get hostname, setting to localhost.localdomain", NULL);
+		logmsg(L_WARNING, F_MAILDIR, "unable to get hostname, setting to localhost.localdomain", NULL);
 		strcpy(myhost, "localhost.localdomain");
 	}
 
@@ -58,7 +58,7 @@ int maildirfind(char *maildir){
 
 	if ((maildirpath=getenv("MAILDIR"))==NULL){
 		if (getenv("HOME")==NULL){
-			logmsg(L_ERROR, F_GENERAL, "$MAILDIR not set, $HOME not found", NULL);
+			logmsg(L_ERROR, F_MAILDIR, "$MAILDIR not set, $HOME not found", NULL);
 			return -1;
 		} else {
 			if (cat(&maildirpath, getenv("HOME"), "/Maildir", NULL)) return -1;
@@ -86,13 +86,13 @@ int maildiropen(char *maildir, char **uniqname){
 
 	maildirgname(uniqname);
 	if ((cat(&path, maildirpath, "/new/", *uniqname, NULL))) goto errexit;
-	logmsg(L_INFO, F_GENERAL, "spooling to ", path, NULL);
+	logmsg(L_INFO, F_MAILDIR, "spooling to ", path, NULL);
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
 	if ((fd=fopen(path, "w+")) == NULL) {
 #else
 	if ((fd=open(path, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0644)) == -1) {
 #endif
-		logmsg(L_ERROR, F_GENERAL, "open ", path, " for writing failed: ", strerror(errno), NULL);
+		logmsg(L_ERROR, F_MAILDIR, "open ", path, " for writing failed: ", strerror(errno), NULL);
 		free(path);
 		goto errexit;
 	}
@@ -145,14 +145,19 @@ int maildirclose(char *maildir, char **uniqname, int fd){
 }
 
 int maildir_init(char *maildir, char *subdir, int harddelete){
-	(void) harddelete;
 	// maybe add a flag to recurse into subdirs
 	DIR *dirptr;
 	struct dirent *tmpdirent;
 	char *mymaildir=NULL;
+	maildirent tmpmaildirent;
+	struct stat maildirstat;
 
+	maildir_harddelete = harddelete;
+	memset(&maildirstat, 0, sizeof(struct stat));
+	memset(&tmpmaildirent, 0, sizeof(maildirent));
+	
 	if (maildirfind(maildir)){
-		logmsg(L_ERROR, F_GENERAL, "unable to find maildir", NULL);
+		logmsg(L_ERROR, F_MAILDIR, "unable to find maildir", NULL);
 		return -1;
 	}
 
@@ -160,38 +165,46 @@ int maildir_init(char *maildir, char *subdir, int harddelete){
 	else cat(&mymaildir, maildirpath, "/cur", NULL);
 
 	if ((dirptr=opendir(mymaildir))==NULL){
-		logmsg(L_ERROR, F_GENERAL, "unable to open maildir ", mymaildir, ": ", strerror(errno), NULL);
+		logmsg(L_ERROR, F_MAILDIR, "unable to open maildir ", mymaildir, ": ", strerror(errno), NULL);
 		return -1;
 	}
 
 	for (tmpdirent=readdir(dirptr); tmpdirent!=NULL; tmpdirent=readdir(dirptr)){
 		if (!strncmp(tmpdirent->d_name, ".", 1)) continue;
 		if (!strncmp(tmpdirent->d_name, "..", 2)) continue;
-		logmsg(L_ERROR, F_GENERAL, "adding ", tmpdirent->d_name, " to struct", NULL);
+		if (stat(cati(mymaildir, "/", tmpdirent->d_name, NULL), &maildirstat)==-1){
+			logmsg(L_ERROR, F_MAILDIR, "stat() for file in maildir failed ", NULL);
+			return -1;
+		}
+		strncpy(tmpmaildirent.name, tmpdirent->d_name, AM_MAXPATH);
+		tmpmaildirent.size = maildirstat.st_size;
+		maildir_sappend(&tmpmaildirent);
+		memset(&tmpmaildirent, 0, sizeof(maildirent));
 	}
 	return 0; //FIXME
 }
 
-static int maildir_sappend(maildir *maildir_add){
-	maildir *p;
+static int maildir_sappend(maildirent *maildir_add){
+	maildirent *p;
 
+	logmsg(L_DEBUG, F_MAILDIR, "adding ", maildir_add->name, " to maildir structure",  NULL);
 	if (maildir_storage == NULL){
-		if ((maildir_storage = malloc(sizeof(maildir))) == NULL) {
-			logmsg(L_ERROR, F_GENERAL, "unable to malloc() memory for first maildir element", NULL);
+		if ((maildir_storage = malloc(sizeof(maildirent))) == NULL) {
+			logmsg(L_ERROR, F_MAILDIR, "unable to malloc() memory for first maildir element", NULL);
 			return -1;
 		}
 		maildir_cnt++;
-		memcpy(maildir_storage, maildir_add, sizeof(maildir));
+		memcpy(maildir_storage, maildir_add, sizeof(maildirent));
 		maildir_storage->next=NULL;
 	} else {
 		p=maildir_storage;
 		while (p->next != NULL) p=p->next;
 
-		if ((p->next=malloc(sizeof(maildir))) == NULL) {
-			logmsg(L_ERROR, F_GENERAL, "unable to malloc() memory for new maildir element", NULL);
+		if ((p->next=malloc(sizeof(maildirent))) == NULL) {
+			logmsg(L_ERROR, F_MAILDIR, "unable to malloc() memory for new maildir element", NULL);
 			return -1;
 		}
-		memcpy(p->next, maildir_add, sizeof(maildir));
+		memcpy(p->next, maildir_add, sizeof(maildirent));
 		maildir_cnt++;
 	}
 	return 0;

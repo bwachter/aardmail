@@ -5,6 +5,8 @@ enum facilities {
 	F_GENERAL,
 	F_NET,
 	F_SSL,
+	F_MAILDIR,
+	F_AUTHINFO,
 };
 
 enum loglevel {
@@ -13,6 +15,7 @@ enum loglevel {
 	L_ERROR,
 	L_WARNING,
 	L_INFO,
+	L_DEBUG,
 };
 
 int logmsg(int loglevel, int facility, char *msg, ...);

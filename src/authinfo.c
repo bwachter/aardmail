@@ -36,23 +36,23 @@ int authinfo_init(){
 	authinfo_key *key;
 
 	if ((home=getenv("HOME"))==NULL){
-		logmsg(L_WARNING, F_GENERAL, "unable to find the home directory", NULL);
+		logmsg(L_WARNING, F_AUTHINFO, "unable to find the home directory", NULL);
 		return -1;
 	}
 
 	if (cat(&path, home, "/.authinfo", NULL)) return -1;
 	if ((err=tf(path))==-1){
-		logmsg(L_INFO, F_GENERAL, "no authinfo found: ", strerror(err), NULL);
+		logmsg(L_INFO, F_AUTHINFO, "no authinfo found: ", strerror(err), NULL);
 		free(path);
 		return -1;
 	}
 	if ((err=openreadclose(path, &authinfo_content, &authinfo_len))){
-		logmsg(L_WARNING, F_GENERAL, "unable to read authinfo: ", strerror(err), NULL);
+		logmsg(L_WARNING, F_AUTHINFO, "unable to read authinfo: ", strerror(err), NULL);
 		free(path);
 		return -1;
 	}
 
-	logmsg(L_INFO, F_GENERAL, "using authinfo file in ", path, NULL);
+	logmsg(L_INFO, F_AUTHINFO, "using authinfo file in ", path, NULL);
 	free(path);
 
 	tmp=authinfo_content;
@@ -121,9 +121,11 @@ int authinfo_lookup(authinfo *authinfo_keys){
 static int authinfo_append(authinfo *authinfo_add){
 	authinfo *p;
 
+	logmsg(L_DEBUG, F_AUTHINFO, "adding ", authinfo_add->login, "@", authinfo_add->machine, ":",
+				 authinfo_add->port, " to authinfo structure",  NULL);
 	if (authinfo_storage == NULL){
 		if ((authinfo_storage = malloc(sizeof(authinfo))) == NULL) {
-			logmsg(L_ERROR, F_GENERAL, "unable to malloc() memory for first authinfo element", NULL);
+			logmsg(L_ERROR, F_AUTHINFO, "unable to malloc() memory for first authinfo element", NULL);
 			return -1;
 		}
 		i++;
@@ -134,7 +136,7 @@ static int authinfo_append(authinfo *authinfo_add){
 		while (p->next != NULL) p=p->next;
 
 		if ((p->next=malloc(sizeof(authinfo))) == NULL) {
-			logmsg(L_ERROR, F_GENERAL, "unable to malloc() memory for new authinfo element", NULL);
+			logmsg(L_ERROR, F_AUTHINFO, "unable to malloc() memory for new authinfo element", NULL);
 			return -1;
 		}
 		memcpy(p->next, authinfo_add, sizeof(authinfo));

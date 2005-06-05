@@ -79,13 +79,15 @@ all: $(ALL)
  
 aardmail-pop3c$(EXE): $(OBJDIR)/pop3c.o $(OBJDIR)/cat.o \
 	$(OBJDIR)/aardlog.o $(OBJDIR)/network.o $(OBJDIR)/netssl.o \
-	$(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o $(OBJDIR)/fs.o 
+	$(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o $(OBJDIR)/fs.o \
+	$(OBJDIR)/aardmail.o
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 aardmail-smtpc$(EXE): $(OBJDIR)/smtpc.o $(OBJDIR)/cat.o \
 	$(OBJDIR)/aardlog.o $(OBJDIR)/network.o $(OBJDIR)/netssl.o \
-	$(OBJDIR)/fs.o $(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o 
+	$(OBJDIR)/fs.o $(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o \
+	$(OBJDIR)/aardmail.o
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 

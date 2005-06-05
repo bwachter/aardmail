@@ -57,7 +57,11 @@ int main(int argc, char** argv){
 
 	memset(&defaultauth, 0, sizeof(authinfo));
 
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	while ((i=getopt(argc, argv, "c:f:h:s:tv:")) != EOF){
+#else
+	while ((i=getopt(argc, argv, "h:s:v:")) != EOF){
+#endif
 		switch(i){
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 		case 'c':

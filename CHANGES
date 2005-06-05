@@ -1,11 +1,14 @@
+0.1-pre2:
+
 0.1-pre-1:
 	Added support for building debian packages
+	Added manpages
 	Completed authinfo support
 	Made the checks for using/not using TLS a bit more sane
 	Fixed the IO if compiled using stdio-crap / popen
 	Fixed pipe-stuff (-x switch)
 	Added -v switch to control logging
-	Can retrieve mails via pop3 and spool to Maildir or pipe (hardcoded)
+	Can retrieve mails via pop3 and spool to Maildir or pipe
 	Supports TLS with/without starttls
 	Added license foo, install hints, install target, ...
 	Added authinfo support	

@@ -7,9 +7,10 @@
 #include "aardlog.h"
 
 #ifdef HAVE_SSL
+
 int netsslread(SSL *ssl_handle, char *buf, int len){
 	int i=0;
-	while (i<0){
+	while (i<1){
 		i=SSL_read(ssl_handle, buf, len);
 		switch (i){
 		case SSL_ERROR_WANT_READ:
@@ -23,7 +24,7 @@ int netsslread(SSL *ssl_handle, char *buf, int len){
 
 int netsslwrite(SSL *ssl_handle, char *buf, int len){
 	int i=0;
-	while (i<0){
+	while (i<1){
 		i=SSL_write(ssl_handle, buf, len);
 		switch (i){
 		case SSL_ERROR_WANT_WRITE:

@@ -24,7 +24,12 @@ static inline int __write2(const char *s){
 
 #define AM_MAXUSER 1025
 #define AM_MAXPASS 1025
+#define AM_MAXPATH 1025
 
 int debuglevel;
-
+int am_checkprogram(char *program);
+#if (!defined(__WIN32__)) && (!defined _BROKEN_IO)
+int am_pipe(char *pipeto);
+#endif
+void am_unimplemented();
 #endif

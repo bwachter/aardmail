@@ -27,59 +27,23 @@ static struct {
 char *uniqname;
 static char *tmpstring;
 
-#ifndef __WIN32__
-static int pipefd[2];
-#endif
-
-int pop3c_pipe(char *pipeto);
-int pop3c_quitclose(int sd);
-
-void pop3c_usage(char *program){
-	char *tmpstring=NULL;
-#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
-	if (!cat(&tmpstring, "Usage: ", program, " [-b program] [-c option] [-d] -h hostname [-l]\n",
-					 "\t\t[-m maildir] [-n number] [-p password] [-r number]\n",
-					 "\t\t[-s service] [-t] [-u user] [-v level] [-x program]","\n",
+static int pop3c_quitclose(int sd);
+static void pop3c_usage(char *program);
+static int pop3c_oksendline(int sd, char *msg);
+static int pop3c_getstat(int sd);
+#if (defined(__WIN32__)) || (defined _BROKEN_IO)
+static FILE *pop3c_openspool();
+static int pop3c_closespool(FILE *fd);
+static long pop3c_getmessage(int sd, FILE *fd, int size);
 #else
-	if (!cat(&tmpstring, "Usage: ", program, " [-b program] [-d] -h hostname [-m maildir] [-p password]\n",
-					 "\t\t[-r number] [-s service] [-t] [-u user] [-x program]","\n",
+static int pop3c_openspool();
+static int pop3c_closespool(int fd);
+static long pop3c_getmessage(int sd, int fd, int size);
 #endif
-					 "\t-b:\tonly fetch mail if program exits with zero status\n",
-#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
-					 "\t-c:\tcrypto options. Options may be: 0 (off), 1 (tls, like -t),\n",
-					 "\t\t2 (tls, fallback to plain on error), 3 (starttls, no fallback)\n",
-					 "\t\tand 4 (starttls, fallback to plain on error)\n",
-#endif
-					 "\t-d:\tdon't delete mail after retrieval (default is to delete)\n",
-					 "\t-h:\tspecify the hostname to connect to\n",
-#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
-					 "\t-l:\tuse starttls, exit on error (like -c 3)\n",
-#endif
-					 "\t-m:\tthe maildir for spooling; default (unless -x used) is ~/Maildir\n",
-					 "\t-n:\tonly load number mails\n",
-					 "\t-p:\tthe password to use. Don't use this option.\n",
-					 "\t-r:\treconnect after number mails (see FAQ)\n",
-					 "\t-s:\tthe service to connect to. Must be resolvable if non-numeric.\n",
-#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
-					 "\t-t:\tuse tls. If tls is not possible the program will exit (like -c 1)\n",
-#endif
-					 "\t-u:\tthe username to use. You usually don't need this option.\n",
-					 "\t-v:\tset the loglevel, valid values are 0 (no logging), 1 (deadly),\n",
-					 "\t\t2 (errors, default), 3 (warnings) and 4 (info, very much)\n",
-					 "\t-x:\tthe program to popen() for each received mail\n",
-					 NULL)) {
-		__write2(tmpstring);
-		free(tmpstring);
-	}
-	exit(0);
-}
+static int pop3c_connectauth(authinfo *auth);
+static int pop3c_session(int sd);
 
-void pop3c_unimplemented(){
-	__write2("Sorry, this function is currently unimplemented. Exit.\n");
-	exit(0);
-}
-
-int pop3c_oksendline(int sd, char *msg){
+static int pop3c_oksendline(int sd, char *msg){
 	char buf[MAXNETBUF];
 	int i;
 
@@ -99,7 +63,7 @@ int pop3c_oksendline(int sd, char *msg){
 	return -1;
 }
 
-int pop3c_getstat(int sd){
+static int pop3c_getstat(int sd){
 	char *tmp, *tmp2;
 	char buf[MAXNETBUF];
 	int i;
@@ -130,16 +94,16 @@ int pop3c_getstat(int sd){
 }
 
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
-FILE *pop3c_openspool(){
+static FILE *pop3c_openspool(){
 	FILE *fd;
 	if (pop3c.pipeto){
 		fd=popen(pop3c.pipeto, "w");
 	}
 #else
-int pop3c_openspool(){
+static int pop3c_openspool(){
 	int fd;
 	if (pop3c.pipeto)
-		fd=pop3c_pipe(pop3c.pipeto);
+		fd=am_pipe(pop3c.pipeto);
 #endif
 	else
 		fd=maildiropen(NULL, &uniqname);
@@ -153,13 +117,13 @@ int pop3c_openspool(){
 }
 
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
-int pop3c_closespool(FILE *fd){
+static int pop3c_closespool(FILE *fd){
 	fflush(fd);
 	if (pop3c.pipeto) {
 		if(pclose(fd)==-1) return -1;
 	} else maildirclose(NULL, &uniqname, fd);
 #else
-int pop3c_closespool(int fd){
+static int pop3c_closespool(int fd){
 	if (pop3c.pipeto){
 		close(fd);
 		wait(NULL);
@@ -170,9 +134,9 @@ int pop3c_closespool(int fd){
 }
 
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
-long pop3c_getmessage(int sd, FILE *fd, int size){
+static long pop3c_getmessage(int sd, FILE *fd, int size){
 #else
-long pop3c_getmessage(int sd, int fd, int size){
+static long pop3c_getmessage(int sd, int fd, int size){
 #endif
 	(void) size;
 	char *tmp;
@@ -228,91 +192,7 @@ long pop3c_getmessage(int sd, int fd, int size){
 	}
 }
 
-int pop3c_checkprogram(char *program){
-#ifndef __WIN32__
-	pid_t pid;
-	int status, i;
-	char **buf, **bufptr, *ptr;
-
-	if ((buf=malloc(sizeof(char*)*(strlen(program)+2)))==NULL) return -1;
-
-	bufptr=buf;
-	*bufptr++=program;
-	for (ptr=program;*ptr;ptr++){
-		if (*ptr==' '){
-			*ptr=0;
-			*bufptr++=ptr+1;
-		}
-	} *bufptr++=NULL;
-
-	if ((pid=fork())==-1){
-		logmsg(L_ERROR, F_GENERAL, "fork() failed: ", strerror(errno), NULL);
-		return -1;
-	}
-
-	if (pid==0){
-		execvp(buf[0], buf);
-		logmsg(L_DEADLY, F_GENERAL, "execvp() failed: ", strerror(errno), NULL);
-	} else {
-		free(buf);
-		waitpid(pid, &status, 0);
-		if (WIFEXITED(status)){
-			i=WEXITSTATUS(status);
-			if (i==0) return 0;
-			else return -1;
-		}
-	}
-	return -1; // should never happen... ;)
-#else
-	return 0;
-#endif
-}
-
-#if (!defined(__WIN32__)) && (!defined _BROKEN_IO)
-int pop3c_pipe(char *pipeto){
-	pid_t pid;
-	int fd;
-	char **buf, **bufptr, *ptr;
-
-	if ((buf=malloc(sizeof(char*)*(strlen(pipeto)+2)))==NULL) return -1;
-
-	bufptr=buf;
-	*bufptr++=pipeto;
-	for (ptr=pipeto;*ptr;ptr++){
-		if (*ptr==' '){
-			*ptr=0;
-			*bufptr++=ptr+1;
-		}
-	} *bufptr++=NULL;
-
-	if (pipe(pipefd)==-1){
-		logmsg(L_ERROR, F_GENERAL, "pipe() failed: ", strerror(errno), NULL);
-		return -1;
-	}
-
-	if ((pid=fork())==-1){
-		logmsg(L_ERROR, F_GENERAL, "fork() failed: ", strerror(errno), NULL);
-		return -1;
-	}
-
-	if (pid == 0){
-		close(0);
-		fd=dup(pipefd[0]);
-		close(pipefd[0]);
-		close(pipefd[1]);
-
-		execvp(buf[0], buf);
-		logmsg(L_DEADLY, F_GENERAL, "execvp() failed: ", strerror(errno), NULL);
-	} else {
-		free(buf);
-		close(pipefd[0]);
-		return pipefd[1];
-	}
-	return -1;
-}
-#endif
-
-int pop3c_connectauth(authinfo *auth){
+static int pop3c_connectauth(authinfo *auth){
 	int i, sd;
 	char buf[1024];
 
@@ -351,13 +231,13 @@ int pop3c_connectauth(authinfo *auth){
 	return -1; // we should'nt get here...
 }
 
-int pop3c_quitclose(int sd){
+static int pop3c_quitclose(int sd){
 	if ((pop3c_oksendline(sd, "quit\r\n")) == -1)
 		return -1;
 	return (close(sd));
 }
 
-int pop3c_session(int sd){
+static int pop3c_session(int sd){
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
 	FILE *fd;
 #else
@@ -425,7 +305,7 @@ int main(int argc, char** argv){
 #endif
 		switch(c){
 		case 'b':
-			if (pop3c_checkprogram(optarg)!=0) {
+			if (am_checkprogram(optarg)!=0) {
 				logmsg(L_INFO, F_GENERAL, "not polling because program evaluated to false", NULL);
 				exit(0);
 			}
@@ -444,6 +324,11 @@ int main(int argc, char** argv){
 		case 'd':
 			pop3c.keepmail = 1;
 			break;
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
+		case 'f':
+			strncpy(am_sslkey, optarg, 1024);
+			break;
+#endif
 		case 'h':
 			strncpy(defaultauth.machine, optarg, NI_MAXHOST);
 			break;
@@ -463,7 +348,7 @@ int main(int argc, char** argv){
 			strncpy(defaultauth.password, optarg, AM_MAXPASS);
 			break;
 		case 'r':
-			pop3c_unimplemented();
+			am_unimplemented();
 			break;
 		case 's':
 			strncpy(defaultauth.port, optarg, NI_MAXSERV);
@@ -503,4 +388,48 @@ int main(int argc, char** argv){
 	if (pop3c_session(sd)==-1) exit(-1);
 	if (pop3c_quitclose(sd)==-1) exit(-1);
 	return 0;  
+}
+
+static void pop3c_usage(char *program){
+	char *tmpstring=NULL;
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
+	if (!cat(&tmpstring, "Usage: ", program, " [-b program] [-c option] [-d] [-f certificate]\n",
+					 "\t\t-h hostname [-l] [-m maildir] [-n number] [-p password]\n",
+					 "\t\t[-r number] [-s service] [-t] [-u user] [-v level]\n",
+					 "\t\t[-x program]\n",
+#else
+	if (!cat(&tmpstring, "Usage: ", program, " [-b program] [-d] -h hostname [-m maildir] [-p password]\n",
+					 "\t\t[-r number] [-s service] [-t] [-u user] [-x program]","\n",
+#endif
+					 "\t-b:\tonly fetch mail if program exits with zero status\n",
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
+					 "\t-c:\tcrypto options. Options may be: 0 (off), 1 (tls, like -t),\n",
+					 "\t\t2 (tls, fallback to plain on error), 3 (starttls, no fallback)\n",
+					 "\t\tand 4 (starttls, fallback to plain on error)\n",
+#endif
+					 "\t-d:\tdon't delete mail after retrieval (default is to delete)\n",
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
+					 "\t-f:\tthe certificate file to use for authentification\n",
+#endif
+					 "\t-h:\tspecify the hostname to connect to\n",
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
+					 "\t-l:\tuse starttls, exit on error (like -c 3)\n",
+#endif
+					 "\t-m:\tthe maildir for spooling; default (unless -x used) is ~/Maildir\n",
+					 "\t-n:\tonly load number mails\n",
+					 "\t-p:\tthe password to use. Don't use this option.\n",
+					 "\t-r:\treconnect after number mails (see FAQ)\n",
+					 "\t-s:\tthe service to connect to. Must be resolvable if non-numeric.\n",
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
+					 "\t-t:\tuse tls. If tls is not possible the program will exit (like -c 1)\n",
+#endif
+					 "\t-u:\tthe username to use. You usually don't need this option.\n",
+					 "\t-v:\tset the loglevel, valid values are 0 (no logging), 1 (deadly),\n",
+					 "\t\t2 (errors, default), 3 (warnings) and 4 (info, very much)\n",
+					 "\t-x:\tthe program to popen() for each received mail\n",
+					 NULL)) {
+		__write2(tmpstring);
+		free(tmpstring);
+	}
+	exit(0);
 }

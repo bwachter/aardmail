@@ -46,6 +46,9 @@ int logmsg(int loglevel, int facility, char *msg, ...) {
 	case L_INFO:
 		__write1("[INFO]");
 		break;
+	case L_DEBUG:
+		__write1("[DEBUG]");
+		break;
 	default:
 		__write1("[UNKNOWN]");
 		break;
@@ -60,6 +63,12 @@ int logmsg(int loglevel, int facility, char *msg, ...) {
 		break;
 	case F_SSL:
 		__write1("[SSL] ");
+		break;
+	case F_MAILDIR:
+		__write1("[MAILDIR] ");
+		break;
+	case F_AUTHINFO:
+		__write1("[AUTHINFO] ");
 		break;
 	default:
 		__write1("[UNKNOWN] ");

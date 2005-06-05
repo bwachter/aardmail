@@ -4,13 +4,15 @@
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
 #include <stdio.h>
 #endif
+#include "aardmail.h"
 
-typedef struct _maildir maildir;
+typedef struct _maildirent maildirent;
 
-struct _maildir {
-	struct stat *stat;
+struct _maildirent {
+	char name[AM_MAXPATH];
+	off_t size;
 	int deleted;
-	maildir *next;
+	maildirent *next;
 };
 
 char *maildirpath;
