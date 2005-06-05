@@ -335,9 +335,7 @@ int pop3c_connectauth(authinfo *auth){
 			pop3c_quitclose(sd);
 			close(sd);
 			return -1;
-		} else {
-			logmsg(L_INFO, F_SSL, "SSL-connection using ", (SSL_get_cipher(ssl)), NULL);
-		}
+		} 
 	}
 #endif
 

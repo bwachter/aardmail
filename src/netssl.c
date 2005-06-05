@@ -1,6 +1,7 @@
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 #include "network.h"
 #include "aardmail.h"
 #include "aardlog.h"
@@ -94,15 +95,88 @@ int netsslstart(int sd){
 #endif
 
 #ifdef HAVE_MATRIXSSL
-int netsslread(SSL *ssl_handle, char *buf, int len){
+int sslRead(sslConn_t *cp, char *buf, int len){
 }
 
-int netsslwrite(SSL *ssl_handle, char *buf, int len){
+// sslDoHandshake, sslConnect are losely based on matrixssl-examples
+sslConn_t *sslDoHandshake(sslConn_t *conn){
+	char buf[1024];
+	int bytes, status, rc;
+
+	conn->insock.size=1024;
+	conn->insock.start = conn->insock.end = conn->insock.buf = 
+		(unsigned char *)malloc(conn->insock.size);
+	conn->outsock.size = 1024;
+	conn->outsock.start = conn->outsock.end = conn->outsock.buf =
+		(unsigned char *)malloc(conn->outsock.size);
+	conn->inbuf.size = 0;
+	conn->inbuf.start = conn->inbuf.end = conn->inbuf.buf = NULL;
+
+	bytes = matrixSslEncodeClientHello(conn->ssl, &conn->outsock, 0);
+	if (bytes < 0){
+		goto error;
+	}
+
+	if (psSocketWrite(conn->fd, &conn->outsock) < 0) {
+		logmsg(L_ERROR, F_SSL, "socketWrite() failed", NULL);
+		goto error;
+	}
+	conn->outsock.start = conn->outsock.end = conn->outsock.buf;
+
+ readMore:
+	rc = sslRead(conn, buf, sizeof(buf));
+	if (rc == 0){
+		if (matrixSslHandshakeIsComplete(conn->ssl) == 0){
+			goto readMore;
+		}
+	} else if (rc > 0){
+		logmsg(L_ERROR, F_SSL, "sslRead() got data during handshake", NULL);
+		goto readMore;
+	} else {
+		logmsg(L_ERROR, F_SSL, "sslRead() error in sslDoHandshake", NULL);
+		goto error;
+	}
+	return conn;
+
+ error:
+	sslFreeConnection(&conn);
+	return NULL;
+}
+
+int sslConnect(sslConn_t **cpp, int fd){
+	sslConn_t *conn;
+
+	conn=calloc(sizeof(sslConn_t), 1);
+	conn->fd=fd;
+	if (matrixSslNewSession(&conn->ssl, NULL, NULL, 0) < 0) {
+		sslFreeConnection(&conn);
+		return -1;
+	}
+
+	*cpp=sslDoHandshake(conn); // try handshake with any cipher suite
+	if (*cpp==NULL){
+		return -1;
+	}
+	return 0;
+}
+
+int netsslread(sslConn_t *ssl_handle, char *buf, int len){
+}
+
+int netsslwrite(sslConn_t *ssl_handle, char *buf, int len){
 }
 
 int netsslstart(int sd){
+	int err;
+
 	if (matrixSslOpen() < 0) {
 		logmsg(L_ERROR, F_SSL, "matrixSslOpen() failed", NULL);
+		am_sslconf ^= AM_SSL_USETLS; // remove usetls-bits
+		return  -1;
+	}
+
+	if ((err = sslConnect(&ssl, sd))<0) {
+		logmsg(L_ERROR, F_SSL, "sslConnect() failed", NULL);
 		am_sslconf ^= AM_SSL_USETLS; // remove usetls-bits
 		return  -1;
 	}

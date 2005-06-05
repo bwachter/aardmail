@@ -28,8 +28,8 @@ CFLAGS+=-D_BROKEN_IO
 endif
 
 ifdef MATRIXSSL
-LIBS+=-lmatrixsslstatic
-#CFLAGS+=-DHAVE_SSL
+LIBS+=-lmatrixsslstatic -lpthread
+CFLAGS+=-DHAVE_MATRIXSSL
 endif
 
 ifdef GNUTLS
@@ -128,4 +128,3 @@ maintainer-deb: rename
 
 deb: rename
 	$(Q)cd ../$(VERSION) && dpkg-buildpackage -rfakeroot -us -uc
-	$(Q)cd .. && rm -Rf $(VERSION)

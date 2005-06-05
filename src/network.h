@@ -26,6 +26,15 @@ SSL *ssl;
 
 #ifdef HAVE_MATRIXSSL
 #include <matrixSsl.h>
+typedef struct {
+	ssl_t *ssl;
+	sslBuf_t inbuf;
+	sslBuf_t insock;
+	sslBuf_t outsock;
+	int outBufferCount;
+	int fd;
+} sslConn_t;
+sslConn_t *ssl;
 #endif
 
 int netconnect(char *hostname, char *servicename);
@@ -37,9 +46,15 @@ int netnameinfo(const struct sockaddr *sa, socklen_t salen,
 						char *hostname, size_t hostlen, 
 						char *servname, size_t servlen, int flags);
 
-#ifdef HAVE_SSL
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 int netsslstart(int sd);
+#endif
+#ifdef HAVE_SSL
 int netsslread(SSL *ssl_handle, char *buf, int len);
 int netsslwrite(SSL *ssl_handle, char *buf, int len);
+#endif
+#ifdef HAVE_MATRIXSSL
+int netsslread(sslConn_t *ssl_handle, char *buf, int len);
+int netsslwrite(sslConn_t *ssl_handle, char *buf, int len);
 #endif
 #endif
