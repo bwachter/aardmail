@@ -45,6 +45,7 @@ int am_checkprogram(char *program){
 	}
 	return -1; // should never happen... ;)
 #else
+	(void) program;
 	return 0;
 #endif
 }
