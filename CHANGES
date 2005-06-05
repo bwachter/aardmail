@@ -1,4 +1,5 @@
-0.1-pre:
+0.1-pre-1:
+	Added support for building debian packages
 	Completed authinfo support
 	Made the checks for using/not using TLS a bit more sane
 	Fixed the IO if compiled using stdio-crap / popen
