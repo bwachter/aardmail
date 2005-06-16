@@ -196,6 +196,7 @@ static int pop3c_connectauth(authinfo *auth){
 	int i, sd;
 	char buf[1024];
 
+ connect:
 	if ((sd=netconnect(auth->machine, auth->port)) == -1)
 		return -1;
 	if ((i=netreadline(sd, buf)) == -1)
@@ -203,18 +204,28 @@ static int pop3c_connectauth(authinfo *auth){
 	else logmsg(L_INFO, F_NET, buf, NULL);
 
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
-	// FIXME, reconnect on error if ALLOWPLAIN is set
 	// check if we have to use starttls. abort if USETLS is already set
 	if ((am_sslconf & AM_SSL_STARTTLS) && !(am_sslconf & AM_SSL_USETLS)){
-		if ((pop3c_oksendline(sd, "stls\r\n")) == -1)
-			return -1;
+		if ((pop3c_oksendline(sd, "stls\r\n")) == -1) {
+			if (am_sslconf & AM_SSL_ALLOWPLAIN){
+				pop3c_quitclose(sd);
+				am_sslconf = 0;
+				logmsg(L_WARNING, F_NET, "Reconnecting using plaintext (you allowed this!)", NULL);
+				goto connect;
+			} else return -1;
+		}
 
 		am_sslconf ^= AM_SSL_USETLS;
 		if ((i=netsslstart(sd))) {
 			logmsg(L_ERROR, F_SSL, "unable to open tls-connection using starttls", NULL);
-			pop3c_quitclose(sd);
-			close(sd);
-			return -1;
+			if ((pop3c_oksendline(sd, "stls\r\n")) == -1) {
+				if (am_sslconf & AM_SSL_ALLOWPLAIN){
+					pop3c_quitclose(sd);
+					am_sslconf = 0;
+					logmsg(L_WARNING, F_NET, "Reconnecting using plaintext (you allowed this!)", NULL);
+					goto connect;
+				} else return -1;
+			}
 		} 
 	}
 #endif

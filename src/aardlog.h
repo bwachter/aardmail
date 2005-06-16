@@ -5,6 +5,7 @@ enum facilities {
 	F_GENERAL,
 	F_NET,
 	F_SSL,
+	F_FS,
 	F_MAILDIR,
 	F_AUTHINFO,
 };

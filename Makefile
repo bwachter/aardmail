@@ -67,7 +67,13 @@ endif
 
 ARFLAGS=cru
 Q=@
-ALL=aardmail-miniclient$(EXE) aardmail-pop3c$(EXE) aardmail-smtpc$(EXE)
+ALL=aardmail-pop3c$(EXE)
+ifndef WIN32
+ALL+=aardmail-miniclient$(EXE)
+endif
+ifdef DEV
+ALL+=aardmail-smtpc$(EXE) aardmail-sendmail$(EXE)
+endif
 
 # you should not need to touch anything below this line
 
@@ -78,8 +84,20 @@ PREFIX?=/usr
 
 all: $(ALL)
  
+aardmail-miniclient$(EXE): $(OBJDIR)/network.o $(OBJDIR)/netssl.o $(OBJDIR)/miniclient.o \
+	$(OBJDIR)/aardlog.o $(OBJDIR)/cat.o $(OBJDIR)/maildir.o $(OBJDIR)/fs.o
+	$(Q)echo "LD $@"
+	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+
 aardmail-pop3c$(EXE): $(OBJDIR)/pop3c.o $(OBJDIR)/cat.o \
 	$(OBJDIR)/aardlog.o $(OBJDIR)/network.o $(OBJDIR)/netssl.o \
+	$(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o $(OBJDIR)/fs.o \
+	$(OBJDIR)/aardmail.o
+	$(Q)echo "LD $@"
+	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+aardmail-sendmail$(EXE): $(OBJDIR)/sendmail.o $(OBJDIR)/cat.o \
+	$(OBJDIR)/aardlog.o \
 	$(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o $(OBJDIR)/fs.o \
 	$(OBJDIR)/aardmail.o
 	$(Q)echo "LD $@"
@@ -89,11 +107,6 @@ aardmail-smtpc$(EXE): $(OBJDIR)/smtpc.o $(OBJDIR)/cat.o \
 	$(OBJDIR)/aardlog.o $(OBJDIR)/network.o $(OBJDIR)/netssl.o \
 	$(OBJDIR)/fs.o $(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o \
 	$(OBJDIR)/aardmail.o
-	$(Q)echo "LD $@"
-	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
-
-aardmail-miniclient$(EXE): $(OBJDIR)/network.o $(OBJDIR)/netssl.o $(OBJDIR)/miniclient.o \
-	$(OBJDIR)/aardlog.o $(OBJDIR)/cat.o $(OBJDIR)/maildir.o $(OBJDIR)/fs.o
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 

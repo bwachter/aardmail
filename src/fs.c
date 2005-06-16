@@ -42,3 +42,4 @@ int openreadclose(char *fn, char **buf, unsigned long *len) {
     (*buf)[*len]=0;
   return close(fd);
 }
+

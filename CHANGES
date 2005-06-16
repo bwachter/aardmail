@@ -15,5 +15,4 @@
 	Can retrieve mails via pop3 and spool to Maildir or pipe
 	Supports TLS with/without starttls
 	Added license foo, install hints, install target, ...
-	Added authinfo support	
-	
+	Added authinfo support

@@ -10,6 +10,9 @@ aardmail-pop3c \- client to retrieve mail via pop3
 .PP
 When called without arguments aardmail-pop3c will give a short overview of the available options.
 .TP
+.B \-5
+Use CRAM-MD5 authentification
+.TP
 .B \-b program
 Execute the program and only poll mails if it exits with zero exit status. That's useful if you poll mail on your notebook via cron but only want to get mail in special environements. You can specify parameters, but since the string gets parsed in the client you need to quote the spaces.
 .TP

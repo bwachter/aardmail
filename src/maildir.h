@@ -24,5 +24,6 @@ int maildiropen(char *maildir, char **uniqname);
 int maildirclose(char *maildir, char **uniqname, int fd);
 #endif
 int maildir_init(char *maildir, char *subdir, int harddelete);
+int maildirfind(char *maildir);
 
 #endif

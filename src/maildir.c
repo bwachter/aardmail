@@ -73,6 +73,7 @@ int maildirfind(char *maildir){
 }
 
 // opens a file in maildir/ 
+// if maildir does not start with a / use subdir in maildir
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
 FILE *maildiropen(char *maildir, char **uniqname){
 	FILE *fd;
@@ -182,6 +183,10 @@ int maildir_init(char *maildir, char *subdir, int harddelete){
 		memset(&tmpmaildirent, 0, sizeof(maildirent));
 	}
 	return 0; //FIXME
+}
+
+int maildir_sgetfirst(maildirent *maildir_find){
+	maildirent *p;
 }
 
 static int maildir_sappend(maildirent *maildir_add){

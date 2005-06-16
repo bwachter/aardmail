@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <fcntl.h>
-
+#include <dirent.h>
 #ifdef __WIN32__
 #include <getopt.h>
 #include <windows.h>
@@ -20,23 +20,29 @@
 #include "network.h"
 #include "cat.h"
 #include "maildir.h"
+#include "fs.h"
 
 static struct {
 	char *maildir;
 	int keepmail;
 } smtpc;
 
+static char* mailfrom;
+static char** rcptto;
+
 static void smtpc_usage(char *program);
-static int smtpc_oksendline(int sd, char *msg);
+static int smtpc_oksendline(int sd, char *msg, char *ok);
 static int smtpc_connectauth(authinfo *auth);
-static int smtpc_session(int sd);
+static int smtpc_session(int sd, char **msg);
 static int smtpc_quitclose(int sd);
 
 static int smtpc_connectauth(authinfo *auth){
 	int i, sd;
+	char have_ehlo=1;
 	char buf[1024];
 	char myhost[NI_MAXHOST];
 
+ connectauth:
 	if (gethostname(myhost, NI_MAXHOST)==-1){
 		logmsg(L_WARNING, F_GENERAL, "unable to get hostname, setting to localhost.localdomain", NULL);
 		strcpy(myhost, "localhost.localdomain");
@@ -48,41 +54,101 @@ static int smtpc_connectauth(authinfo *auth){
 		return -1;
 	else logmsg(L_INFO, F_NET, buf, NULL);
 
+	// send HELO or EHLO, FIXME
+	if (have_ehlo == 1){
+		if ((smtpc_oksendline(sd, cati("EHLO ", myhost, "\r\n", NULL), "250"))==-1)
+			if ((smtpc_oksendline(sd, cati("HELO ", myhost, "\r\n", NULL), "250"))==-1){
+				have_ehlo=0;
+				smtpc_quitclose(sd);
+				goto connectauth;
+			}
+	} else {
+		if ((smtpc_oksendline(sd, cati("HELO ", myhost, "\r\n", NULL), "250"))==-1) {
+			smtpc_quitclose(sd);
+			return -1;
+		}
+	}
+
+
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
-	// FIXME, reconnect on error if ALLOWPLAIN is set
 	// check if we have to use starttls. abort if USETLS is already set
 	if ((am_sslconf & AM_SSL_STARTTLS) && !(am_sslconf & AM_SSL_USETLS)){
-		if ((smtpc_oksendline(sd, "starttls\r\n")) == -1)
-			return -1;
+		if ((smtpc_oksendline(sd, "starttls\r\n", "2")) == -1){
+			smtpc_quitclose(sd);
+			if (am_sslconf & AM_SSL_ALLOWPLAIN) {
+				logmsg(L_WARNING, F_NET, "Reconnecting using plaintext (you allowed this!)", NULL);
+				am_sslconf = 0;
+				goto connectauth;
+			} else return -1;
+		}
 
 		am_sslconf ^= AM_SSL_USETLS;
 		if ((i=netsslstart(sd))) {
 			logmsg(L_ERROR, F_SSL, "unable to open tls-connection using starttls", NULL);
-			smtpc_quitclose(sd);
-			close(sd);
-			return -1;
+			if (am_sslconf & AM_SSL_ALLOWPLAIN){
+				logmsg(L_WARNING, F_NET, "Reconnecting using plaintext (you allowed this!)", NULL);
+				am_sslconf = 0;
+				goto connectauth;
+			} else return -1;
 		} 
 	}
 #endif
-	if ((smtpc_oksendline(sd, cati("helo ", myhost, "\r\n", NULL)))==-1)
-		return -1;
-	else return sd;
 
-	// FIXME, add cram-md5-foo and authentificate, if wanted
-
-	return -1; // we should'nt get here...
+	return sd;
 }
 
-static int smtpc_session(int sd){
+static int smtpc_session(int sd, char **msg){
+	char **buf, **bufptr, *ptr;
+
+	if ((buf=malloc(sizeof(char*)*(strlen(*msg)+2)))==NULL) return -1;
+
+	// split the mail buffer into lines and search for adresses
+	bufptr=buf;
+	*bufptr++=*msg;
+	for (ptr=*msg;*ptr;ptr++){
+		if (*ptr=='\n'){
+			*ptr=0;
+			*bufptr++=ptr+1;
+		}
+	} *bufptr++=NULL;
+
+	mailfrom="bwachter@lart.info";
+	if ((smtpc_oksendline(sd, cati("MAIL FROM:<", mailfrom, ">\r\n", NULL), "2")) == -1) 
+		goto error;
+	if ((smtpc_oksendline(sd, "RCPT TO:<bwachter@lart.info>\r\n", "2")) == -1)
+		goto error;
+	if ((smtpc_oksendline(sd, "DATA\r\n", "3")) == -1)
+		goto error;
+	//write(sd, *msg, strlen(*msg));
+
+	netwriteline(sd, "X-Foobar: aardmail-smtpc\r\n");
+	for (bufptr=buf;*bufptr!=NULL;bufptr++){
+		netwriteline(sd, *bufptr);
+		netwriteline(sd, "\r\n");
+	}
+	smtpc_oksendline(sd, ".\r\n", "250");
+
+	/*
+	while (*msg){
+		if (**msg=='\n'){
+		}
+		*msg++;
+	}
+	*/
+	free(buf);
+	return 0;
+ error:
+	free(buf);
+	return -1;
 }
 
 static int smtpc_quitclose(int sd){
-	if ((smtpc_oksendline(sd, "quit\r\n")) == -1)
+	if ((smtpc_oksendline(sd, "quit\r\n", "2")) == -1)
 		return -1;
 	return (close(sd));
 }
 
-static int smtpc_oksendline(int sd, char *msg){
+static int smtpc_oksendline(int sd, char *msg, char *ok){
 	char buf[MAXNETBUF];
 	int i;
 
@@ -95,16 +161,25 @@ static int smtpc_oksendline(int sd, char *msg){
 		logmsg(L_ERROR, F_NET, "unable to read line from network: ", strerror(errno), NULL);
 		return -1;
 	}
+
+	while (!strncmp(buf+3, "-", 1)){
+		logmsg(L_ERROR, F_NET, "continuation: ", buf, NULL);
+		i=netreadline(sd, buf);
+	}
 	logmsg(L_INFO, F_NET, "< ", buf, NULL);
-	if (!strncmp(buf, "2", 1))
+	if (!strncmp(buf, ok, strlen(ok)))
 		return 0;
-	logmsg(L_ERROR, F_NET, "bad response: '", buf, "' after '", msg, "' from me", NULL); 
+	logmsg(L_ERROR, F_NET, "bad response: '", buf, "' after '", msg, "' from me", NULL);
 	return -1;
 }
 
 int main(int argc, char **argv){
 	int c, sd;
 	authinfo defaultauth;
+	unsigned long len;
+	char *mail, *mymaildir=NULL;
+	DIR *dirptr;
+	struct dirent *tmpdirent;
 
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	while ((c=getopt(argc, argv, "b:c:df:h:lm:p:r:s:tu:v:x:")) != EOF){
@@ -184,12 +259,38 @@ int main(int argc, char **argv){
 	if (!strcmp(defaultauth.port,""))
 		strcpy(defaultauth.port, "25");
 
+	if (maildirfind(smtpc.maildir)){
+		logmsg(L_ERROR, F_MAILDIR, "unable to find maildir", NULL);
+		return -1;
+	}
+
+	if (smtpc.maildir != NULL && !strcmp(smtpc.maildir, maildirpath)) { // smtpc.maildir not set or not usable, append .spool
+		cat (&mymaildir, maildirpath, "/cur", NULL);
+	} else {
+		cat(&mymaildir, maildirpath, "/.spool/cur", NULL);
+	}
+
+	if ((dirptr=opendir(mymaildir))==NULL){
+		logmsg(L_ERROR, F_MAILDIR, "unable to open maildir ", mymaildir, ": ", strerror(errno), NULL);
+		return -1;
+	}
+
 	logmsg(L_INFO, F_GENERAL, "connecting to machine ", defaultauth.machine, ", port ", defaultauth.port, NULL);
 	if (strcmp(defaultauth.login, "")) logmsg(L_INFO, F_GENERAL, "using login-name: ", defaultauth.login, NULL);
 	if (strcmp(defaultauth.login, "")) logmsg(L_INFO, F_GENERAL, "using password: yes", NULL);
 
 	if ((sd=smtpc_connectauth(&defaultauth))==-1) exit(-1);
-	if (smtpc_session(sd)==-1) exit(-1);
+	// FIXME for each mail do smtpc_session; don't exit on failure, just don't delete the mail
+	for (tmpdirent=readdir(dirptr); tmpdirent!=NULL; tmpdirent=readdir(dirptr)){
+		if (tmpdirent->d_type != DT_REG) continue;
+		openreadclose(cati(mymaildir, "/", tmpdirent->d_name, NULL), &mail, &len);
+		if (smtpc_session(sd, &mail)==-1) {
+			// FIXME check how long the mail is in queue already, `send' warning
+		} else if (unlink(tmpdirent->d_name)==-1) {
+			logmsg(L_ERROR, F_GENERAL, "unable to delete mail ", mymaildir, "/", tmpdirent->d_name, ": ", strerror(errno), NULL);
+			exit(-1);
+		}
+	}
 	if (smtpc_quitclose(sd)==-1) exit(-1);
 	return 0;
 }
