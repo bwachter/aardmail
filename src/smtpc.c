@@ -22,6 +22,15 @@
 #include "maildir.h"
 #include "fs.h"
 
+struct slist {
+	char *item;
+	struct slist *next;
+};
+
+typedef struct slist addresslist;
+
+addresslist rcptlist, fromlist, *addressptr;
+
 static struct {
 	char *maildir;
 	int keepmail;
@@ -52,7 +61,6 @@ static int smtpc_connectauth(authinfo *auth){
 		return -1;
 	if ((i=netreadline(sd, buf)) == -1)
 		return -1;
-	else logmsg(L_INFO, F_NET, buf, NULL);
 
 	// send HELO or EHLO, FIXME
 	if (have_ehlo == 1){
@@ -97,8 +105,42 @@ static int smtpc_connectauth(authinfo *auth){
 	return sd;
 }
 
+// add addrlist parameter and build up an address list for both from and to
+static int smtpc_getaddr(char *msg){
+	char *ptr, isaddr=0;
+	int i, start;
+	for (ptr=msg,i=0;ptr!=NULL;*ptr++,i++){
+		if (*ptr=='\n') {
+			*ptr='\0';
+			break;
+		}
+		if (*ptr=='<'){
+			start=i;
+			continue;
+		}
+		if (*ptr=='>' && isaddr){
+			*ptr='\0';
+			break;
+		}
+		if (*ptr=='@') {
+			logmsg(L_INFO, F_GENERAL, "Found email address", NULL);
+			isaddr=1;
+			continue;
+		}
+		if (*ptr==' ') {
+			isaddr=0;
+			start=i;
+			continue;
+		}
+	}
+	if (isaddr)
+		logmsg(L_INFO, F_GENERAL, "Address found: ", msg+start+1, NULL);
+	exit(0);
+	return 0;
+}
+
 static int smtpc_session(int sd, char **msg){
-	char **buf, **bufptr, *ptr;
+	char **buf, **bufptr, *ptr, isfrom=0;
 
 	if ((buf=malloc(sizeof(char*)*(strlen(*msg)+2)))==NULL) return -1;
 
@@ -109,6 +151,7 @@ static int smtpc_session(int sd, char **msg){
 		if (*ptr=='\n'){
 			*ptr=0;
 			*bufptr++=ptr+1;
+			if (!strncasecmp(ptr+1, "from:", 5)) smtpc_getaddr(ptr+1);
 		}
 	} *bufptr++=NULL;
 
@@ -121,12 +164,13 @@ static int smtpc_session(int sd, char **msg){
 		goto error;
 	//write(sd, *msg, strlen(*msg));
 
-	netwriteline(sd, "X-Foobar: aardmail-smtpc\r\n");
+	netwriteline(sd, "X-Broken-By: aardmail-smtpc (http://bwachter.lart.info/projects/aardmail/)\r\n");
 	for (bufptr=buf;*bufptr!=NULL;bufptr++){
 		netwriteline(sd, *bufptr);
 		netwriteline(sd, "\r\n");
 	}
-	smtpc_oksendline(sd, ".\r\n", "250");
+	if ((smtpc_oksendline(sd, ".\r\n", "250")) == -1)
+		goto error;
 
 	/*
 	while (*msg){
@@ -152,7 +196,6 @@ static int smtpc_oksendline(int sd, char *msg, char *ok){
 	char buf[MAXNETBUF];
 	int i;
 
-	logmsg(L_INFO, F_NET, "> ", msg, NULL);
 	if ((i=netwriteline(sd, msg)) == -1){
 		logmsg(L_ERROR, F_NET, "unable to write line to network: ", strerror(errno), NULL);
 		return -1;
@@ -163,10 +206,10 @@ static int smtpc_oksendline(int sd, char *msg, char *ok){
 	}
 
 	while (!strncmp(buf+3, "-", 1)){
-		logmsg(L_ERROR, F_NET, "continuation: ", buf, NULL);
+		//logmsg(L_INFO, F_NET, "continuation: ", buf, NULL);
 		i=netreadline(sd, buf);
 	}
-	logmsg(L_INFO, F_NET, "< ", buf, NULL);
+	
 	if (!strncmp(buf, ok, strlen(ok)))
 		return 0;
 	logmsg(L_ERROR, F_NET, "bad response: '", buf, "' after '", msg, "' from me", NULL);

@@ -18,6 +18,8 @@ static void sendmail_usage(char *program);
 char *uniqname;
 
 int main(int argc, char **argv){
+	int i=1;
+	char buf[1024];
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
 	FILE *fd;
 #else
@@ -33,8 +35,13 @@ int main(int argc, char **argv){
 			logmsg(L_ERROR, F_GENERAL, "opening spool failed", NULL);
 			return -1;
 		}
-
-
+	while (i>0){
+		i=read(0, buf, 1024);
+		if (!strncmp(buf+i-2, ".\n", 2)) break;
+		write(fd, buf, i);
+	}
+	maildirclose(NULL, &uniqname, fd);
+	return -1;
 }
 
 static void sendmail_usage(char *program){

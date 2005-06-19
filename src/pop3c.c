@@ -47,7 +47,6 @@ static int pop3c_oksendline(int sd, char *msg){
 	char buf[MAXNETBUF];
 	int i;
 
-	logmsg(L_INFO, F_NET, "> ", msg, NULL);
 	if ((i=netwriteline(sd, msg)) == -1){
 		logmsg(L_ERROR, F_NET, "unable to write line to network: ", strerror(errno), NULL);
 		return -1;
@@ -56,7 +55,6 @@ static int pop3c_oksendline(int sd, char *msg){
 		logmsg(L_ERROR, F_NET, "unable to read line from network: ", strerror(errno), NULL);
 		return -1;
 	}
-	logmsg(L_INFO, F_NET, "< ", buf, NULL);
 	if (!strncmp(buf, "+OK", 3))
 		return 0;
 	logmsg(L_ERROR, F_NET, "bad response: '", buf, "' after '", msg, "' from me", NULL); 
@@ -77,7 +75,6 @@ static int pop3c_getstat(int sd){
 		logmsg(L_ERROR, F_NET, "unable to read line from network: ", strerror(errno), NULL);
 		return -1;
 	}
-	logmsg(L_INFO, F_NET, "< ", buf, NULL);
 	if (strncmp(buf, "+OK", 3)){
 		logmsg(L_ERROR, F_NET, "bad response: '", buf, "'after 'stat' from me", NULL);
 		return -1;
@@ -201,7 +198,6 @@ static int pop3c_connectauth(authinfo *auth){
 		return -1;
 	if ((i=netreadline(sd, buf)) == -1)
 		return -1;
-	else logmsg(L_INFO, F_NET, buf, NULL);
 
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	// check if we have to use starttls. abort if USETLS is already set

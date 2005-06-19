@@ -2,6 +2,8 @@
 
 	Fixed stupid TLS bug introduced by supporting reauth
 	Major cleanup and moving general purpose functions out of pop3c
+	Added (ugly) plaintext reconnect on TLS-failure if wanted by the user
+	Added smtpc (`single user')
 
 0.1-pre-1:
 
