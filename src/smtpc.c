@@ -31,6 +31,12 @@ typedef struct slist addresslist;
 
 addresslist rcptlist, fromlist, *addressptr;
 
+int slist_add(char *string){
+	*addressptr=rcptlist;
+	if (*adressptr->next==NULL)
+}
+
+
 static struct {
 	char *maildir;
 	int keepmail;
@@ -107,6 +113,7 @@ static int smtpc_connectauth(authinfo *auth){
 
 // add addrlist parameter and build up an address list for both from and to
 static int smtpc_getaddr(char *msg){
+logmsg(L_WARNING, F_NET, "called getaddr", NULL);
 	char *ptr, isaddr=0;
 	int i, start;
 	for (ptr=msg,i=0;ptr!=NULL;*ptr++,i++){
@@ -135,14 +142,17 @@ static int smtpc_getaddr(char *msg){
 	}
 	if (isaddr)
 		logmsg(L_INFO, F_GENERAL, "Address found: ", msg+start+1, NULL);
-	exit(0);
+	//exit(0);
 	return 0;
 }
 
 static int smtpc_session(int sd, char **msg){
 	char **buf, **bufptr, *ptr, isfrom=0;
 
-	if ((buf=malloc(sizeof(char*)*(strlen(*msg)+2)))==NULL) return -1;
+	if ((buf=malloc(sizeof(char*)*(strlen(*msg)+2)))==NULL) {
+		logmsg(L_ERROR, F_GENERAL, "malloc() failed", NULL);
+		return -1;
+	}
 
 	// split the mail buffer into lines and search for adresses
 	bufptr=buf;
@@ -151,7 +161,7 @@ static int smtpc_session(int sd, char **msg){
 		if (*ptr=='\n'){
 			*ptr=0;
 			*bufptr++=ptr+1;
-			if (!strncasecmp(ptr+1, "from:", 5)) smtpc_getaddr(ptr+1);
+			if (!strncasecmp(ptr+1, "To:", 3)) smtpc_getaddr(ptr+1);
 		}
 	} *bufptr++=NULL;
 
@@ -160,6 +170,7 @@ static int smtpc_session(int sd, char **msg){
 		goto error;
 	if ((smtpc_oksendline(sd, "RCPT TO:<bwachter@lart.info>\r\n", "2")) == -1)
 		goto error;
+	return -1;
 	if ((smtpc_oksendline(sd, "DATA\r\n", "3")) == -1)
 		goto error;
 	//write(sd, *msg, strlen(*msg));
@@ -182,6 +193,7 @@ static int smtpc_session(int sd, char **msg){
 	free(buf);
 	return 0;
  error:
+	logmsg(L_ERROR, F_GENERAL, "error in smtpc_session", NULL);
 	free(buf);
 	return -1;
 }
@@ -325,7 +337,9 @@ int main(int argc, char **argv){
 	if ((sd=smtpc_connectauth(&defaultauth))==-1) exit(-1);
 	// FIXME for each mail do smtpc_session; don't exit on failure, just don't delete the mail
 	for (tmpdirent=readdir(dirptr); tmpdirent!=NULL; tmpdirent=readdir(dirptr)){
-		if (tmpdirent->d_type != DT_REG) continue;
+		if (!strcmp(tmpdirent->d_name, ".")) continue;
+		if (!strcmp(tmpdirent->d_name, "..")) continue;
+		logmsg(L_ERROR, F_GENERAL, tmpdirent->d_name, NULL);
 		openreadclose(cati(mymaildir, "/", tmpdirent->d_name, NULL), &mail, &len);
 		if (smtpc_session(sd, &mail)==-1) {
 			// FIXME check how long the mail is in queue already, `send' warning
