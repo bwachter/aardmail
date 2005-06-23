@@ -1,6 +1,8 @@
 0.1-pre3:
 	Added smtpc (`single user')
 	Added (ugly) plaintext reconnect on TLS-failure if wanted by the user
+	Completed netaddrinfo() emulation code (most of the new code stolen from libesmtp).
+		aardmail-pop3c works now on all recent Windows versions
 
 0.1-pre-2:
 
