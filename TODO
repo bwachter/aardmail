@@ -1,5 +1,8 @@
+- use the now integrated cram-md5-foo
+- add base64
+- complete smtpc addr parsing, use plain and cram-md5-auth
+- add a sane sendmail (with manpage)
 - add some more information to the maildir name
-- fix windows/obsolete networking code kludge
 - do some more testing to the SSL-code (currently it's only confirmed to be working with gmail)
-- reconnect if starttls failed and we're allowed to use plaintext (low prio, since that's generally a bad idea)
+---> release 0.1 is ready
 - add auth using client certificates (low prio, need to write a pop3d for testing this first)
