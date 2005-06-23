@@ -1,9 +1,11 @@
+0.1-pre3:
+	Added smtpc (`single user')
+	Added (ugly) plaintext reconnect on TLS-failure if wanted by the user
+
 0.1-pre-2:
 
 	Fixed stupid TLS bug introduced by supporting reauth
 	Major cleanup and moving general purpose functions out of pop3c
-	Added (ugly) plaintext reconnect on TLS-failure if wanted by the user
-	Added smtpc (`single user')
 
 0.1-pre-1:
 
