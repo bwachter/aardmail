@@ -19,6 +19,21 @@
 #include "network.h"
 #include "cat.h"
 
+#ifdef __WIN32__
+#define EAI_BADFLAGS     -1    /* Invalid value for `ai_flags' field.  */
+#define EAI_NONAME       -2    /* NAME or SERVICE is unknown.  */
+#define EAI_AGAIN        -3    /* Temporary failure in name resolution.  */
+#define EAI_FAIL         -4    /* Non-recoverable failure in name res.  */
+#define EAI_NODATA       -5    /* No address associated with NAME.  */
+#define EAI_FAMILY       -6    /* `ai_family' not supported.  */
+#define EAI_SOCKTYPE     -7    /* `ai_socktype' not supported.  */
+#define EAI_SERVICE      -8    /* SERVICE not supported for `ai_socktype'.  */
+#define EAI_ADDRFAMILY   -9    /* Address family for NAME not supported.  */
+#define EAI_MEMORY       -10   /* Memory allocation failure.  */
+#define EAI_SYSTEM       -11   /* System error returned in `errno'.  */
+#endif
+
+
 static struct addrinfo *
 dup_addrinfo (struct addrinfo *info, void *addr, size_t addrlen)
 {
@@ -41,7 +56,7 @@ dup_addrinfo (struct addrinfo *info, void *addr, size_t addrlen)
 
 #if (defined __WIN32__) || (defined _BROKEN_IO)
 void
-freeaddrinfo (struct addrinfo *ai)
+netfreeaddrinfo (struct addrinfo *ai)
 {
   struct addrinfo *next;
 
@@ -350,7 +365,7 @@ int netaddrinfo(const char *node, const char *service,
       ai = dup_addrinfo (&result, &sa, addrlen);
       if (ai == NULL)
         {
-          freeaddrinfo (sai);
+          netfreeaddrinfo (sai);
           return EAI_MEMORY;
         }
       if (sai == NULL)
@@ -370,7 +385,7 @@ int netaddrinfo(const char *node, const char *service,
       sai->ai_canonname = malloc (strlen (hp->h_name) + 1);
       if (sai->ai_canonname == NULL)
         {
-          freeaddrinfo (sai);
+          netfreeaddrinfo (sai);
           return EAI_MEMORY;
         }
       strcpy (sai->ai_canonname, hp->h_name);
