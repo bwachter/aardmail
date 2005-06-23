@@ -16,6 +16,8 @@ VERSIONNR=$(shell head -1 CHANGES|sed 's/://')
 VERSION=aardmail-$(shell head -1 CHANGES|sed 's/://')
 CURNAME=$(notdir $(shell pwd))
 
+LIBS=-L. -laardmail
+
 ifneq ($(DEBUG),)
 CFLAGS=-g -Wall -W -pipe -Os
 LDFLAGS=-g
@@ -67,7 +69,7 @@ endif
 
 ARFLAGS=cru
 Q=@
-ALL=libcrammd5.a aardmail-pop3c$(EXE)
+ALL=libcrammd5.a libaardmail.a aardmail-pop3c$(EXE) aardmail-miniclient$(EXE)
 ifndef WIN32
 ALL+=aardmail-miniclient$(EXE)
 endif
@@ -84,31 +86,26 @@ PREFIX?=/usr
 
 all: $(ALL)
  
-aardmail-miniclient$(EXE): $(OBJDIR)/network.o $(OBJDIR)/netssl.o $(OBJDIR)/miniclient.o \
-	$(OBJDIR)/aardlog.o $(OBJDIR)/cat.o $(OBJDIR)/maildir.o $(OBJDIR)/fs.o
+aardmail-miniclient$(EXE): $(OBJDIR)/miniclient.o 
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-aardmail-pop3c$(EXE): $(OBJDIR)/pop3c.o $(OBJDIR)/cat.o \
-	$(OBJDIR)/aardlog.o $(OBJDIR)/network.o $(OBJDIR)/netssl.o \
-	$(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o $(OBJDIR)/fs.o \
-	$(OBJDIR)/aardmail.o
+aardmail-pop3c$(EXE): $(OBJDIR)/pop3c.o 
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-aardmail-sendmail$(EXE): $(OBJDIR)/sendmail.o $(OBJDIR)/cat.o \
-	$(OBJDIR)/aardlog.o \
-	$(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o $(OBJDIR)/fs.o \
-	$(OBJDIR)/aardmail.o
+aardmail-sendmail$(EXE): $(OBJDIR)/sendmail.o 
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-aardmail-smtpc$(EXE): $(OBJDIR)/smtpc.o $(OBJDIR)/cat.o \
-	$(OBJDIR)/aardlog.o $(OBJDIR)/network.o $(OBJDIR)/netssl.o \
-	$(OBJDIR)/fs.o $(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o \
-	$(OBJDIR)/aardmail.o
+aardmail-smtpc$(EXE): $(OBJDIR)/smtpc.o
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+libaardmail.a: $(OBJDIR)/network.o $(OBJDIR)/netssl.o $(OBJDIR)/aardlog.o $(OBJDIR)/cat.o \
+	$(OBJDIR)/aardmail.o $(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o $(OBJDIR)/fs.o 
+	$(Q)echo "AR $@"
+	$(Q)$(CROSS)$(AR) $(ARFLAGS) $@ $^
 
 libcrammd5.a: crammd5/client-crammd5.o crammd5/hmacmd5.o crammd5/md5.o
 	$(Q)echo "AR $@"

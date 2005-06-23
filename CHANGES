@@ -3,6 +3,8 @@
 	Added (ugly) plaintext reconnect on TLS-failure if wanted by the user
 	Completed netaddrinfo() emulation code (most of the new code stolen from libesmtp).
 		aardmail-pop3c works now on all recent Windows versions
+	Made miniclient working sometimes under Windows (braindead API kept me from finishing it)
+	Put all the aardmail objects into libaardmail
 
 0.1-pre-2:
 
