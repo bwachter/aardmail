@@ -35,7 +35,7 @@ int authinfo_init(){
 	authinfo authinfo_tmp;
 	authinfo_key *key;
 
-	if ((home=getenv("HOME"))==NULL){
+	if (((home=getenv("HOME"))==NULL) && ((home=getenv("USERPROFILE"))==NULL)){
 		logmsg(L_WARNING, F_AUTHINFO, "unable to find the home directory", NULL);
 		return -1;
 	}
