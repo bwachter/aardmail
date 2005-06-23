@@ -47,7 +47,9 @@ void miniclient_usage(char *program){
 int main(int argc, char** argv){
 	char buf[1024];
 
-#ifdef __WIN32
+#ifdef __WIN32__
+	HANDLE myhandles[2];
+
 	// add that windows foo here
 #else
 	struct pollfd pfd[2];
@@ -100,7 +102,48 @@ int main(int argc, char** argv){
 	sd=netconnect(defaultauth.machine, defaultauth.port);
 
 #ifdef __WIN32__
-#warning miniclient is currently not working under win32
+#warning miniclient is not fully working due to the braindead Windows API
+	int res;
+	WSAEVENT event = WSACreateEvent();
+
+	i=netreadline(sd, buf);
+	__write2(buf);
+
+	myhandles[0] = GetStdHandle(STD_INPUT_HANDLE); 
+	if (WSAEventSelect(sd, event, FD_READ)!=0){
+		logmsg(L_ERROR, F_NET, "WSAEventSelect() failed", NULL);
+		return -1;
+	}
+	myhandles[1] = event;
+
+	while (strcmp(buf, "exit\n")){
+		res = WaitForMultipleObjects(2, myhandles, FALSE, INFINITE);
+		if (res == WAIT_OBJECT_0) {
+			if ((i=read(0,buf,1024))==-1) return -1;
+			buf[i]='\0';
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
+			if ((!strcasecmp(buf, "STLS\n")) || (!strcasecmp(buf, "STARTTLS\n")))
+				am_sslconf=AM_SSL_STARTTLS;
+#endif
+			netwriteline(sd, buf);
+		} else if (res == WAIT_OBJECT_0+1) {
+			// for seme reason we get here always when there's no input from stdin. 
+			if ((i=netreadline(sd,buf))==-1) { }
+			__write1(buf);
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
+			if (am_sslconf==AM_SSL_STARTTLS) {
+				if ((!strncmp(buf, "+OK", 3)) || (!strncmp(buf, "220", 3))) {
+					am_sslconf = AM_SSL_USETLS;
+					if (netsslstart(sd)){
+						logmsg(L_ERROR, F_SSL, "unable to start ssl negotiation", NULL);
+						close(sd);
+						return -1;
+					}
+				} else am_sslconf=0;
+			}
+#endif
+		}
+	}
 #else
 	pfd[0].fd=0;
 	pfd[0].events=POLLRDNORM | POLLIN;
