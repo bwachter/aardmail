@@ -67,7 +67,7 @@ endif
 
 ARFLAGS=cru
 Q=@
-ALL=aardmail-pop3c$(EXE)
+ALL=libcrammd5.a aardmail-pop3c$(EXE)
 ifndef WIN32
 ALL+=aardmail-miniclient$(EXE)
 endif
@@ -110,7 +110,17 @@ aardmail-smtpc$(EXE): $(OBJDIR)/smtpc.o $(OBJDIR)/cat.o \
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
+libcrammd5.a: crammd5/client-crammd5.o crammd5/hmacmd5.o crammd5/md5.o
+	$(Q)echo "AR $@"
+	$(Q)$(CROSS)$(AR) $(ARFLAGS) $@ $^
+
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
+	$(Q)echo "CC $@"
+	$(Q)$(DIET) $(CROSS)$(CC) $(CFLAGS) -c $< -o $@
+ifneq ($(STRIP),)
+	$(Q)$(COMMENT) -$(CROSS)$(STRIP) $@
+endif
+%.o: %.c
 	$(Q)echo "CC $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(CFLAGS) -c $< -o $@
 ifneq ($(STRIP),)
@@ -119,7 +129,7 @@ endif
 
 clean:
 	$(Q)echo "cleaning up"
-	$(Q)$(RM) $(ALL) $(OBJDIR)/*.o
+	$(Q)$(RM) $(ALL) $(OBJDIR)/*.o crammd5/*.o
 
 install: all
 	install -d $(DESTDIR)$(BINDIR)
