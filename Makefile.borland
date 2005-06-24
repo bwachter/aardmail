@@ -7,7 +7,9 @@ DESTDIR=
 BINDIR=/usr/bin
 MANDIR=/usr/share/man
 
-LDFLAGS=-tWC -w-
+LDFLAGS=-tWC -w- -k- -q -O2 -lq -lc -lx -lGpd -lGn -lGl -lw- 
+CFLAGS=-w- -O2 -q 
+LIBS=-Lsrc aardmail.lib
 
 !ifdef GNUTLS
 LIBS+=-lgnutls-openssl -lgnutls -ltasn1 -lgcrypt -lgpg-error -lz
@@ -22,7 +24,7 @@ CFLAGS+=-DHAVE_SSL
 EXE=.exe
 
 Q=@
-ALL=aardmail-pop3c$(EXE) aardmail-miniclient$(EXE)
+ALL=crammd5\crammd5.lib src\aardmail.lib aardmail-pop3c$(EXE) aardmail-miniclient$(EXE)
 
 !ifdef DEV
 ALL+=aardmail-smtpc$(EXE) aardmail-sendmail$(EXE)
@@ -33,29 +35,39 @@ ALL+=aardmail-smtpc$(EXE) aardmail-sendmail$(EXE)
 OBJDIR=src
 SRCDIR=src
 PREFIX?=/usr
-COMMON_OBJ=$(OBJDIR)/network.obj $(OBJDIR)/netssl.obj $(OBJDIR)/aardlog.obj \
-	$(OBJDIR)/cat.obj $(OBJDIR)/maildir.obj $(OBJDIR)/authinfo.obj \
-	$(OBJDIR)/aardmail.obj $(OBJDIR)/fs.obj $(OBJDIR)/getopt.obj
-
 .PHONY: clean install tar rename upload deb maintainer-deb
 
 all: $(ALL)
  
-aardmail-miniclient$(EXE): $(OBJDIR)/miniclient.obj $(COMMON_OBJ)
-	$(Q)echo "LD $@"
-	$(Q)$(LD) $(LDFLAGS) -e$@ $**
-
-aardmail-pop3c$(EXE): $(OBJDIR)/pop3c.obj $(COMMON_OBJ)
+aardmail-miniclient$(EXE): $(OBJDIR)\miniclient.obj 
 	$(Q)echo "LD $@"
 	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $**
 
-aardmail-sendmail$(EXE): $(OBJDIR)/sendmail.obj $(COMMON_OBJ)
+aardmail-pop3c$(EXE): $(OBJDIR)\pop3c.obj 
 	$(Q)echo "LD $@"
 	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $**
 
-aardmail-smtpc$(EXE): $(OBJDIR)/smtpc.obj $(COMMON_OBJ)
+aardmail-sendmail$(EXE): $(OBJDIR)\sendmail.obj 
 	$(Q)echo "LD $@"
 	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $**
+
+aardmail-smtpc$(EXE): $(OBJDIR)\smtpc.obj 
+	$(Q)echo "LD $@"
+	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $**
+
+src\aardmail.lib: $(OBJDIR)\network.obj $(OBJDIR)\netssl.obj $(OBJDIR)\aardlog.obj \
+        $(OBJDIR)\cat.obj $(OBJDIR)\maildir.obj $(OBJDIR)\authinfo.obj \
+        $(OBJDIR)\aardmail.obj $(OBJDIR)\fs.obj $(OBJDIR)\getopt.obj
+	$(Q)echo "TLIB $@"
+	$(Q)cd $(@D)
+	$(Q)tlib $(@F) /a $(**F)
+	$(Q)cd ..
+
+crammd5\crammd5.lib: crammd5\client_crammd5.obj crammd5\hmacmd5.obj crammd5\md5.obj
+	$(Q)echo "TLIB $@"
+	$(Q)cd $(@D)
+	$(Q)tlib $(@F) /a $(**F)
+	$(Q)cd ..
 
 .c.obj:
 	$(Q)echo "CC $@"
