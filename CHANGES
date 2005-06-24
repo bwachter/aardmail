@@ -1,4 +1,8 @@
-0.1-pre3:
+0.1-pre-4:
+	Added Makefile for Borland CC
+	Fixed all sources to compile with Borland C (and most likely other windows compilers, too)
+
+0.1-pre-3:
 	Added smtpc (`single user')
 	Added (ugly) plaintext reconnect on TLS-failure if wanted by the user
 	Completed netaddrinfo() emulation code (most of the new code stolen from libesmtp).

@@ -1,0 +1,73 @@
+# set up some basic programs
+CC=bcc32
+LD=bcc32
+RM=del /F
+INSTALL=install
+DESTDIR=
+BINDIR=/usr/bin
+MANDIR=/usr/share/man
+
+LDFLAGS=-tWC -w-
+
+!ifdef GNUTLS
+LIBS+=-lgnutls-openssl -lgnutls -ltasn1 -lgcrypt -lgpg-error -lz
+CFLAGS+=-DHAVE_SSL
+!endif
+
+!ifdef SSL
+LIBS+=-lssl -lcrypto
+CFLAGS+=-DHAVE_SSL
+!endif
+
+EXE=.exe
+
+Q=@
+ALL=aardmail-pop3c$(EXE) aardmail-miniclient$(EXE)
+
+!ifdef DEV
+ALL+=aardmail-smtpc$(EXE) aardmail-sendmail$(EXE)
+!endif
+
+# you should not need to touch anything below this line
+
+OBJDIR=src
+SRCDIR=src
+PREFIX?=/usr
+COMMON_OBJ=$(OBJDIR)/network.obj $(OBJDIR)/netssl.obj $(OBJDIR)/aardlog.obj \
+	$(OBJDIR)/cat.obj $(OBJDIR)/maildir.obj $(OBJDIR)/authinfo.obj \
+	$(OBJDIR)/aardmail.obj $(OBJDIR)/fs.obj $(OBJDIR)/getopt.obj
+
+.PHONY: clean install tar rename upload deb maintainer-deb
+
+all: $(ALL)
+ 
+aardmail-miniclient$(EXE): $(OBJDIR)/miniclient.obj $(COMMON_OBJ)
+	$(Q)echo "LD $@"
+	$(Q)$(LD) $(LDFLAGS) -e$@ $**
+
+aardmail-pop3c$(EXE): $(OBJDIR)/pop3c.obj $(COMMON_OBJ)
+	$(Q)echo "LD $@"
+	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $**
+
+aardmail-sendmail$(EXE): $(OBJDIR)/sendmail.obj $(COMMON_OBJ)
+	$(Q)echo "LD $@"
+	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $**
+
+aardmail-smtpc$(EXE): $(OBJDIR)/smtpc.obj $(COMMON_OBJ)
+	$(Q)echo "LD $@"
+	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $**
+
+.c.obj:
+	$(Q)echo "CC $@"
+	$(Q)$(CC) $(CFLAGS) -o$@ -c $<
+
+clean:
+	$(Q)echo "cleaning up"
+	$(Q)$(RM) $(ALL) $(OBJDIR)\*.obj crammd5\*.obj
+
+install: all
+	install -d $(DESTDIR)$(BINDIR)
+	install -d $(DESTDIR)$(MANDIR)/man1
+	install -m 755 $(ALL) $(DESTDIR)$(BINDIR)
+	install -m 644 doc/man/*.1 $(DESTDIR)$(MANDIR)/man1
+
