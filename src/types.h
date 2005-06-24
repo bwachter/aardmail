@@ -24,16 +24,13 @@
 #endif
 #endif
 
-#ifdef __BORLANDC__
-#define pclose(a) _pclose(a)
-#define popen(a,b) _popen(a,b)
-#endif
-
 #define AM_MAXUSER 1025
 #define AM_MAXPASS 1025
 #define AM_MAXPATH 1025
 
 #ifdef __BORLANDC__
+#define pclose(a) _pclose(a)
+#define popen(a,b) _popen(a,b)
 struct addrinfo {
 	int     ai_flags;
 	int     ai_family;
@@ -60,7 +57,7 @@ typedef int pid_t;
 #ifndef NI_NUMERICSERV
 #define NI_NUMERICSERV 8
 #endif
-#ifndef NU_NUMERICHOST
+#ifndef NI_NUMERICHOST
 #define NI_NUMERICHOST 2
 #endif
 
@@ -96,4 +93,5 @@ typedef int pid_t;
 #ifndef AI_PASSIVE
 #define AI_PASSIVE 4
 #endif
+
 #endif
