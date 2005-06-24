@@ -1,7 +1,9 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
+#ifndef __WIN32__
 #include <strings.h>
+#endif
 
 #include "aardmail.h"
 #include "aardlog.h"
@@ -25,7 +27,9 @@ int loglevel(int loglevel){
 }
 
 int logmsg(int loglevel, int facility, char *msg, ...) {
+#ifdef __GNUC__
 	(void) facility;
+#endif
 	va_list ap;
 	char *tmp;
 	int die=0;

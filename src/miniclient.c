@@ -3,7 +3,11 @@
 #ifdef __WIN32__
 #include <windows.h>
 #include <winbase.h>
+#ifdef _GNUC_
 #include <getopt.h>
+#else
+#include "getopt.h"
+#endif
 #else
 #include <unistd.h>
 #include <sys/poll.h>
@@ -49,8 +53,8 @@ int main(int argc, char** argv){
 
 #ifdef __WIN32__
 	HANDLE myhandles[2];
-
-	// add that windows foo here
+	int res;
+	WSAEVENT event = WSACreateEvent();
 #else
 	struct pollfd pfd[2];
 #endif
@@ -102,9 +106,9 @@ int main(int argc, char** argv){
 	sd=netconnect(defaultauth.machine, defaultauth.port);
 
 #ifdef __WIN32__
+#ifdef __GNUC__
 #warning miniclient is not fully working due to the braindead Windows API
-	int res;
-	WSAEVENT event = WSACreateEvent();
+#endif
 
 	i=netreadline(sd, buf);
 	__write2(buf);

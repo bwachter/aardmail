@@ -110,8 +110,10 @@ int netreadline(int sd, char *buf){
 }
 
 int netwriteline(int sd, char *buf){
-	logmsg(L_INFO, F_NET, "> ", buf, NULL);
 	int i;
+
+	logmsg(L_INFO, F_NET, "> ", buf, NULL);
+
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	if (am_sslconf & AM_SSL_USETLS){
 		i=netsslwrite(ssl, buf, strlen(buf));
@@ -149,8 +151,10 @@ int netnameinfo(const struct sockaddr *sa, socklen_t salen,
 	} else {
 #endif
 #if (defined( __WIN32__)) || (defined(_BROKEN_IO))
+#ifdef __GNUC__
 		(void) flags;
 		(void) salen;
+#endif
 		char *tmp;
 		if ((tmp = malloc((NI_MAXHOST+1)*sizeof(char))) == NULL) {
 			__write2("malloc() failed\n");
@@ -430,13 +434,15 @@ int netconnect(char *hostname, char *servicename){
 	struct addrinfo *res;
 	struct addrinfo hints;
 	int sd, err;
+#ifdef __WIN32__
+	WSADATA wsaData;
+#endif
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_flags = AI_PASSIVE;
 	hints.ai_socktype = SOCK_STREAM;
 
 #ifdef __WIN32__
-	WSADATA wsaData;
 	WSAStartup( 0x0202, &wsaData );
 #endif
 	if ((err=netaddrinfo(hostname, servicename, &hints, &res))){

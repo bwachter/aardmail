@@ -4,7 +4,11 @@
 #include <fcntl.h>
 
 #ifdef __WIN32__
+#ifdef _GNUC_
 #include <getopt.h>
+#else
+#include "getopt.h"
+#endif
 #else
 #endif
 

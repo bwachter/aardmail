@@ -10,21 +10,28 @@
 #else
 #include <unistd.h>
 #endif
+#include "types.h"
 
-static inline int __write1(const char *s){
+#ifdef __BORLANDC__
+static int __write1(const char *s)
+#else
+static inline int __write1(const char *s)
+#endif
+{
 	write(1, s, strlen(s));
 	return 0;
 }
 
-static inline int __write2(const char *s){
+#ifdef __BORLANDC__
+static int __write2(const char *s)
+#else
+static inline int __write2(const char *s)
+#endif
+{
 	write(2, s, strlen(s));
 	return 0;
 }
 #endif
-
-#define AM_MAXUSER 1025
-#define AM_MAXPASS 1025
-#define AM_MAXPATH 1025
 
 int debuglevel;
 int am_checkprogram(char *program);

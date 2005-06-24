@@ -4,7 +4,11 @@
 #include <fcntl.h>
 
 #ifdef __WIN32__
+#ifdef _GNUC_
 #include <getopt.h>
+#else
+#include "getopt.h"
+#endif
 #else
 #include <sys/wait.h>
 #endif
@@ -135,7 +139,9 @@ static long pop3c_getmessage(int sd, FILE *fd, int size){
 #else
 static long pop3c_getmessage(int sd, int fd, int size){
 #endif
+#ifdef __GNUC__
 	(void) size;
+#endif
 	char *tmp;
 	char *buf[MAXNETBUF];
 	int i, delayrn=0;
