@@ -118,7 +118,7 @@ int main(int argc, char** argv){
 		logmsg(L_ERROR, F_NET, "WSAEventSelect() failed", NULL);
 		return -1;
 	}
-	myhandles[1] = event;
+	myhandles[1] = (HANDLE)event;
 
 	while (strcmp(buf, "exit\n")){
 		res = WaitForMultipleObjects(2, myhandles, FALSE, INFINITE);

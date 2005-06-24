@@ -2,28 +2,19 @@
 CC=bcc32
 LD=bcc32
 RM=del /F
-INSTALL=install
-DESTDIR=
-BINDIR=/usr/bin
-MANDIR=/usr/share/man
 
 LDFLAGS=-tWC -w- -k- -q -O2 -lq -lc -lx -lGpd -lGn -lGl -lw- 
 CFLAGS=-w- -O2 -q 
-LIBS=-Lsrc aardmail.lib
-
-!ifdef GNUTLS
-LIBS+=-lgnutls-openssl -lgnutls -ltasn1 -lgcrypt -lgpg-error -lz
-CFLAGS+=-DHAVE_SSL
-!endif
+LIBS=-Lsrc aardmail.lib ws2_32.lib
 
 !ifdef SSL
-LIBS+=-lssl -lcrypto
-CFLAGS+=-DHAVE_SSL
+SSLLIBS=ssleay32.lib libeay32.lib
+SSLCFLAGS=-DHAVE_SSL
 !endif
 
 EXE=.exe
-
 Q=@
+
 ALL=crammd5\crammd5.lib src\aardmail.lib aardmail-pop3c$(EXE) aardmail-miniclient$(EXE)
 
 !ifdef DEV
@@ -34,26 +25,25 @@ ALL+=aardmail-smtpc$(EXE) aardmail-sendmail$(EXE)
 
 OBJDIR=src
 SRCDIR=src
-PREFIX?=/usr
-.PHONY: clean install tar rename upload deb maintainer-deb
+.PHONY: clean
 
 all: $(ALL)
  
 aardmail-miniclient$(EXE): $(OBJDIR)\miniclient.obj 
 	$(Q)echo "LD $@"
-	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $**
+	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
 
 aardmail-pop3c$(EXE): $(OBJDIR)\pop3c.obj 
 	$(Q)echo "LD $@"
-	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $**
+	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
 
 aardmail-sendmail$(EXE): $(OBJDIR)\sendmail.obj 
 	$(Q)echo "LD $@"
-	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $**
+	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
 
 aardmail-smtpc$(EXE): $(OBJDIR)\smtpc.obj 
 	$(Q)echo "LD $@"
-	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $**
+	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
 
 src\aardmail.lib: $(OBJDIR)\network.obj $(OBJDIR)\netssl.obj $(OBJDIR)\aardlog.obj \
         $(OBJDIR)\cat.obj $(OBJDIR)\maildir.obj $(OBJDIR)\authinfo.obj \
@@ -71,15 +61,9 @@ crammd5\crammd5.lib: crammd5\client_crammd5.obj crammd5\hmacmd5.obj crammd5\md5.
 
 .c.obj:
 	$(Q)echo "CC $@"
-	$(Q)$(CC) $(CFLAGS) -o$@ -c $<
+	$(Q)$(CC) $(CFLAGS) $(SSLCFLAGS) -o$@ -c $<
 
 clean:
 	$(Q)echo "cleaning up"
 	$(Q)$(RM) $(ALL) $(OBJDIR)\*.obj crammd5\*.obj
-
-install: all
-	install -d $(DESTDIR)$(BINDIR)
-	install -d $(DESTDIR)$(MANDIR)/man1
-	install -m 755 $(ALL) $(DESTDIR)$(BINDIR)
-	install -m 644 doc/man/*.1 $(DESTDIR)$(MANDIR)/man1
 
