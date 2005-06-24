@@ -18,7 +18,7 @@ CURNAME=$(notdir $(shell pwd))
 
 LIBS=-L. -laardmail
 
-ifneq ($(DEBUG),)
+ifdef DEBUG
 CFLAGS=-g -Wall -W -pipe -Os
 LDFLAGS=-g
 else
@@ -56,7 +56,7 @@ STRIP=strip -x
 endif
 endif
 ifeq ($(shell uname),IRIX64)
-ifeq ($(DEBUG),)
+ifdef DEBUG
 STRIP=
 CFLAGS=-Wall -W -Os 
 LDFLAGS=-g
@@ -114,13 +114,13 @@ libcrammd5.a: crammd5/client-crammd5.o crammd5/hmacmd5.o crammd5/md5.o
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(Q)echo "CC $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(CFLAGS) -c $< -o $@
-ifneq ($(STRIP),)
+ifdef STRIP
 	$(Q)$(COMMENT) -$(CROSS)$(STRIP) $@
 endif
 %.o: %.c
 	$(Q)echo "CC $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(CFLAGS) -c $< -o $@
-ifneq ($(STRIP),)
+ifdef STRIP
 	$(Q)$(COMMENT) -$(CROSS)$(STRIP) $@
 endif
 
