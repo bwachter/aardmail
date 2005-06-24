@@ -2,6 +2,20 @@
 #define _AM_TYPES_H
 
 #ifdef __WIN32__
+#include <io.h>
+#include <windows.h>
+#include <winbase.h>
+#include <ws2tcpip.h>
+#else
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <stdint.h>
+#endif
+
+#ifdef __WIN32__
 #ifndef strcasecmp
 #define strcasecmp(a,b) stricmp(a,b)
 #endif 
@@ -15,20 +29,25 @@
 #define popen(a,b) _popen(a,b)
 #endif
 
-// FIXME, only works on windows
-#ifndef uint32_t
+#define AM_MAXUSER 1025
+#define AM_MAXPASS 1025
+#define AM_MAXPATH 1025
+
+#ifdef __BORLANDC__
+struct addrinfo {
+	int     ai_flags;
+	int     ai_family;
+	int     ai_socktype;
+	int     ai_protocol;
+	size_t  ai_addrlen;
+	struct sockaddr *ai_addr;
+	char   *ai_canonname;
+	struct addrinfo *ai_next;
+};
+
 typedef unsigned __int32 uint32_t;
-#endif
-
-#ifndef uint16_t
 typedef unsigned __int16 uint16_t;
-#endif
-
-#ifndef socklen_t
 typedef uint32_t socklen_t;
-#endif
-
-#ifndef pid_t
 typedef int pid_t;
 #endif
 
@@ -44,10 +63,6 @@ typedef int pid_t;
 #ifndef NU_NUMERICHOST
 #define NI_NUMERICHOST 2
 #endif
-
-#define AM_MAXUSER 1025
-#define AM_MAXPASS 1025
-#define AM_MAXPATH 1025
 
 #ifndef EAI_FAMILY
 #define EAI_FAMILY -1

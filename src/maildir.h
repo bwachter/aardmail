@@ -1,9 +1,12 @@
 #ifndef _MAILDIR_H
 #define _MAILDIR_H
+
 #include <sys/stat.h>
+
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
 #include <stdio.h>
 #endif
+
 #include "aardmail.h"
 
 typedef struct _maildirent maildirent;

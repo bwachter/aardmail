@@ -37,19 +37,6 @@ typedef struct {
 sslConn_t *ssl;
 #endif
 
-#ifndef addrinfo
-struct addrinfo {
-	int     ai_flags;
-	int     ai_family;
-	int     ai_socktype;
-	int     ai_protocol;
-	size_t  ai_addrlen;
-	struct sockaddr *ai_addr;
-	char   *ai_canonname;
-	struct addrinfo *ai_next;
-};
-#endif
-
 int netconnect(char *hostname, char *servicename);
 int netread(int sd, char *buf);
 int netreadline(int sd, char *buf);

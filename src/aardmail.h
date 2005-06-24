@@ -1,16 +1,14 @@
 #ifndef _AARDMAIL_H
 #define _AARDMAIL_H
 
+#include "types.h"
 #ifdef __dietlibc__
 #include <write12.h>
 #else
 #include <string.h>
 #ifdef __WIN32__
 #include <io.h>
-#else
-#include <unistd.h>
 #endif
-#include "types.h"
 
 #ifdef __BORLANDC__
 static int __write1(const char *s)
