@@ -1,0 +1,62 @@
+.TH "aardmail-sendmail" 1 "June 14, 2005"
+.SH NAME
+aardmail-sendmail \- sendmail wrapper for spooling mails
+.SH "SYNOPSIS"
+\fBaardmail-pop3c\fR [\fB\-b\ \fIprogram\fR\fR] [\fB\-c\ \fIoption\fR\fR] [\fB\-d\fR\fR] \fB\-h\ \fIhostname\fR\fR [\fB\-l\fR\fR] [\fB\-m\ \fImaildir\fR\fR] [\fB\-n\ \fInumber\fR\fR] [\fB\-p\ \fIpassword\fR\fR] [\fB\-r\ \fInumber\fR\fR] [\fB\-s\ \fIservice\fR\fR] [\fB\-t\fR\fR] [\fB\-u\ \fIuser\fR\fR] [\fB\-v\ \fIlevel\fR\fR] [\fB\-x\ \fIprogram\fR\fR]
+.SH "DESCRIPTION"
+.PP
+\fBaardmail-sendmail\fR is a simple program to spool mails into a Maildir. You can use \fBaardmail-smtpc\fR to deliver mails stored in a Maildir using SMTP. Only a small subset of sendmails options are supported, this manpage only documents the supported options (unlike \fBssmtp\fR). If you give an invalid option the program will just print out 'Invalid option' and continue normally.
+.SH "OPTIONS"
+.PP
+When called without arguments aardmail-sendmail will wait for a mail on STDIN, terminated by EOF or a single \fB.\fR.
+.TP
+.B \-dX
+Set debug-value to X. 
+.TP
+.B \-Ffullname
+Set the senders full name
+.TP
+.B \-ffrom
+Sets the name of From:
+.TP
+.B \-c option
+General option to control cryptography settings. Valid options are 0 for no encryption, 1 for TLS with exit on error (like -t), 2 for TLS with fallback to no encryption on error, 3 for TLS using starttls and exit on error (like -l) and 4 for TLS using starttls with fallback to no encryption on error.
+.TP
+.B \-d
+Don't delete the mails after successful sending. The default is to delete delivered mails.
+.TP
+.B \-h hostname
+The hostname to connect to. This can be either a name resolvable via DNS or a numeric IP
+.TP
+.B \-l
+Use TLS with starttls and exit if an error occurs (like -c 3)
+.TP
+.B \-m maildir
+Use maildir as spool. The default is to use ~/Maildir/.spool 
+.TP
+.B \-n number
+Only send number mails
+.TP
+.B \-p password
+Authentify using the given password. Don't use this option, use a .authinfo file instead
+.TP
+.B \-s service
+The service to connect to. This can be either a string which is resolvable via /etc/services or a numeric portnumber. The default is 25 (SMTP).
+.TP
+.B \-t
+Use TLS and exit on error. Same like -c 1.
+.TP
+.B \-u username
+Specify the username to use. When setting up .authinfo properly you usually only need this option if you want to send mail under different account names from the same server (you usually don't want this)
+.TP
+.B \-v level
+Set the verbosity. Valid values are 0 (no logging), 1 (deadly), 2 (error), 3 (warning) and 4 (info). The default is 2. It does not matter if you specify levels bigger than 4.
+.TP
+.B \-V
+Print version and exit
+.SH "SEE ALSO"
+.PP
+aardmail (1), aardmail-smtpc (1).
+.SH "AUTHOR"
+.PP
+aardmail was written by Bernd 'Aard' Wachter <bwachter@lart\&.info>. It can be obtained at \fIhttp://bwachter.lart.info/projects/aardmail/\fP
