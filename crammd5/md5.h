@@ -24,12 +24,8 @@
 #ifndef MD5_UTILS_H
 #define MD5_UTILS_H
 
-#include <sys/types.h>
-#if !(defined __WIN32__) || (defined __GNUC__)
-#include <stdint.h>
-#else
+//#include <sys/types.h>
 #include "../src/types.h"
-#endif
 
 
 typedef struct {

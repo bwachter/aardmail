@@ -8,6 +8,7 @@ enum facilities {
 	F_FS,
 	F_MAILDIR,
 	F_AUTHINFO,
+	F_ADDRLIST,
 };
 
 enum loglevel {

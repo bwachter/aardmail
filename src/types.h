@@ -12,7 +12,11 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#if (defined(sun)) || (defined (sgi))
+#include <inttypes.h>
+#else
 #include <stdint.h>
+#endif
 #endif
 
 #ifdef __WIN32__

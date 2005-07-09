@@ -1,5 +1,9 @@
-
 1. Building
+1.1 Building with gcc and compatible
+1.2 Building with Borland C
+
+1.1 Building with gcc and compatible
+------------------------------------
 
 Just type `make', specifying options using environement variables:
 
@@ -17,7 +21,24 @@ CROSS=
 DIET=
 	Set to the dietwrapper if you want to link against dietlibc
 
+1.2 Building with Borland C
+---------------------------
+
+Type `make -f Makefile.borland'.
+
+If you want to enable SSL
+- get the nasm-assembler (nasmw.exe) and put it in your path
+- get the OpenSSL-sources from http://www.openssl.org
+- make sure you have perl in your path
+- create the makefile with perl Configure BCC-32
+- compile with make -f ./
+- copy the includes from i32 to Include/openssl of your BCC installation
+  (make sure you don't copy the links -- -b switch to cp)
+- copy *.lib of the lib directory to Lib of your BCC installation
+- compile aardmail with make -DSSL -f Makefile.borland
+
 2. Installing
+-------------
 
 Type `Make install', specifying options using environement varibles:
 

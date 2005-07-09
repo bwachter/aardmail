@@ -24,7 +24,7 @@
 #define EAI_SYSTEM       -11   /* System error returned in `errno'.  */
 #endif
 
-
+#if (defined(__WIN32__)) || (defined(_BROKEN_IO))
 static struct addrinfo *
 dup_addrinfo (struct addrinfo *info, void *addr, size_t addrlen)
 {
@@ -44,6 +44,7 @@ dup_addrinfo (struct addrinfo *info, void *addr, size_t addrlen)
   ret->ai_addrlen = addrlen;
   return ret;
 }
+#endif
 
 #if (defined __WIN32__) || (defined _BROKEN_IO)
 void
@@ -199,6 +200,7 @@ int netaddrinfo(const char *node, const char *service,
 	} else {
 #endif
 #if (defined(__WIN32__)) || (defined(_BROKEN_IO))
+		err=0;
   struct hostent *hp;
   struct servent *servent;
   const char *socktype;
@@ -206,7 +208,6 @@ int netaddrinfo(const char *node, const char *service,
   struct addrinfo hint, result;
   struct addrinfo *ai, *sai, *eai;
   char **addrs;
-  int code;
 
   memset (&result, 0, sizeof result);
 
@@ -283,28 +284,9 @@ int netaddrinfo(const char *node, const char *service,
       return (*res == NULL) ? EAI_MEMORY : 0;
     }
 
-  errno = 0;
   hp = gethostbyname (node);
-  if (hp == NULL)
-    {
-      if (errno != 0)
-	{
-	  return EAI_SYSTEM;
-	}
-      //code = h_error_ctx (&ghbnctx);
-      switch (code)
-	{
-	case HOST_NOT_FOUND: code = EAI_NODATA; break;
-	case NO_DATA: code = EAI_NODATA; break;
-#if defined(NO_ADDRESS) && NO_ADDRESS != NO_DATA
-	case NO_ADDRESS: code = EAI_NODATA; break;
-#endif
-	case NO_RECOVERY: code = EAI_FAIL; break;
-	case TRY_AGAIN: code = EAI_AGAIN; break;
-	default: code = EAI_FAIL; break;
-	}
-      return code;
-    }
+	// fixme, translate error codes
+  if (hp == NULL) return h_errno;
 
   /* Check that the address family is acceptable.
    */
@@ -312,14 +294,13 @@ int netaddrinfo(const char *node, const char *service,
     {
     case AF_INET:
       if (!(hints->ai_family == PF_UNSPEC || hints->ai_family == PF_INET))
-	goto eai_family;
+				return EAI_FAMILY;
       break;
     case AF_INET6:
       if (!(hints->ai_family == PF_UNSPEC || hints->ai_family == PF_INET6))
-	goto eai_family;
+				return EAI_FAMILY;
       break;
     default:
-    eai_family:
       return EAI_FAMILY;
     }
 

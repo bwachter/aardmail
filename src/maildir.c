@@ -194,10 +194,6 @@ int maildir_init(char *maildir, char *subdir, int harddelete){
 	return 0; //FIXME
 }
 
-int maildir_sgetfirst(maildirent *maildir_find){
-	maildirent *p;
-}
-
 static int maildir_sappend(maildirent *maildir_add){
 	maildirent *p;
 

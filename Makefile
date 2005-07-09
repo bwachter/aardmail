@@ -103,7 +103,8 @@ aardmail-smtpc$(EXE): $(OBJDIR)/smtpc.o
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 libaardmail.a: $(OBJDIR)/network.o $(OBJDIR)/netssl.o $(OBJDIR)/aardlog.o $(OBJDIR)/cat.o \
-	$(OBJDIR)/aardmail.o $(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o $(OBJDIR)/fs.o 
+	$(OBJDIR)/aardmail.o $(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o $(OBJDIR)/fs.o \
+	$(OBJDIR)/kirahvi.o $(OBJDIR)/addrlist.o
 	$(Q)echo "AR $@"
 	$(Q)$(CROSS)$(AR) $(ARFLAGS) $@ $^
 
@@ -126,7 +127,7 @@ endif
 
 clean:
 	$(Q)echo "cleaning up"
-	$(Q)$(RM) $(ALL) $(OBJDIR)/*.o crammd5/*.o
+	$(Q)$(RM) $(ALL) *.exe $(OBJDIR)/*.o crammd5/*.o
 
 install: all
 	install -d $(DESTDIR)$(BINDIR)
@@ -152,3 +153,15 @@ maintainer-deb: rename
 deb: rename
 	$(Q)cd ../$(VERSION) && ./debchangelog && dpkg-buildpackage -rfakeroot -us -uc
 	$(Q)cd .. && rm -Rf $(VERSION)
+
+help:
+	$(Q)echo "Variables for building:"
+	$(Q)echo -e "SSL=0|1\t\tenable/disable SSL support and link against OpenSSL or any"
+	$(Q)echo -e "\t\tcompatible library. Default is 0."
+	$(Q)echo -e "DEBUG=0|1\tenable/disable debug build/stripping binaries. Default is 0."
+	$(Q)echo -e "WIN32=0|1\tenable/disable build for Windows. Adds .exe to the binaries"
+	$(Q)echo -e "\t\tand links against libws2_32, libwsock32 and libgdi32.  Default is 0."
+	$(Q)echo -e "CROSS=\t\tset a cross compiler prefix, for example i386-pc-mingw32-."
+	$(Q)echo -e "\t\tDefault is unset."
+	$(Q)echo -e "DIET=\t\tset the diet-wrapper if you want to link against dietlibc."
+	$(Q)echo -e "\t\tDefault is unset."

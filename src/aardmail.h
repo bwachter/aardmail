@@ -7,8 +7,15 @@
 #else
 #include <string.h>
 #ifdef __WIN32__
+#ifdef _GNUC_
+#include <getopt.h>
+#else
+#include "getopt.h"
+#endif
 #include <io.h>
 #endif
+
+#define AM_VERSION "(aardmail 0.1-pre4); http://bwachter.lart.info/projects/aardmail/"
 
 #ifdef __BORLANDC__
 static int __write1(const char *s)
@@ -37,4 +44,5 @@ int am_checkprogram(char *program);
 int am_pipe(char *pipeto);
 #endif
 void am_unimplemented();
+void kirahvi();
 #endif

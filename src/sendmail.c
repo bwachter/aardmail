@@ -3,27 +3,46 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#ifdef __WIN32__
-#ifdef _GNUC_
-#include <getopt.h>
-#else
-#include "getopt.h"
-#endif
-#else
-#endif
-
 #include "aardmail.h"
 #include "aardlog.h"
 #include "cat.h"
+#include "fs.h"
 #include "maildir.h"
 
-static void sendmail_usage(char *program);
+#define AM_SM_IGNORE_DOTS 1
 
 char *uniqname;
 
 int main(int argc, char **argv){
-	int i=1;
+	int smcfg=0;
+	int i=1, isbody=0, c;
 	char buf[1024];
+	char from[1024];
+
+	while ((c=getopt(argc, argv, "d:f:F:o:tvV")) != EOF){
+		switch(c){
+		case 'd':
+			loglevel(atoi(optarg));
+			break;
+		case 'f': // set the from: line. will be overwritten if there's a From:-line
+			break;
+		case 'F':
+			break; // set the fullname 
+		case 'o':
+			if (optarg[0]=='i') smcfg|=AM_SM_IGNORE_DOTS; // ignore single dots
+			break;
+		case 't':
+			//FIXME
+			break;
+		case 'v':
+			loglevel(4);
+			break;
+		case 'V':
+			__write1(cati("aardmail-sendmail ", AM_VERSION, NULL));
+			exit(0);
+		}
+	}
+
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
 	FILE *fd;
 #else
@@ -41,32 +60,29 @@ int main(int argc, char **argv){
 		}
 	while (i>0){
 		i=read(0, buf, 1024);
-		if (!strncmp(buf+i-2, ".\n", 2)) break;
-		write(fd, buf, i);
+		if (!isbody){
+			if (!strncasecmp(buf, "from:", 5)){
+				logmsg(L_ERROR, F_GENERAL, "Found from:", NULL);
+			}
+			if (!strncmp(buf, "\n", 1)) {
+				logmsg(L_ERROR, F_GENERAL, "foo", NULL);
+				isbody=1;
+				if (!strncmp(from, "\0", 1)){
+					logmsg(L_ERROR, F_GENERAL, "Unable to figure out From:", NULL);
+					goto error;
+				}
+				// header time ;)
+			}
+		}
+		if (!strncmp(buf+i-2, "\r\n", 2)) {
+			logmsg(L_ERROR, F_GENERAL, "Having \\r\\n in the input is bad for your karma", NULL);
+			goto error;
+		}
+		if (!strncmp(buf+i-2, ".\n", 2) && !(smcfg & AM_SM_IGNORE_DOTS)) break;
+		filewrite(fd, buf, i);
 	}
-	maildirclose(NULL, &uniqname, fd);
+	return maildirclose(NULL, &uniqname, fd);
+ error:
 	return -1;
 }
 
-static void sendmail_usage(char *program){
-	char *tmpstring=NULL;
-	if (!cat(&tmpstring, "Usage: ", program, " [-b program] [-d] -h hostname [-m maildir] [-p password]\n",
-					 "\t\t[-r number] [-s service] [-t] [-u user] [-x program]","\n",
-					 "\t-b:\tonly fetch mail if program exits with zero status\n",
-					 "\t-d:\tdon't delete mail after retrieval (default is to delete)\n",
-					 "\t-h:\tspecify the hostname to connect to\n",
-					 "\t-m:\tthe maildir for spooling; default (unless -x used) is ~/Maildir\n",
-					 "\t-n:\tonly load number mails\n",
-					 "\t-p:\tthe password to use. Don't use this option.\n",
-					 "\t-r:\treconnect after number mails (see FAQ)\n",
-					 "\t-s:\tthe service to connect to. Must be resolvable if non-numeric.\n",
-					 "\t-u:\tthe username to use. You usually don't need this option.\n",
-					 "\t-v:\tset the loglevel, valid values are 0 (no logging), 1 (deadly),\n",
-					 "\t\t2 (errors, default), 3 (warnings) and 4 (info, very much)\n",
-					 "\t-x:\tthe program to popen() for each received mail\n",
-					 NULL)) {
-		__write2(tmpstring);
-		free(tmpstring);
-	}
-	exit(0);
-}

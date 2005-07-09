@@ -199,6 +199,9 @@ static int pop3c_connectauth(authinfo *auth){
 	int i, sd;
 	char buf[1024];
 
+	// ugly hack to get rid of the `label defined but not used' warning when building without SSL
+	goto connect;
+
  connect:
 	if ((sd=netconnect(auth->machine, auth->port)) == -1)
 		return -1;
@@ -312,9 +315,9 @@ int main(int argc, char** argv){
 #endif
 
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
-	while ((c=getopt(argc, argv, "b:c:dh:lm:n:p:r:s:tu:v:x:")) != EOF){
+	while ((c=getopt(argc, argv, "a:b:c:dh:lm:n:p:r:s:tu:v:x:")) != EOF){
 #else
-	while ((c=getopt(argc, argv, "b:dh:m:n:p:r:s:u:v:x:")) != EOF){
+	while ((c=getopt(argc, argv, "a:b:dh:m:n:p:r:s:u:v:x:")) != EOF){
 #endif
 		switch(c){
 		case 'b':
@@ -342,6 +345,9 @@ int main(int argc, char** argv){
 			strncpy(am_sslkey, optarg, 1024);
 			break;
 #endif
+		case 'g':
+			kirahvi();
+			exit(0);
 		case 'h':
 			strncpy(defaultauth.machine, optarg, NI_MAXHOST);
 			break;
@@ -357,13 +363,14 @@ int main(int argc, char** argv){
 			pop3c.onlyget = atoi(optarg);
 			break;
 		case 'p':
-			logmsg(L_WARNING, F_GENERAL, "do not use -p password, it's unsecure. use .authinfo", NULL);
+			logmsg(L_WARNING, F_GENERAL, "do not use -p password, it's insecure. use .authinfo", NULL);
 			strncpy(defaultauth.password, optarg, AM_MAXPASS);
 			break;
 		case 'r':
 			am_unimplemented();
 			break;
 		case 's':
+			if (!strcmp(optarg, "kirahvi")){kirahvi(); exit(0);}
 			strncpy(defaultauth.port, optarg, NI_MAXSERV);
 			break;
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
