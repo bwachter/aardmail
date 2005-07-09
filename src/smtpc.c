@@ -21,33 +21,16 @@
 #include "aardmail.h"
 #include "aardlog.h"
 #include "authinfo.h"
+#include "addrlist.h"
 #include "network.h"
 #include "cat.h"
 #include "maildir.h"
 #include "fs.h"
 
-struct slist {
-	char *item;
-	struct slist *next;
-};
-
-typedef struct slist addresslist;
-
-addresslist rcptlist, fromlist, *addressptr;
-
-int slist_add(char *string){
-	*addressptr=rcptlist;
-	if (*adressptr->next==NULL)
-}
-
-
 static struct {
 	char *maildir;
 	int keepmail;
 } smtpc;
-
-static char* mailfrom;
-static char** rcptto;
 
 static void smtpc_usage(char *program);
 static int smtpc_oksendline(int sd, char *msg, char *ok);
@@ -115,15 +98,13 @@ static int smtpc_connectauth(authinfo *auth){
 	return sd;
 }
 
-// add addrlist parameter and build up an address list for both from and to
-static int smtpc_getaddr(char *msg){
-logmsg(L_WARNING, F_NET, "called getaddr", NULL);
-	char *ptr, isaddr=0;
-	int i, start;
-	for (ptr=msg,i=0;ptr!=NULL;*ptr++,i++){
+static int smtpc_getaddr(addrlist **addrlist_storage, char *msg){
+	char *ptr, isaddr=0, endaddr=0;
+	int i, start=0;
+	for (ptr=msg,i=0;*ptr!=NULL;*ptr++,i++){
 		if (*ptr=='\n') {
 			*ptr='\0';
-			break;
+			endaddr=1;
 		}
 		if (*ptr=='<'){
 			start=i;
@@ -131,27 +112,38 @@ logmsg(L_WARNING, F_NET, "called getaddr", NULL);
 		}
 		if (*ptr=='>' && isaddr){
 			*ptr='\0';
-			break;
+			endaddr=1;
 		}
 		if (*ptr=='@') {
-			logmsg(L_INFO, F_GENERAL, "Found email address", NULL);
 			isaddr=1;
 			continue;
 		}
-		if (*ptr==' ') {
-			isaddr=0;
+		if (*ptr==',' || *ptr==';' || *ptr==' ') {
+			if (isaddr==0) start=i;
+			else {
+				*ptr='\0';
+				endaddr=1;
+			}
+		}
+		if (isaddr && endaddr){
+			logmsg(L_INFO, F_GENERAL, "Address found: ", msg+start+1, NULL);
+			addrlist_append(addrlist_storage, msg+start+1);
+			isaddr=endaddr=0;
 			start=i;
 			continue;
 		}
+		if (endaddr) {
+			endaddr=0;
+			start=i;
+		}
 	}
-	if (isaddr)
-		logmsg(L_INFO, F_GENERAL, "Address found: ", msg+start+1, NULL);
-	//exit(0);
 	return 0;
 }
 
 static int smtpc_session(int sd, char **msg){
-	char **buf, **bufptr, *ptr, isfrom=0;
+	addrlist *rcptlist=NULL, *fromlist=NULL, *addrptr;
+	char **buf, **bufptr, *ptr, prevchar;
+	int isheader=1;
 
 	if ((buf=malloc(sizeof(char*)*(strlen(*msg)+2)))==NULL) {
 		logmsg(L_ERROR, F_GENERAL, "malloc() failed", NULL);
@@ -162,38 +154,48 @@ static int smtpc_session(int sd, char **msg){
 	bufptr=buf;
 	*bufptr++=*msg;
 	for (ptr=*msg;*ptr;ptr++){
-		if (*ptr=='\n'){
-			*ptr=0;
+		if (!strncasecmp(ptr, "From:", 5)) smtpc_getaddr(&fromlist, ptr);
+		if (!strncasecmp(ptr, "To:", 3)) smtpc_getaddr(&rcptlist, ptr);
+		if (!strncasecmp(ptr, "BCC:", 4)) smtpc_getaddr(&rcptlist, ptr);
+		if (!strncasecmp(ptr, "CC:", 3)) smtpc_getaddr(&rcptlist, ptr);
+		if (*ptr=='\n') {
+			if (prevchar=='\n')
+				isheader=0;
+			prevchar='\n';
+			*ptr='\0';
 			*bufptr++=ptr+1;
-			if (!strncasecmp(ptr+1, "To:", 3)) smtpc_getaddr(ptr+1);
-		}
+		} else prevchar=*ptr;
 	} *bufptr++=NULL;
 
-	mailfrom="bwachter@lart.info";
-	if ((smtpc_oksendline(sd, cati("MAIL FROM:<", mailfrom, ">\r\n", NULL), "2")) == -1) 
+	if (fromlist==NULL){
+		logmsg(L_ERROR, F_GENERAL, "No from-address found, aborting", NULL);
 		goto error;
-	if ((smtpc_oksendline(sd, "RCPT TO:<bwachter@lart.info>\r\n", "2")) == -1)
+	}
+	if (rcptlist==NULL){
+		logmsg(L_ERROR, F_GENERAL, "No to-address found, aborting", NULL);
 		goto error;
-	return -1;
+	}
+
+	if ((smtpc_oksendline(sd, cati("MAIL FROM:<", fromlist->address, ">\r\n", NULL), "2")) == -1)
+		goto error;
+
+	for (addrptr=rcptlist;addrptr!=NULL;addrptr=addrptr->next){
+		if ((smtpc_oksendline(sd, cati("RCPT TO:<", addrptr->address, ">\r\n"), "2")) == -1)
+			goto error;
+	}
+
 	if ((smtpc_oksendline(sd, "DATA\r\n", "3")) == -1)
 		goto error;
-	//write(sd, *msg, strlen(*msg));
 
 	netwriteline(sd, "X-Broken-By: aardmail-smtpc (http://bwachter.lart.info/projects/aardmail/)\r\n");
 	for (bufptr=buf;*bufptr!=NULL;bufptr++){
+		if (!strncasecmp(*bufptr, "BCC:", 4)) continue;
 		netwriteline(sd, *bufptr);
 		netwriteline(sd, "\r\n");
 	}
 	if ((smtpc_oksendline(sd, ".\r\n", "250")) == -1)
 		goto error;
 
-	/*
-	while (*msg){
-		if (**msg=='\n'){
-		}
-		*msg++;
-	}
-	*/
 	free(buf);
 	return 0;
  error:
@@ -222,7 +224,7 @@ static int smtpc_oksendline(int sd, char *msg, char *ok){
 	}
 
 	while (!strncmp(buf+3, "-", 1)){
-		//logmsg(L_INFO, F_NET, "continuation: ", buf, NULL);
+		// continuation, FIXME -- do something useful with it
 		i=netreadline(sd, buf);
 	}
 	
@@ -236,19 +238,19 @@ int main(int argc, char **argv){
 	int c, sd;
 	authinfo defaultauth;
 	unsigned long len;
-	char *mail, *mymaildir=NULL;
+	char *mail=0, *mymaildir=NULL;
 	DIR *dirptr;
 	struct dirent *tmpdirent;
 
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	while ((c=getopt(argc, argv, "b:c:df:h:lm:p:r:s:tu:v:x:")) != EOF){
 #else
-	while ((c=getopt(argc, argv, "b:dh:m:p:r:s:u:v:x:")) != EOF){
+	while ((c=getopt(argc, argv, "a:b:dh:m:p:r:s:u:v:x:")) != EOF){
 #endif
 		switch(c){
 		case 'b':
 			if (am_checkprogram(optarg)!=0) {
-				logmsg(L_INFO, F_GENERAL, "not polling because program evaluated to false", NULL);
+				logmsg(L_INFO, F_GENERAL, "not sending because program evaluated to false", NULL);
 				exit(0);
 			}
 			break;
@@ -283,7 +285,7 @@ int main(int argc, char **argv){
 			smtpc.maildir = strdup(optarg);
 			break;
 		case 'p':
-			logmsg(L_WARNING, F_GENERAL, "do not use -p password, it's unsecure. use .authinfo", NULL);
+			logmsg(L_WARNING, F_GENERAL, "do not use -p password, it's insecure. use .authinfo", NULL);
 			strncpy(defaultauth.password, optarg, AM_MAXPASS);
 			break;
 		case 's':
@@ -323,7 +325,8 @@ int main(int argc, char **argv){
 		return -1;
 	}
 
-	if (smtpc.maildir != NULL && !strcmp(smtpc.maildir, maildirpath)) { // smtpc.maildir not set or not usable, append .spool
+	if (smtpc.maildir != NULL && !strcmp(smtpc.maildir, maildirpath)) { 
+		// smtpc.maildir not set or not usable, append .spool
 		cat (&mymaildir, maildirpath, "/cur", NULL);
 	} else {
 		cat(&mymaildir, maildirpath, "/.spool/cur", NULL);
@@ -338,13 +341,17 @@ int main(int argc, char **argv){
 	if (strcmp(defaultauth.login, "")) logmsg(L_INFO, F_GENERAL, "using login-name: ", defaultauth.login, NULL);
 	if (strcmp(defaultauth.login, "")) logmsg(L_INFO, F_GENERAL, "using password: yes", NULL);
 
-	if ((sd=smtpc_connectauth(&defaultauth))==-1) exit(-1);
+	//	if ((sd=smtpc_connectauth(&defaultauth))==-1) exit(-1);
 	// FIXME for each mail do smtpc_session; don't exit on failure, just don't delete the mail
 	for (tmpdirent=readdir(dirptr); tmpdirent!=NULL; tmpdirent=readdir(dirptr)){
 		if (!strcmp(tmpdirent->d_name, ".")) continue;
 		if (!strcmp(tmpdirent->d_name, "..")) continue;
-		logmsg(L_ERROR, F_GENERAL, tmpdirent->d_name, NULL);
-		openreadclose(cati(mymaildir, "/", tmpdirent->d_name, NULL), &mail, &len);
+		logmsg(L_DEBUG, F_GENERAL, "processing ", cati(mymaildir, "/", tmpdirent->d_name, NULL), NULL);
+		if (openreadclose(cati(mymaildir, "/", tmpdirent->d_name, NULL), &mail, &len)){
+			logmsg(L_ERROR, F_GENERAL, "error reading mail ", cati(mymaildir, "/", tmpdirent->d_name, NULL), 
+						 ": ", strerror(errno), NULL);
+			continue;
+		}
 		if (smtpc_session(sd, &mail)==-1) {
 			// FIXME check how long the mail is in queue already, `send' warning
 		} else if (unlink(tmpdirent->d_name)==-1) {
