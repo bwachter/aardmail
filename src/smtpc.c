@@ -341,7 +341,7 @@ int main(int argc, char **argv){
 	if (strcmp(defaultauth.login, "")) logmsg(L_INFO, F_GENERAL, "using login-name: ", defaultauth.login, NULL);
 	if (strcmp(defaultauth.login, "")) logmsg(L_INFO, F_GENERAL, "using password: yes", NULL);
 
-	//	if ((sd=smtpc_connectauth(&defaultauth))==-1) exit(-1);
+	if ((sd=smtpc_connectauth(&defaultauth))==-1) exit(-1);
 	// FIXME for each mail do smtpc_session; don't exit on failure, just don't delete the mail
 	for (tmpdirent=readdir(dirptr); tmpdirent!=NULL; tmpdirent=readdir(dirptr)){
 		if (!strcmp(tmpdirent->d_name, ".")) continue;
