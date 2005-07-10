@@ -148,7 +148,7 @@ static int smtpc_session(int sd, char **msg){
 		goto error;
 	}
 	memset(rcptlist, 0, sizeof(addrlist));
-	memset(rcptlist, 0, sizeof(addrlist));
+	memset(fromlist, 0, sizeof(addrlist));
 
 	if ((buf=malloc(sizeof(char*)*(strlen(*msg)+2)))==NULL) {
 		logmsg(L_ERROR, F_GENERAL, "malloc() failed", NULL);
