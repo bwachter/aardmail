@@ -17,8 +17,7 @@ char *uniqname;
 int main(int argc, char **argv){
 	int smcfg=0;
 	int i=1, isbody=0, c;
-	char buf[1024];
-	char from[1024];
+	char buf[1024], from[1024], *mymaildir=NULL;
 
 	while ((c=getopt(argc, argv, "d:f:F:o:tvV")) != EOF){
 		switch(c){
@@ -49,9 +48,15 @@ int main(int argc, char **argv){
 #else
 	int fd;
 #endif
-	fd=maildiropen(NULL, &uniqname);
+	if (maildirfind(NULL)){
+		logmsg(L_ERROR, F_MAILDIR, "unable to find maildir", NULL);
+		return -1;
+	}
+	cat (&mymaildir, maildirpath, "/.spool", NULL);
+	fd=maildiropen(mymaildir, &uniqname);
 #if (defined(__WIN32)) || (defined _BROKEN_IO)
 	if (fd == NULL)
+
 #else
 	if (fd == -1)
 #endif
@@ -63,10 +68,9 @@ int main(int argc, char **argv){
 		i=read(0, buf, 1024);
 		if (!isbody){
 			if (!strncasecmp(buf, "from:", 5)){
-				logmsg(L_ERROR, F_GENERAL, "Found from:", NULL);
+				logmsg(L_DEBUG, F_GENERAL, "Found from: ", buf, NULL);
 			}
 			if (!strncmp(buf, "\n", 1)) {
-				logmsg(L_ERROR, F_GENERAL, "foo", NULL);
 				isbody=1;
 				if (!strncmp(from, "\0", 1)){
 					logmsg(L_ERROR, F_GENERAL, "Unable to figure out From:", NULL);
@@ -82,8 +86,9 @@ int main(int argc, char **argv){
 		if (!strncmp(buf+i-2, ".\n", 2) && !(smcfg & AM_SM_IGNORE_DOTS)) break;
 		filewrite(fd, buf, i);
 	}
-	return maildirclose(NULL, &uniqname, fd);
+	return maildirclose(mymaildir, &uniqname, fd);
  error:
+	logmsg(L_ERROR, F_GENERAL, "some stupid error occured", NULL);
 	return -1;
 }
 

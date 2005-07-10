@@ -139,7 +139,7 @@ int maildirclose(char *maildir, char **uniqname, int fd){
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
 	if (!(status=fclose(fd))){
 #else
-	if (!(status==close(fd))){
+	if (!(status=close(fd))){
 #endif
 #ifdef __WIN32__
 		status=MoveFile(oldpath, newpath);
@@ -147,7 +147,7 @@ int maildirclose(char *maildir, char **uniqname, int fd){
 		status=link(oldpath, newpath);
 		unlink(oldpath);
 #endif
-	}
+	} else logmsg(L_ERROR, F_GENERAL, "Closing mail failed: ", strerror(errno), NULL);
 
 	free(oldpath);
 	free(newpath);
