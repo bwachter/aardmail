@@ -8,6 +8,7 @@
 #include "cat.h"
 #include "fs.h"
 #include "maildir.h"
+#include "version.h"
 
 #define AM_SM_IGNORE_DOTS 1
 
@@ -38,7 +39,7 @@ int main(int argc, char **argv){
 			loglevel(4);
 			break;
 		case 'V':
-			__write1(cati("aardmail-sendmail ", AM_VERSION, NULL));
+			__write1(cati("aardmail-sendmail ", AM_VERSION, "\n", NULL));
 			exit(0);
 		}
 	}

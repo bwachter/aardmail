@@ -15,7 +15,7 @@
 #include <io.h>
 #endif
 
-#define AM_VERSION "(aardmail 0.1-pre4); http://bwachter.lart.info/projects/aardmail/"
+#include "version.h"
 
 #ifdef __BORLANDC__
 static int __write1(const char *s)

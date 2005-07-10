@@ -14,6 +14,7 @@
 #include <io.h>
 #include <ws2tcpip.h>
 #else
+#include <strings.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #endif
@@ -99,51 +100,55 @@ static int smtpc_connectauth(authinfo *auth){
 }
 
 static int smtpc_getaddr(addrlist **addrlist_storage, char *msg){
-	char *ptr, isaddr=0, endaddr=0;
+	char *ptr, isaddr=0, endaddr=0, buf[1024];
 	int i, start=0;
-	for (ptr=msg,i=0;*ptr!=NULL;*ptr++,i++){
-		if (*ptr=='\n') {
-			*ptr='\0';
-			endaddr=1;
-		}
+	for (ptr=msg,i=0;*ptr!='\0';*ptr++,i++){
+		if (*ptr=='\n') endaddr=1;
 		if (*ptr=='<'){
-			start=i;
+			start=i+1;
 			continue;
 		}
-		if (*ptr=='>' && isaddr){
-			*ptr='\0';
-			endaddr=1;
-		}
+		if (*ptr=='>' && isaddr) endaddr=1;
 		if (*ptr=='@') {
 			isaddr=1;
 			continue;
 		}
 		if (*ptr==',' || *ptr==';' || *ptr==' ') {
-			if (isaddr==0) start=i;
-			else {
-				*ptr='\0';
-				endaddr=1;
-			}
+			if (isaddr==0) start=i+1;
+			else 	endaddr=1;
 		}
 		if (isaddr && endaddr){
-			logmsg(L_INFO, F_GENERAL, "Address found: ", msg+start+1, NULL);
-			addrlist_append(addrlist_storage, msg+start+1);
+			strncpy(buf, msg+start, i-start);
+			buf[i-start]='\0';
+			logmsg(L_DEBUG, F_GENERAL, "Address found: ", buf, NULL);
+			addrlist_append(addrlist_storage, buf);
 			isaddr=endaddr=0;
 			start=i;
+			if (*ptr=='\n') break;
 			continue;
 		}
 		if (endaddr) {
 			endaddr=0;
 			start=i;
+			if (*ptr=='\n') break;
 		}
 	}
 	return 0;
 }
 
 static int smtpc_session(int sd, char **msg){
-	addrlist *rcptlist=NULL, *fromlist=NULL, *addrptr;
-	char **buf, **bufptr, *ptr, prevchar;
+	addrlist *rcptlist, *fromlist, *addrptr;
+	char **buf=NULL, **bufptr, *ptr, prevchar;
 	int isheader=1;
+
+	//	if ((*addrlist_storage = malloc(sizeof(addrlist))) == NULL);
+	if ((rcptlist=malloc(sizeof(addrlist))) == NULL ||
+			(fromlist=malloc(sizeof(addrlist))) == NULL){
+		logmsg(L_ERROR, F_GENERAL, "Unable to malloc() memory for addrlist", NULL);
+		goto error;
+	}
+	memset(rcptlist, 0, sizeof(addrlist));
+	memset(rcptlist, 0, sizeof(addrlist));
 
 	if ((buf=malloc(sizeof(char*)*(strlen(*msg)+2)))==NULL) {
 		logmsg(L_ERROR, F_GENERAL, "malloc() failed", NULL);
@@ -180,7 +185,7 @@ static int smtpc_session(int sd, char **msg){
 		goto error;
 
 	for (addrptr=rcptlist;addrptr!=NULL;addrptr=addrptr->next){
-		if ((smtpc_oksendline(sd, cati("RCPT TO:<", addrptr->address, ">\r\n"), "2")) == -1)
+		if ((smtpc_oksendline(sd, cati("RCPT TO:<", addrptr->address, ">\r\n", NULL), "2")) == -1)
 			goto error;
 	}
 
@@ -190,17 +195,20 @@ static int smtpc_session(int sd, char **msg){
 	netwriteline(sd, "X-Broken-By: aardmail-smtpc (http://bwachter.lart.info/projects/aardmail/)\r\n");
 	for (bufptr=buf;*bufptr!=NULL;bufptr++){
 		if (!strncasecmp(*bufptr, "BCC:", 4)) continue;
-		netwriteline(sd, *bufptr);
-		netwriteline(sd, "\r\n");
+		if (**bufptr=='.') netwriteline(sd, cati(".", *bufptr, "\r\n", NULL));
+		else netwriteline(sd, cati(*bufptr, "\r\n", NULL));
 	}
 	if ((smtpc_oksendline(sd, ".\r\n", "250")) == -1)
 		goto error;
 
 	free(buf);
+	addrlist_free(&rcptlist);
+	addrlist_free(&fromlist);
 	return 0;
  error:
-	logmsg(L_ERROR, F_GENERAL, "error in smtpc_session", NULL);
 	free(buf);
+	addrlist_free(&rcptlist);
+	addrlist_free(&fromlist);
 	return -1;
 }
 
@@ -354,7 +362,7 @@ int main(int argc, char **argv){
 		}
 		if (smtpc_session(sd, &mail)==-1) {
 			// FIXME check how long the mail is in queue already, `send' warning
-		} else if (unlink(tmpdirent->d_name)==-1) {
+		} else if (unlink(cati(mymaildir, "/", tmpdirent->d_name, NULL))==-1) {
 			logmsg(L_ERROR, F_GENERAL, "unable to delete mail ", mymaildir, "/", tmpdirent->d_name, ": ", strerror(errno), NULL);
 			exit(-1);
 		}

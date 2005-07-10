@@ -74,6 +74,9 @@ int logmsg(int loglevel, int facility, char *msg, ...) {
 	case F_AUTHINFO:
 		__write1("[AUTHINFO] ");
 		break;
+	case F_ADDRLIST:
+		__write1("[ADDRLIST] ");
+		break;
 	default:
 		__write1("[UNKNOWN] ");
 		break;

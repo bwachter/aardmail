@@ -20,4 +20,5 @@ struct _addrlist {
 
 int addrlist_append(addrlist **addrlist_storage, char *address);
 int addrlist_delete(addrlist **addrlist_storage, char *address);
+int addrlist_free(addrlist **addrlist_storage);
 #endif

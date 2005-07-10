@@ -12,7 +12,7 @@ int netsslread(SSL *ssl_handle, char *buf, int len){
 	int i=0;
 	while (i<1){
 		i=SSL_read(ssl_handle, buf, len);
-		switch (i){
+		switch (SSL_get_error(ssl_handle, i)){
 		case SSL_ERROR_WANT_READ:
 			continue;
 		default:
@@ -26,7 +26,7 @@ int netsslwrite(SSL *ssl_handle, char *buf, int len){
 	int i=0;
 	while (i<1){
 		i=SSL_write(ssl_handle, buf, len);
-		switch (i){
+		switch (SSL_get_error(ssl_handle, i)){
 		case SSL_ERROR_WANT_WRITE:
 			continue;
 		default: 

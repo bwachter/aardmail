@@ -26,25 +26,6 @@ CFLAGS=-Wall -W -pipe  -Os
 LDFLAGS=-s
 endif
 
-ifdef BROKEN
-CFLAGS+=-D_BROKEN_IO
-endif
-
-ifdef MATRIXSSL
-LIBS+=-lmatrixsslstatic -lpthread
-CFLAGS+=-DHAVE_MATRIXSSL
-endif
-
-ifdef GNUTLS
-LIBS+=-lgnutls-openssl -lgnutls -ltasn1 -lgcrypt -lgpg-error -lz
-CFLAGS+=-DHAVE_SSL
-endif
-
-ifdef SSL
-LIBS+=-lssl -lcrypto
-CFLAGS+=-DHAVE_SSL
-endif
-
 ifdef WIN32
 LIBS+=-lws2_32 -lwsock32 -lgdi32
 EXE=.exe
@@ -67,14 +48,32 @@ endif
 endif
 endif
 
+ifdef BROKEN
+CFLAGS+=-D_BROKEN_IO
+endif
+
+ifdef MATRIXSSL
+LIBS+=-lmatrixsslstatic -lpthread
+CFLAGS+=-DHAVE_MATRIXSSL
+endif
+
+ifdef GNUTLS
+LIBS+=-lgnutls-openssl -lgnutls -ltasn1 -lgcrypt -lgpg-error -lz
+CFLAGS+=-DHAVE_SSL
+endif
+
+ifdef SSL
+LIBS+=-lssl -lcrypto
+CFLAGS+=-DHAVE_SSL
+endif
+
 ARFLAGS=cru
 Q=@
-ALL=libcrammd5.a libaardmail.a aardmail-pop3c$(EXE) aardmail-miniclient$(EXE)
-ifndef WIN32
-ALL+=aardmail-miniclient$(EXE)
-endif
+ALL=libcrammd5.a libaardmail.a aardmail-pop3c$(EXE) aardmail-miniclient$(EXE) aardmail-smtpc$(EXE) aardmail-sendmail$(EXE)
+
 ifdef DEV
-ALL+=aardmail-smtpc$(EXE) aardmail-sendmail$(EXE)
+CFLAGS+=-D_DEV
+ALL+=
 endif
 
 # you should not need to touch anything below this line
@@ -86,23 +85,23 @@ PREFIX?=/usr
 
 all: $(ALL)
  
-aardmail-miniclient$(EXE): $(OBJDIR)/miniclient.o 
+aardmail-miniclient$(EXE): libaardmail.a $(OBJDIR)/miniclient.o 
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-aardmail-pop3c$(EXE): $(OBJDIR)/pop3c.o 
+aardmail-pop3c$(EXE): libaardmail.a $(OBJDIR)/pop3c.o 
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-aardmail-sendmail$(EXE): $(OBJDIR)/sendmail.o 
+aardmail-sendmail$(EXE): libaardmail.a $(OBJDIR)/sendmail.o 
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-aardmail-smtpc$(EXE): $(OBJDIR)/smtpc.o
+aardmail-smtpc$(EXE): libaardmail.a $(OBJDIR)/smtpc.o
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-libaardmail.a: $(OBJDIR)/network.o $(OBJDIR)/netssl.o $(OBJDIR)/aardlog.o $(OBJDIR)/cat.o \
+libaardmail.a: $(SRCDIR)/version.h $(OBJDIR)/network.o $(OBJDIR)/netssl.o $(OBJDIR)/aardlog.o $(OBJDIR)/cat.o \
 	$(OBJDIR)/aardmail.o $(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o $(OBJDIR)/fs.o \
 	$(OBJDIR)/kirahvi.o $(OBJDIR)/addrlist.o
 	$(Q)echo "AR $@"
@@ -111,6 +110,11 @@ libaardmail.a: $(OBJDIR)/network.o $(OBJDIR)/netssl.o $(OBJDIR)/aardlog.o $(OBJD
 libcrammd5.a: crammd5/client_crammd5.o crammd5/hmacmd5.o crammd5/md5.o
 	$(Q)echo "AR $@"
 	$(Q)$(CROSS)$(AR) $(ARFLAGS) $@ $^
+
+$(SRCDIR)/version.h: CHANGES
+	$(Q)echo -e -n "#ifndef AM_VERSION_H\n#define AM_VERSION_H\n#define AM_VERSION \"" > $@
+	$(Q)echo -n $(VERSION) >> $@
+	$(Q)echo -e -n "; http://bwachter.lart.info/projects/aardmail/\"\n#endif\n" >> $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(Q)echo "CC $@"
