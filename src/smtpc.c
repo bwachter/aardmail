@@ -159,10 +159,10 @@ static int smtpc_session(int sd, char **msg){
 	bufptr=buf;
 	*bufptr++=*msg;
 	for (ptr=*msg;*ptr;ptr++){
-		if (!strncasecmp(ptr, "From:", 5)) smtpc_getaddr(&fromlist, ptr);
-		if (!strncasecmp(ptr, "To:", 3)) smtpc_getaddr(&rcptlist, ptr);
-		if (!strncasecmp(ptr, "BCC:", 4)) smtpc_getaddr(&rcptlist, ptr);
-		if (!strncasecmp(ptr, "CC:", 3)) smtpc_getaddr(&rcptlist, ptr);
+		if (isheader && !strncasecmp(ptr, "From:", 5)) smtpc_getaddr(&fromlist, ptr);
+		if (isheader && !strncasecmp(ptr, "To:", 3)) smtpc_getaddr(&rcptlist, ptr);
+		if (isheader && !strncasecmp(ptr, "BCC:", 4)) smtpc_getaddr(&rcptlist, ptr);
+		if (isheader && !strncasecmp(ptr, "CC:", 3)) smtpc_getaddr(&rcptlist, ptr);
 		if (*ptr=='\n') {
 			if (prevchar=='\n')
 				isheader=0;

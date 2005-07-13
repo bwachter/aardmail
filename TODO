@@ -1,10 +1,20 @@
+0.1-pre-5:
+- add getopt.c for building under windows
+- add some more information to the maildir name
 - store fingerprint of servers certificate in .aardmail/somewhat; warn if the fingerprint
   does not match; enable checking of the servers certificate using a local ca-file
+
+0.2-pre-1:
 - add fetchmail frontend
-- use the now integrated cram-md5-foo
-- add base64
-- complete smtpc addr parsing, use plain and cram-md5-auth
 - add a sane sendmail (with manpage)
-- add some more information to the maildir name
-- add auth using client certificates (low prio, need to write a pop3d for testing this first)
-  (works with smtpc)
+
+0.2-pre-2:
+- make sendmail/smtpc-combination suitable for multiuser-systems
+
+0.2-pre-3:
+- use the now integrated cram-md5-foo
+- add base64, plain auth
+
+0.2-pre-4:
+- add pop3d
+- add auth using client certificates to pop3c (works with smtpc, not much to be done for pop3c)
