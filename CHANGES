@@ -1,6 +1,8 @@
 0.1-pre-4:
 	Added Makefile for Borland CC
 	Fixed all sources to compile with Borland C (and most likely other windows compilers, too)
+	Added client cert and address parsing to smtpc
+	Added absolutely minimalistic sendmail
 
 0.1-pre-3:
 	Added smtpc (`single user')
