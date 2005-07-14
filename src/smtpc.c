@@ -138,7 +138,7 @@ static int smtpc_getaddr(addrlist **addrlist_storage, char *msg){
 
 static int smtpc_session(int sd, char **msg){
 	addrlist *rcptlist, *fromlist, *addrptr;
-	char **buf=NULL, **bufptr, *ptr, prevchar;
+	char **buf=NULL, **bufptr, *ptr, prevchar='\n';
 	int isheader=1;
 
 	//	if ((*addrlist_storage = malloc(sizeof(addrlist))) == NULL);
@@ -159,10 +159,12 @@ static int smtpc_session(int sd, char **msg){
 	bufptr=buf;
 	*bufptr++=*msg;
 	for (ptr=*msg;*ptr;ptr++){
-		if (isheader && !strncasecmp(ptr, "From:", 5)) smtpc_getaddr(&fromlist, ptr);
-		if (isheader && !strncasecmp(ptr, "To:", 3)) smtpc_getaddr(&rcptlist, ptr);
-		if (isheader && !strncasecmp(ptr, "BCC:", 4)) smtpc_getaddr(&rcptlist, ptr);
-		if (isheader && !strncasecmp(ptr, "CC:", 3)) smtpc_getaddr(&rcptlist, ptr);
+		if (prevchar=='\n'){
+			if (isheader && !strncasecmp(ptr, "From:", 5)) smtpc_getaddr(&fromlist, ptr);
+			if (isheader && !strncasecmp(ptr, "To:", 3)) smtpc_getaddr(&rcptlist, ptr);
+			if (isheader && !strncasecmp(ptr, "BCC:", 4)) smtpc_getaddr(&rcptlist, ptr);
+			if (isheader && !strncasecmp(ptr, "CC:", 3)) smtpc_getaddr(&rcptlist, ptr);
+		}
 		if (*ptr=='\n') {
 			if (prevchar=='\n')
 				isheader=0;

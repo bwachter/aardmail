@@ -1,5 +1,5 @@
 0.1-pre-5:
-
+	Fixed missing isheader-check in smtpc
 
 0.1-pre-4:
 	Added Makefile for Borland CC
