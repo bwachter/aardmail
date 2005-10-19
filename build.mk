@@ -3,32 +3,6 @@
 
 all: $(ALL)
 
-aardmail-miniclient$(EXE): libaardmail.a $(OBJDIR)/miniclient.o 
-	$(Q)echo "LD $@"
-	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
-
-aardmail-pop3c$(EXE): libaardmail.a $(OBJDIR)/pop3c.o 
-	$(Q)echo "LD $@"
-	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
-
-aardmail-sendmail$(EXE): libaardmail.a $(OBJDIR)/sendmail.o 
-	$(Q)echo "LD $@"
-	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
-
-aardmail-smtpc$(EXE): libaardmail.a $(OBJDIR)/smtpc.o
-	$(Q)echo "LD $@"
-	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
-
-libaardmail.a: $(SRCDIR)/version.h $(OBJDIR)/network.o $(OBJDIR)/netssl.o $(OBJDIR)/aardlog.o $(OBJDIR)/cat.o \
-	$(OBJDIR)/aardmail.o $(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o $(OBJDIR)/fs.o \
-	$(OBJDIR)/kirahvi.o $(OBJDIR)/addrlist.o
-	$(Q)echo "AR $@"
-	$(Q)$(CROSS)$(AR) $(ARFLAGS) $@ $^
-
-libcrammd5.a: crammd5/client_crammd5.o crammd5/hmacmd5.o crammd5/md5.o
-	$(Q)echo "AR $@"
-	$(Q)$(CROSS)$(AR) $(ARFLAGS) $@ $^
-
 $(SRCDIR)/version.h: 
 	$(Q)echo "-> $@"
 	$(Q)printf "#ifndef AM_VERSION_H\n#define AM_VERSION_H\n#define AM_VERSION \"" > $@
@@ -37,7 +11,7 @@ $(SRCDIR)/version.h:
 
 clean:
 	$(Q)echo "cleaning up"
-	$(Q)$(RM) $(ALL) *.exe $(OBJDIR)/*.{o,obj,lib} crammd5/*.{o,obj,lib} $(SRCDIR)/version.h
+	$(Q)$(RM) $(ALL) *.exe $(OBJDIR)/*.{o,obj,lib} crammd5/*.{o,obj,lib} crammd5/*.o $(OBJDIR)/*.o $(SRCDIR)/version.h 
 
 install: all
 	install -d $(DESTDIR)$(BINDIR)
