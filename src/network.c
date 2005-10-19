@@ -200,7 +200,6 @@ int netaddrinfo(const char *node, const char *service,
 	} else {
 #endif
 #if (defined(__WIN32__)) || (defined(_BROKEN_IO))
-		err=0;
   struct hostent *hp;
   struct servent *servent;
   const char *socktype;
@@ -208,6 +207,7 @@ int netaddrinfo(const char *node, const char *service,
   struct addrinfo hint, result;
   struct addrinfo *ai, *sai, *eai;
   char **addrs;
+	err=0;
 
   memset (&result, 0, sizeof result);
 
