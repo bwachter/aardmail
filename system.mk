@@ -24,7 +24,7 @@ DEBUG_CFLAGS=-g -Wall -W -Os
 DEBUG_LDFLAGS=-g
 
 LIBS=-L. -laardmail -Libaard -libaard
-ALL=libcrammd5.a libaardmail.a aardmail-pop3c$(EXE) aardmail-miniclient$(EXE) aardmail-smtpc$(EXE) aardmail-sendmail$(EXE)
+ALL=libaardtest libcrammd5.a libaardmail.a aardmail-pop3c$(EXE) aardmail-miniclient$(EXE) aardmail-smtpc$(EXE) aardmail-sendmail$(EXE)
 
 SOLARIS_LIBS=-lresolv -lsocket
 WIN32_LIBS=-lws2_32 -lwsock32 -lgdi32

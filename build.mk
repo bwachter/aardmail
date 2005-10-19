@@ -1,10 +1,13 @@
 
-.PHONY: clean install tar rename upload deb maintainer-deb
+.PHONY: clean install tar rename upload deb maintainer-deb 
 
-all: ibaard/libibaard.a $(ALL)
+all: $(ALL)
 
 ibaard/libibaard.a:
 	make -C ibaard
+
+libaardtest: src/libaardtest.o
+	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ src/libaardtest.o -Libaard -libaard
 
 $(SRCDIR)/version.h: 
 	$(Q)echo "-> $@"
