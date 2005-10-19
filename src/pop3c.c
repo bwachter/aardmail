@@ -13,11 +13,12 @@
 #include <sys/wait.h>
 #endif
 
+#include <ibaard_network.h>
+#include <ibaard_log.h>
+#include <ibaard_cat.h>
+#include <ibaard_authinfo.h>
+
 #include "aardmail.h"
-#include "aardlog.h"
-#include "authinfo.h"
-#include "network.h"
-#include "cat.h"
 #include "maildir.h"
 
 static struct {

@@ -81,9 +81,7 @@ aardmail-smtpc$(EXE): libaardmail.a $(OBJDIR)/smtpc.o
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $> $(LIBS)
 
-libaardmail.a: $(SRCDIR)/version.h $(OBJDIR)/network.o $(OBJDIR)/netssl.o $(OBJDIR)/aardlog.o $(OBJDIR)/cat.o \
-	$(OBJDIR)/aardmail.o $(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o $(OBJDIR)/fs.o \
-	$(OBJDIR)/kirahvi.o $(OBJDIR)/addrlist.o
+libaardmail.a: $(SRCDIR)/version.h $(OBJDIR)/aardmail.o $(OBJDIR)/maildir.o $(OBJDIR)/addrlist.o
 	$(Q)echo "AR $@"
 	$(Q)$(CROSS)$(AR) $(ARFLAGS) $@ $>
 

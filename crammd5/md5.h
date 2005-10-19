@@ -25,7 +25,7 @@
 #define MD5_UTILS_H
 
 //#include <sys/types.h>
-#include "../src/types.h"
+#include <ibaard_types.h>
 
 
 typedef struct {

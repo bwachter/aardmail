@@ -4,10 +4,12 @@
 #include <fcntl.h>
 #include <strings.h>
 
+#include <ibaard_network.h>
+#include <ibaard_log.h>
+#include <ibaard_cat.h>
+#include <ibaard_fs.h>
+
 #include "aardmail.h"
-#include "aardlog.h"
-#include "cat.h"
-#include "fs.h"
 #include "maildir.h"
 #include "version.h"
 

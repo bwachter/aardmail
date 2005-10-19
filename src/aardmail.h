@@ -1,7 +1,7 @@
 #ifndef _AARDMAIL_H
 #define _AARDMAIL_H
 
-#include "types.h"
+#include <ibaard_types.h>
 #ifdef __dietlibc__
 #include <write12.h>
 #else
@@ -16,6 +16,12 @@
 #endif
 
 #include "version.h"
+
+#define F_GENERAL "GENERAL"
+#define F_NET "NET"
+#define F_MAILDIR "MAILDIR"
+#define F_AUTHINFO "AUTHINFO"
+#define F_ADDRLIST "ADDRLIST"
 
 #ifdef __BORLANDC__
 static int __write1(const char *s)

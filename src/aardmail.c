@@ -6,8 +6,11 @@
 #else
 #include <sys/wait.h>
 #endif
+
+#include <ibaard_network.h>
+#include <ibaard_log.h>
+
 #include "aardmail.h"
-#include "aardlog.h"
 
 #ifdef _DEV
 #warning Enabling experimental code. Unless you're a developer and can file very detailed bugreports that's not what you want

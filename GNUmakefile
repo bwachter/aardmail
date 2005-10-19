@@ -68,25 +68,23 @@ ifdef $(STRIP)
 	$(Q)$(COMMENT) -$(CROSS)$(STRIP) $@
 endif
 
-aardmail-miniclient$(EXE): libaardmail.a $(OBJDIR)/miniclient.o 
+aardmail-miniclient$(EXE): $(OBJDIR)/miniclient.o 
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-aardmail-pop3c$(EXE): libaardmail.a $(OBJDIR)/pop3c.o 
+aardmail-pop3c$(EXE): $(OBJDIR)/pop3c.o 
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-aardmail-sendmail$(EXE): libaardmail.a $(OBJDIR)/sendmail.o 
+aardmail-sendmail$(EXE): $(OBJDIR)/sendmail.o 
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-aardmail-smtpc$(EXE): libaardmail.a $(OBJDIR)/smtpc.o
+aardmail-smtpc$(EXE): $(OBJDIR)/smtpc.o
 	$(Q)echo "LD $@"
 	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-libaardmail.a: $(SRCDIR)/version.h $(OBJDIR)/network.o $(OBJDIR)/netssl.o $(OBJDIR)/aardlog.o $(OBJDIR)/cat.o \
-	$(OBJDIR)/aardmail.o $(OBJDIR)/maildir.o $(OBJDIR)/authinfo.o $(OBJDIR)/fs.o \
-	$(OBJDIR)/kirahvi.o $(OBJDIR)/addrlist.o
+libaardmail.a: $(SRCDIR)/version.h $(OBJDIR)/aardmail.o $(OBJDIR)/maildir.o $(OBJDIR)/addrlist.o
 	$(Q)echo "AR $@"
 	$(Q)$(CROSS)$(AR) $(ARFLAGS) $@ $^
 

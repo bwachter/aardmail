@@ -18,12 +18,12 @@ PREFIX?=/usr
 Q=@
 ARFLAGS=cru
 #-pipe crashes on IRIX
-CFLAGS=-Wall -W -Os
+CFLAGS=-Wall -W -Os -Iibaard/src
 LDFLAGS=-s
 DEBUG_CFLAGS=-g -Wall -W -Os
 DEBUG_LDFLAGS=-g
 
-LIBS=-L. -laardmail
+LIBS=-L. -laardmail -Libaard -libaard
 ALL=libcrammd5.a libaardmail.a aardmail-pop3c$(EXE) aardmail-miniclient$(EXE) aardmail-smtpc$(EXE) aardmail-sendmail$(EXE)
 
 SOLARIS_LIBS=-lresolv -lsocket

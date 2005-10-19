@@ -16,10 +16,12 @@
 #include <netdb.h>
 #endif
 
-#include "cat.h"
-#include "aardlog.h"
+#include <ibaard_network.h>
+#include <ibaard_log.h>
+#include <ibaard_fs.h>
+#include <ibaard_cat.h>
+
 #include "maildir.h"
-#include "fs.h"
 
 static int deliveries=0;
 static maildirent *maildir_storage;

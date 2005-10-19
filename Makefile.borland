@@ -45,10 +45,9 @@ aardmail-smtpc$(EXE): $(OBJDIR)\smtpc.obj
 	$(Q)echo "LD $@"
 	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
 
-src\aardmail.lib: $(OBJDIR)\network.obj $(OBJDIR)\netssl.obj $(OBJDIR)\aardlog.obj \
-        $(OBJDIR)\cat.obj $(OBJDIR)\maildir.obj $(OBJDIR)\authinfo.obj \
-        $(OBJDIR)\aardmail.obj $(OBJDIR)\fs.obj $(OBJDIR)\getopt.obj \
-        $(OBJDIR)\kirahvi.obj
+src\aardmail.lib: $(OBJDIR)\maildir.obj $(OBJDIR)\aardmail.obj $(OBJDIR)\addrlist.obj
+         $(OBJDIR)\getopt.obj \
+
 	$(Q)echo "TLIB $@"
 	$(Q)cd $(@D)
 	$(Q)tlib $(@F) /a $(**F)
