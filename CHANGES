@@ -1,4 +1,5 @@
 0.1-pre-6:
+	Updated build system to include libaard in build process 
 
 0.1-pre-5:
 	Fixed missing isheader-check in smtpc
