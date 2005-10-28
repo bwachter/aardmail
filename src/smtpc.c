@@ -407,6 +407,7 @@ static void smtpc_usage(char *program){
 					 "\t-u:\tthe username to use. You usually don't need this option.\n",
 					 "\t-v:\tset the loglevel, valid values are 0 (no logging), 1 (deadly),\n",
 					 "\t\t2 (errors, default), 3 (warnings) and 4 (info, very much)\n",
+					 "\n[ ", AM_VERSION, " ]\n",
 					 NULL)) {
 		__write2(tmpstring);
 		free(tmpstring);

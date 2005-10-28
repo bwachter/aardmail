@@ -452,6 +452,7 @@ static void pop3c_usage(char *program){
 					 "\t-v:\tset the loglevel, valid values are 0 (no logging), 1 (deadly),\n",
 					 "\t\t2 (errors, default), 3 (warnings) and 4 (info, very much)\n",
 					 "\t-x:\tthe program to popen() for each received mail\n",
+					 "\n[ ", AM_VERSION, " ]\n",
 					 NULL)) {
 		__write2(tmpstring);
 		free(tmpstring);

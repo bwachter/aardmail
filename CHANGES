@@ -1,5 +1,9 @@
 0.1-pre-5:
 	Fixed missing isheader-check in smtpc
+	Moved common functions to libaard
+	Added support for cert auth to pop3c
+	Added another loglevel (verbose) between info and debug
+	Fixed compile issues on BSD; added a Makefile for BSD make
 
 0.1-pre-4:
 	Added Makefile for Borland CC
