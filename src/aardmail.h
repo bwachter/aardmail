@@ -2,6 +2,7 @@
 #define _AARDMAIL_H
 
 #include <ibaard_types.h>
+
 #ifdef __dietlibc__
 #include <write12.h>
 #else
@@ -14,15 +15,6 @@
 #endif
 #include <io.h>
 #endif
-
-#include "version.h"
-
-#define F_GENERAL "GENERAL"
-#define F_NET "NET"
-#define F_MAILDIR "MAILDIR"
-#define F_AUTHINFO "AUTHINFO"
-#define F_ADDRLIST "ADDRLIST"
-#define F_SSL "SSL"
 
 #ifdef __BORLANDC__
 static int __write1(const char *s)
@@ -43,7 +35,16 @@ static inline int __write2(const char *s)
 	write(2, s, strlen(s));
 	return 0;
 }
-#endif
+#endif // dietlibc
+
+#include "version.h"
+
+#define F_GENERAL "GENERAL"
+#define F_NET "NET"
+#define F_MAILDIR "MAILDIR"
+#define F_AUTHINFO "AUTHINFO"
+#define F_ADDRLIST "ADDRLIST"
+#define F_SSL "SSL"
 
 int debuglevel;
 int am_checkprogram(char *program);
