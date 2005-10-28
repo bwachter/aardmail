@@ -1,8 +1,8 @@
-0.1-pre-5:
-- add getopt.c for building under windows
+0.1:
 - add some more information to the maildir name
 - store fingerprint of servers certificate in .aardmail/somewhat; warn if the fingerprint
   does not match; enable checking of the servers certificate using a local ca-file
+- add getopt.c for building under windows
 
 0.2-pre-1:
 - add fetchmail frontend

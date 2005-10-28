@@ -90,6 +90,7 @@ static int pop3c_getstat(int sd){
 		return -1;
 	}
 	strncpy(tmp2, buf+4, i);
+	tmp2[i] = '\0';
 	logmsg(L_INFO, F_NET, "There are ", tmp2, " messages on server", NULL);
 	return atoi(tmp2);
 }
