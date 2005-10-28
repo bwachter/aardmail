@@ -48,45 +48,28 @@ CFLAGS+=$(GNUTLS_CFLAGS)
 .endif
 
 .ifdef SSL
+.if $(SSL) == 1
 LIBS+=$(SSL_LIBS)
 CFLAGS+=$(SSL_CFLAGS)
+.endif
 .endif
 
 .ifdef DEV
 CFLAGS+=$(DEV_CFLAGS)
 .endif
 
-.include "build.mk"
-
-.c.o:
-	$(Q)echo "CC $@"
-	$(Q)$(DIET) $(CROSS)$(CC) $(CFLAGS) -c $< -o $@
-.ifdef $(STRIP)
-	$(Q)$(COMMENT) -$(CROSS)$(STRIP) $@
+.if exists(dyn-conf.mk)
+.include "dyn-conf.mk"  
+.else   
+DEPSTAT= "You need to run 'make dep'\n"
 .endif
 
-aardmail-miniclient$(EXE): libaardmail.a $(OBJDIR)/miniclient.o 
-	$(Q)echo "LD $@"
-	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $> $(LIBS)
+.include "build.mk"
 
-aardmail-pop3c$(EXE): libaardmail.a $(OBJDIR)/pop3c.o 
-	$(Q)echo "LD $@"
-	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $> $(LIBS)
+.if exists(dyn-bsdmake.mk)
+.include "dyn-bsdmake.mk"  
+.else   
+DEPSTAT= "You need to run 'make dep'\n"
+.endif
 
-aardmail-sendmail$(EXE): libaardmail.a $(OBJDIR)/sendmail.o 
-	$(Q)echo "LD $@"
-	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $> $(LIBS)
-
-aardmail-smtpc$(EXE): libaardmail.a $(OBJDIR)/smtpc.o
-	$(Q)echo "LD $@"
-	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $> $(LIBS)
-
-libaardmail.a: $(SRCDIR)/version.h $(OBJDIR)/aardmail.o $(OBJDIR)/maildir.o $(OBJDIR)/addrlist.o
-	$(Q)echo "AR $@"
-	$(Q)$(CROSS)$(AR) $(ARFLAGS) $@ $>
-
-libcrammd5.a: crammd5/client_crammd5.o crammd5/hmacmd5.o crammd5/md5.o
-	$(Q)echo "AR $@"
-	$(Q)$(CROSS)$(AR) $(ARFLAGS) $@ $>
-
-
+dep: dyn-conf.mk dyn-bsdmake.mk

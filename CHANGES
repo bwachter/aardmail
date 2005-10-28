@@ -1,3 +1,5 @@
+0.1-pre-6:
+
 0.1-pre-5:
 	Fixed missing isheader-check in smtpc
 	Moved common functions to libaard

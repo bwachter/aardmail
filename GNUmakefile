@@ -53,41 +53,14 @@ ifdef DEV
 CFLAGS+=$(DEV_CFLAGS)
 endif
 
+ifeq (dyn-conf.mk,$(wildcard dyn-conf.mk))
+include dyn-conf.mk
+endif
+
 include build.mk
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
-	$(Q)echo "CC $@"
-	$(Q)$(DIET) $(CROSS)$(CC) $(CFLAGS) -c $< -o $@
-ifdef $(STRIP)
-	$(Q)$(COMMENT) -$(CROSS)$(STRIP) $@
-endif
-%.o: %.c
-	$(Q)echo "CC $@"
-	$(Q)$(DIET) $(CROSS)$(CC) $(CFLAGS) -c $< -o $@
-ifdef $(STRIP)
-	$(Q)$(COMMENT) -$(CROSS)$(STRIP) $@
+ifeq (dyn-gmake.mk,$(wildcard dyn-gmake.mk))
+include dyn-gmake.mk
 endif
 
-aardmail-miniclient$(EXE): $(OBJDIR)/miniclient.o 
-	$(Q)echo "LD $@"
-	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
-
-aardmail-pop3c$(EXE): $(OBJDIR)/pop3c.o 
-	$(Q)echo "LD $@"
-	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
-
-aardmail-sendmail$(EXE): $(OBJDIR)/sendmail.o 
-	$(Q)echo "LD $@"
-	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
-
-aardmail-smtpc$(EXE): $(OBJDIR)/smtpc.o
-	$(Q)echo "LD $@"
-	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
-
-libaardmail.a: $(SRCDIR)/version.h $(OBJDIR)/aardmail.o $(OBJDIR)/maildir.o $(OBJDIR)/addrlist.o
-	$(Q)echo "AR $@"
-	$(Q)$(CROSS)$(AR) $(ARFLAGS) $@ $^
-
-libcrammd5.a: crammd5/client_crammd5.o crammd5/hmacmd5.o crammd5/md5.o
-	$(Q)echo "AR $@"
-	$(Q)$(CROSS)$(AR) $(ARFLAGS) $@ $^
+dep: dyn-conf.mk dyn-gmake.mk

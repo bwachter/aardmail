@@ -1,13 +1,11 @@
 
-.PHONY: clean install tar rename upload deb maintainer-deb 
+.PHONY: clean install tar rename upload deb maintainer-deb check dep
 
 all: $(ALL)
 
 ibaard/libibaard.a:
-	make -C ibaard
-
-libaardtest: src/libaardtest.o
-	$(Q)$(DIET) $(CROSS)$(CC) $(LDFLAGS) -o $@ src/libaardtest.o -Libaard -libaard
+	$(Q)echo "-> $@"
+	$(Q)make -C ibaard DIET=$(DIET) SSL=$(SSL) DEV=$(DEV) BROKEN=$(BROKEN) WIN32=$(WIN32)
 
 $(SRCDIR)/version.h: 
 	$(Q)echo "-> $@"
@@ -15,9 +13,80 @@ $(SRCDIR)/version.h:
 	$(Q)printf $(VERSION) >> $@
 	$(Q)printf "; http://bwachter.lart.info/projects/aardmail/\"\n#endif\n" >> $@
 
-clean:
-	$(Q)echo "cleaning up"
-	$(Q)$(RM) $(ALL) *.exe $(OBJDIR)/*.{o,obj,lib} crammd5/*.{o,obj,lib} crammd5/*.o $(OBJDIR)/*.o $(SRCDIR)/version.h 
+dyn-conf.mk:
+	$(Q)if [ -d ibaard ]; then\
+	echo "-> including local libaard";\
+	printf "LIBS+=-Libaard\n" > $@;\
+	printf "INCLUDES+=-Iibaard/src -Ifoobar\n" >> $@;\
+	printf "ALL=ibaard/libibaard.a $(ALL)\n" >> $@;\
+	printf "CLEANDEPS=ibaard-clean\n" >> $@;\
+	fi 
+
+dyn-gmake.mk:
+	$(Q)for i in 1; do \
+	printf '$$(OBJDIR)/%%.o: $$(SRCDIR)/%%.c\n';\
+	printf '\t$$(Q)echo "CC $$@"\n';\
+	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(CFLAGS) -c $$< -o $$@\n';\
+	printf 'ifdef $$(STRIP)\n';\
+	printf '\t$$(Q)$$(COMMENT) -$$(CROSS)$$(STRIP) $$@\n';\
+	printf 'endif\n\n';\
+	printf '%%.o: %%.c\n';\
+	printf '\t$$(Q)echo "CC $$@"\n';\
+	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(CFLAGS) -c $$< -o $$@\n';\
+	printf 'ifdef $$(STRIP)\n';\
+	printf '\t$$(Q)$$(COMMENT) -$$(CROSS)$$(STRIP) $$@\n';\
+	printf 'endif\n\n';\
+	done > $@
+	$(Q)for i in $(BD_BIN); do \
+	printf "$$i: " ;\
+	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.exe//" | sed "s/\.c/\.o/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
+	for j in $$DEPS; do printf "$$j "; done;\
+	printf '\n\t$$(Q)echo "LD $$@"\n';\
+	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(LDFLAGS) -o $$@ $$^ $$(LIBS)\n\n';\
+	done >> $@
+	$(Q)for i in $(BD_LIB); do \
+	printf "$$i:" ;\
+	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.c/\.o/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
+	for j in $$DEPS; do printf "$$j "; done;\
+	printf '\n\t$$(Q)echo "AR $$@"\n';\
+	printf '\t$$(Q)$$(CROSS)$$(AR) $$(ARFLAGS) $$@ $$^\n\n';\
+	done >> $@
+
+dyn-bsdmake.mk:
+	$(Q)for i in 1; do \
+	printf '.c.o:\n';\
+	printf '\t$$(Q)echo "CC $$@"\n';\
+	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(CFLAGS) -c $$< -o $$@\n';\
+	printf '.ifdef $$(STRIP)\n';\
+	printf '\t$$(Q)$$(COMMENT) -$$(CROSS)$$(STRIP) $$@\n';\
+	printf '.endif\n\n';\
+	done > $@
+	$(Q)for i in $(BD_BIN); do \
+	printf "$$i: " ;\
+	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.exe//" | sed "s/\.c/\.o/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
+	for j in $$DEPS; do printf "$$j "; done;\
+	printf '\n\t$$(Q)echo "LD $$@"\n';\
+	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(LDFLAGS) -o $$@ $$> $$(LIBS)\n\n';\
+	done >> $@
+	$(Q)for i in $(BD_LIB); do \
+	printf "$$i:" ;\
+	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.c/\.o/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
+	for j in $$DEPS; do printf "$$j "; done;\
+	printf '\n\t$$(Q)echo "AR $$@"\n';\
+	printf '\t$$(Q)$$(CROSS)$$(AR) $$(ARFLAGS) $$@ $$>\n\n';\
+	done >> $@
+
+ibaard-clean: 
+	$(Q)echo "-> cleaning up libaard"
+	$(Q)make -C ibaard clean
+
+clean: $(CLEANDEPS)
+	$(Q)echo "-> cleaning up"
+	$(Q)$(RM) $(ALL) *.exe $(OBJDIR)/*.{o,obj,lib} crammd5/*.{o,obj,lib} crammd5/*.o $(OBJDIR)/*.o $(SRCDIR)/version.h dyn-*.mk
+
+distclean: clean
+	$(Q)echo "-> cleaning up everything"
+	$(Q)$(RM) -Rf ibaard
 
 install: all
 	install -d $(DESTDIR)$(BINDIR)
@@ -47,6 +116,7 @@ deb: rename
 help:
 	$(Q)echo "Variables for building:"
 	$(Q)echo -e "SSL=0|1\t\tenable/disable SSL support and link against OpenSSL or any"
+
 	$(Q)echo -e "\t\tcompatible library. Default is 0."
 	$(Q)echo -e "DEBUG=0|1\tenable/disable debug build/stripping binaries. Default is 0."
 	$(Q)echo -e "WIN32=0|1\tenable/disable build for Windows. Adds .exe to the binaries"
