@@ -71,7 +71,6 @@ static int pop3c_getstat(int sd){
 	char buf[MAXNETBUF];
 	int i;
 
-	logmsg(L_INFO, F_NET, "> ", "stat", NULL);
 	if ((i=netwriteline(sd,"stat\r\n")) == -1){
 		logmsg(L_ERROR, F_NET, "unable to write line to network: ", strerror(errno), NULL);
 		return -1;
