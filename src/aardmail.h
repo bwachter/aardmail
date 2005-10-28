@@ -22,6 +22,7 @@
 #define F_MAILDIR "MAILDIR"
 #define F_AUTHINFO "AUTHINFO"
 #define F_ADDRLIST "ADDRLIST"
+#define F_SSL "SSL"
 
 #ifdef __BORLANDC__
 static int __write1(const char *s)

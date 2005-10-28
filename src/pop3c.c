@@ -240,12 +240,17 @@ static int pop3c_connectauth(authinfo *auth){
 		if ((pop3c_oksendline(sd, tmpstring)) == -1) 
 			return -1;
 
+#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
+	// we never send a password if we got a ssl key
+	if (strcmp(am_sslkey, "")) return sd;
+#endif
+
 	if (!cat(&tmpstring, "pass ", auth->password, "\r\n", NULL)){
 		if ((pop3c_oksendline(sd, tmpstring)) == -1)
 			return -1;
-		else return sd;
 	}
-	return -1; // we should'nt get here...
+
+	return sd;
 }
 
 static int pop3c_quitclose(int sd){
@@ -316,9 +321,9 @@ int main(int argc, char** argv){
 #endif
 
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
-	while ((c=getopt(argc, argv, "a:b:c:dh:lm:n:p:r:s:tu:v:x:")) != EOF){
+	while ((c=getopt(argc, argv, "a:b:c:df:h:lm:n:p:r:s:tu:v:x:")) != EOF){
 #else
-	while ((c=getopt(argc, argv, "a:b:dh:m:n:p:r:s:u:v:x:")) != EOF){
+	while ((c=getopt(argc, argv, "a:b:df:h:m:n:p:r:s:u:v:x:")) != EOF){
 #endif
 		switch(c){
 		case 'b':
