@@ -324,7 +324,7 @@ int main(int argc, char** argv){
 	netsslcacert(".aardmail");
 	am_ssl_paranoid = L_DEADLY;
 
-	while ((c=getopt(argc, argv, "a:b:c:df:h:lm:n:p:r:s:tu:v:x:")) != EOF){
+	while ((c=getopt(argc, argv, "a:b:c:df:g:h:lm:n:p:r:s:tu:v:x:")) != EOF){
 #else
 	while ((c=getopt(argc, argv, "a:b:df:h:m:n:p:r:s:u:v:x:")) != EOF){
 #endif
@@ -353,8 +353,11 @@ int main(int argc, char** argv){
 		case 'f':
 			strncpy(am_sslkey, optarg, 1024);
 			break;
-#endif
 		case 'g':
+			strncpy(am_ssl_servercerts, optarg, 1024);
+			break;
+#endif
+		case 'k':
 			kirahvi();
 			exit(0);
 		case 'h':
@@ -423,9 +426,9 @@ static void pop3c_usage(char *program){
 	char *tmpstring=NULL;
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	if (!cat(&tmpstring, "Usage: ", program, " [-b program] [-c option] [-d] [-f certificate]\n",
-					 "\t\t-h hostname [-l] [-m maildir] [-n number] [-p password]\n",
-					 "\t\t[-r number] [-s service] [-t] [-u user] [-v level]\n",
-					 "\t\t[-x program]\n",
+					 "\t\t[-g certificate] -h hostname [-l] [-m maildir] [-n number]\n",
+					 "\t\t[-p password] [-r number] [-s service] [-t] [-u user]\n",
+					 "\t\t[-v level] [-x program]\n",
 #else
 	if (!cat(&tmpstring, "Usage: ", program, " [-b program] [-d] -h hostname [-m maildir] [-p password]\n",
 					 "\t\t[-r number] [-s service] [-t] [-u user] [-x program]","\n",
@@ -439,6 +442,7 @@ static void pop3c_usage(char *program){
 					 "\t-d:\tdon't delete mail after retrieval (default is to delete)\n",
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 					 "\t-f:\tthe certificate file to use for authentification\n",
+					 "\t-g:\tthe certificate file to use for verification\n",
 #endif
 					 "\t-h:\tspecify the hostname to connect to\n",
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)

@@ -257,7 +257,7 @@ int main(int argc, char **argv){
 	netsslcacert(".aardmail");
 	am_ssl_paranoid = L_DEADLY;
 
-	while ((c=getopt(argc, argv, "b:c:df:h:lm:p:r:s:tu:v:x:")) != EOF){
+	while ((c=getopt(argc, argv, "b:c:df:g:h:lm:p:r:s:tu:v:x:")) != EOF){
 #else
 	while ((c=getopt(argc, argv, "a:b:dh:m:p:r:s:u:v:x:")) != EOF){
 #endif
@@ -285,6 +285,9 @@ int main(int argc, char **argv){
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 		case 'f':
 			strncpy(am_sslkey, optarg, 1024);
+			break;
+		case 'g':
+			strncpy(am_ssl_servercerts, optarg, 1024);
 			break;
 #endif
 		case 'h':
@@ -381,8 +384,8 @@ static void smtpc_usage(char *program){
 	char *tmpstring=NULL;
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	if (!cat(&tmpstring, "Usage: ", program, " [-b program] [-c option] [-d] [-f certificate]\n",
-					 "\t\t-h hostname [-l] [-m maildir] [-n number] [-p password]\n",
-					 "\t\t[-s service] [-t] [-u user] [-v level]\n",
+					 "\t\t[-g certificate] -h hostname [-l] [-m maildir] [-n number]\n",
+					 "\t\t[-p password] [-s service] [-t] [-u user] [-v level]\n",
 #else
 	if (!cat(&tmpstring, "Usage: ", program, " [-b program] [-d] -h hostname [-m maildir] [-p password]\n",
 					 "\t\t[-s service] [-t] [-u user]","\n",
@@ -396,6 +399,7 @@ static void smtpc_usage(char *program){
 					 "\t-d:\tdon't delete mail after sending (default is to delete)\n",
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 					 "\t-f:\tthe certificate file to use for authentification\n",
+					 "\t-g:\tthe certificate file to use for verification\n",
 #endif
 					 "\t-h:\tspecify the hostname to connect to\n",
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
