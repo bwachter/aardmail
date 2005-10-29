@@ -54,7 +54,9 @@ dyn-gmake.mk:
 	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.c/\.o/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
 	for j in $$DEPS; do printf "$$j "; done;\
 	printf '\n\t$$(Q)echo "AR $$@"\n';\
-	printf '\t$$(Q)$$(CROSS)$$(AR) $$(ARFLAGS) $$@ $$^\n\n';\
+	printf '\t$$(Q)$$(CROSS)$$(AR) $$(ARFLAGS) $$@ $$^\n';\
+	printf '\t$$(Q)$$(CROSS)$$(RANLIB) $$@\n';\
+	printf '\n';\
 	done >> $@
 
 dyn-bsdmake.mk:
@@ -79,6 +81,7 @@ dyn-bsdmake.mk:
 	for j in $$DEPS; do printf "$$j "; done;\
 	printf '\n\t$$(Q)echo "AR $$@"\n';\
 	printf '\t$$(Q)$$(CROSS)$$(AR) $$(ARFLAGS) $$@ $$>\n\n';\
+	printf '\t$$(Q)$$(CROSS)$$(RANLIB) $$@\n';\
 	done >> $@
 
 ibaard-clean: 

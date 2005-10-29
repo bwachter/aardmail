@@ -3,6 +3,7 @@ CROSS=
 CC=gcc
 LD=gcc
 AR=ar
+RANLIB=ranlib
 RM=/bin/rm -f
 INSTALL=install
 DESTDIR=
