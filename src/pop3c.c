@@ -322,6 +322,7 @@ int main(int argc, char** argv){
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	am_sslconf = 0;
 	netsslcacert(".aardmail");
+	am_ssl_paranoid = L_DEADLY;
 
 	while ((c=getopt(argc, argv, "a:b:c:df:h:lm:n:p:r:s:tu:v:x:")) != EOF){
 #else
@@ -339,9 +340,9 @@ int main(int argc, char** argv){
 			switch(atoi(optarg)){
 			case 0: am_sslconf=0; break;
 			case 1: am_sslconf=AM_SSL_USETLS; break;
-			case 2: am_sslconf=AM_SSL_USETLS & AM_SSL_ALLOWPLAIN; break;
+			case 2: am_sslconf=AM_SSL_USETLS | AM_SSL_ALLOWPLAIN; am_ssl_paranoid = L_WARNING; break;
 			case 3: am_sslconf=AM_SSL_STARTTLS; break;
-			case 4: am_sslconf=AM_SSL_STARTTLS & AM_SSL_ALLOWPLAIN; break;
+			case 4: am_sslconf=AM_SSL_STARTTLS | AM_SSL_ALLOWPLAIN; am_ssl_paranoid = L_WARNING; break;
 			}
 			break;
 #endif
