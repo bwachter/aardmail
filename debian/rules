@@ -5,6 +5,7 @@ export DH_OPTIONS
 build: build-arch
 build-arch: build-arch-stamp
 build-arch-stamp: 
+	$(MAKE) dep
 	$(MAKE) SSL=1
 	touch build-arch-stamp
 

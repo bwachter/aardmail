@@ -17,6 +17,7 @@
 #include <ibaard_log.h>
 #include <ibaard_cat.h>
 #include <ibaard_authinfo.h>
+#include <ibaard_fs.h>
 
 #include "aardmail.h"
 #include "maildir.h"
@@ -312,15 +313,16 @@ int main(int argc, char** argv){
 	authinfo defaultauth;
 
 	memset(&defaultauth, 0, sizeof(authinfo));
+		
 	// initialize with sane values
 	pop3c.keepmail = 0;
 	pop3c.msgcount = 0;
 	pop3c.onlyget = 0;
-#if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
-	am_sslconf = 0;
-#endif
 
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
+	am_sslconf = 0;
+	netsslcacert();
+
 	while ((c=getopt(argc, argv, "a:b:c:df:h:lm:n:p:r:s:tu:v:x:")) != EOF){
 #else
 	while ((c=getopt(argc, argv, "a:b:df:h:m:n:p:r:s:u:v:x:")) != EOF){

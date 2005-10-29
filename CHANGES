@@ -1,4 +1,6 @@
 0.1-pre-6:
+	Added certfile for verifying server certs
+	Added verification of certificates
 	Updated build system to include libaard in build process 
 
 0.1-pre-5:
@@ -23,7 +25,6 @@
 	Put all the aardmail objects into libaardmail
 
 0.1-pre-2:
-
 	Fixed stupid TLS bug introduced by supporting reauth
 	Major cleanup and moving general purpose functions out of pop3c
 

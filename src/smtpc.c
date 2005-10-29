@@ -254,6 +254,9 @@ int main(int argc, char **argv){
 	struct dirent *tmpdirent;
 
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
+	am_sslconf = 0;
+	netsslcacert();
+
 	while ((c=getopt(argc, argv, "b:c:df:h:lm:p:r:s:tu:v:x:")) != EOF){
 #else
 	while ((c=getopt(argc, argv, "a:b:dh:m:p:r:s:u:v:x:")) != EOF){
