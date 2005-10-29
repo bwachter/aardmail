@@ -1,11 +1,15 @@
 
-.PHONY: clean install tar rename upload deb maintainer-deb check dep
+.PHONY: clean install tar rename upload deb maintainer-deb check dep ibaard-clean ../ibaard-clean
 
 all: $(ALL)
 
+../ibaard/libibaard.a:
+	$(Q)echo "-> $@"
+	$(Q)make -C ../ibaard DIET=$(DIET) SSL=$(SSL) DEV=$(DEV) BROKEN=$(BROKEN) WIN32=$(WIN32) DEBUG=$(DEBUG)
+
 ibaard/libibaard.a:
 	$(Q)echo "-> $@"
-	$(Q)make -C ibaard DIET=$(DIET) SSL=$(SSL) DEV=$(DEV) BROKEN=$(BROKEN) WIN32=$(WIN32)
+	$(Q)make -C ibaard DIET=$(DIET) SSL=$(SSL) DEV=$(DEV) BROKEN=$(BROKEN) WIN32=$(WIN32) DEBUG=$(DEBUG)
 
 $(SRCDIR)/version.h: 
 	$(Q)echo "-> $@"
@@ -14,13 +18,14 @@ $(SRCDIR)/version.h:
 	$(Q)printf "; http://bwachter.lart.info/projects/aardmail/\"\n#endif\n" >> $@
 
 dyn-conf.mk:
-	$(Q)if [ -d ibaard ]; then\
-	echo "-> including local libaard";\
-	printf "LIBS+=-Libaard\n" > $@;\
-	printf "INCLUDES+=-Iibaard/src -Ifoobar\n" >> $@;\
-	printf "ALL=ibaard/libibaard.a $(ALL)\n" >> $@;\
-	printf "CLEANDEPS=ibaard-clean\n" >> $@;\
-	fi 
+	$(Q)IBAARD="";if [ -d ibaard ]; then IBAARD=ibaard; echo "-> including local libaard";\
+	else if [ -d ../ibaard ]; then IBAARD=../ibaard; echo "-> including local ../libaard";\
+	fi; fi; if [ ! -z $IBAARD ]; then\
+	printf "LIBS+=-L$$IBAARD\n";\
+	printf "INCLUDES+=-I$$IBAARD/src\n";\
+	printf "ALL=$$IBAARD/libibaard.a $(ALL)\n";\
+	printf "CLEANDEPS=$$IBAARD-clean\n";\
+	fi > $@
 
 dyn-gmake.mk:
 	$(Q)for i in 1; do \
@@ -79,6 +84,10 @@ dyn-bsdmake.mk:
 ibaard-clean: 
 	$(Q)echo "-> cleaning up libaard"
 	$(Q)make -C ibaard clean
+
+../ibaard-clean: 
+	$(Q)echo "-> cleaning up libaard"
+	$(Q)make -C ../ibaard clean
 
 clean: $(CLEANDEPS)
 	$(Q)echo "-> cleaning up"

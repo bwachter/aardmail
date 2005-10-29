@@ -255,7 +255,7 @@ int main(int argc, char **argv){
 
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	am_sslconf = 0;
-	netsslcacert();
+	netsslcacert(".aardmail");
 
 	while ((c=getopt(argc, argv, "b:c:df:h:lm:p:r:s:tu:v:x:")) != EOF){
 #else
