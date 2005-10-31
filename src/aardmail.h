@@ -41,7 +41,6 @@ static inline int __write2(const char *s)
 #define F_ADDRLIST "ADDRLIST"
 #define F_SSL "SSL"
 
-int debuglevel;
 int am_checkprogram(char *program);
 #if (!defined(__WIN32__)) && (!defined _BROKEN_IO)
 int am_pipe(char *pipeto);

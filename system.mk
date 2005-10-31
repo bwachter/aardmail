@@ -28,7 +28,7 @@ DEBUG_CFLAGS=-g -Wall -W -Os $(INCLUDES)
 DEBUG_LDFLAGS=-g
 
 BD_BIN=aardmail-pop3c$(EXE) aardmail-miniclient$(EXE) aardmail-smtpc$(EXE) aardmail-sendmail$(EXE)
-BD_LIB=libcrammd5.a libaardmail.a
+BD_LIB=libaardmail.a
 
 ALL=$(BD_LIB) $(BD_BIN)
 

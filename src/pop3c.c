@@ -225,14 +225,12 @@ static int pop3c_connectauth(authinfo *auth){
 		am_sslconf ^= AM_SSL_USETLS;
 		if ((i=netsslstart(sd))) {
 			logmsg(L_ERROR, F_SSL, "unable to open tls-connection using starttls", NULL);
-			if ((pop3c_oksendline(sd, "stls\r\n")) == -1) {
-				if (am_sslconf & AM_SSL_ALLOWPLAIN){
-					pop3c_quitclose(sd);
-					am_sslconf = 0;
-					logmsg(L_WARNING, F_NET, "Reconnecting using plaintext (you allowed this!)", NULL);
-					goto connect;
-				} else return -1;
-			}
+			if (am_sslconf & AM_SSL_ALLOWPLAIN){
+				pop3c_quitclose(sd);
+				am_sslconf = 0;
+				logmsg(L_WARNING, F_NET, "Reconnecting using plaintext (you allowed this!)", NULL);
+				goto connect;
+			} else return -1;
 		} 
 	}
 #endif

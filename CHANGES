@@ -1,3 +1,10 @@
+0.1-pre-8:
+	Fixed all BCC warnings
+	Added correct error messages for SSL
+	Fixed incorrect retrying to establish stls-connections in pop3c
+	Fixed BCC makefiles (SSL-flags missing)
+	Removed crammd from building
+
 0.1-pre-7:
 	Added compile fixes for Borland C
 	Added makefile generation for Borland C

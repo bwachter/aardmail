@@ -3,21 +3,19 @@
 
 all: $(ALL)
 
-../ibaard/libibaard.a:
-	$(Q)echo "-> $@"
-	$(Q)make -C ../ibaard dep
-	$(Q)make -C ../ibaard DIET=$(DIET) SSL=$(SSL) DEV=$(DEV) BROKEN=$(BROKEN) WIN32=$(WIN32) DEBUG=$(DEBUG)
-
-ibaard/libibaard.a:
-	$(Q)echo "-> $@"
-	$(Q)make -C ibaard dep
-	$(Q)make -C ibaard DIET=$(DIET) SSL=$(SSL) DEV=$(DEV) BROKEN=$(BROKEN) WIN32=$(WIN32) DEBUG=$(DEBUG)
-
 $(SRCDIR)/version.h: 
 	$(Q)echo "-> $@"
 	$(Q)printf "#ifndef AM_VERSION_H\n#define AM_VERSION_H\n#define AM_VERSION \"" > $@
 	$(Q)printf $(VERSION) >> $@
 	$(Q)printf "; http://bwachter.lart.info/projects/aardmail/\"\n#endif\n" >> $@
+
+clean: $(CLEANDEPS)
+	$(Q)echo "-> cleaning up"
+	$(Q)$(RM) $(ALL) *.exe *.lib *.tds *.BAK $(OBJDIR)/*.{o,obj,lib} crammd5/*.{o,obj,lib} crammd5/*.o $(OBJDIR)/*.o $(SRCDIR)/version.h dyn-*.mk
+
+distclean: clean
+	$(Q)echo "-> cleaning up everything"
+	$(Q)$(RM) -Rf ibaard Makefile.borland
 
 dyn-conf.mk:
 	$(Q)IBAARD="";if [ -d ibaard ]; then IBAARD=ibaard; echo "-> including local libaard";\
@@ -92,14 +90,14 @@ Makefile.borland:
 	printf "LD=bcc32\nRM=del /F\n";\
 	printf "LDFLAGS=-tWC -w- -k- -q -O2 -lq -lc -lx -lGpd -lGn -lGl -lw-\n";\
 	printf "CFLAGS=-w- -O2 -q\n";\
-	printf "LIBS=-L. libaardmail.lib ibaard.lib ws2_32.lib\n";\
-	printf "INCLUDES=-I../ibaard/src\n";\
+	printf "LIBS=-Libaard libaardmail.lib ibaard.lib ws2_32.lib\n";\
+	printf "INCLUDES=-Iibaard/src\n";\
 	printf "!ifdef SSL\n";\
 	printf "SSLLIBS=ssleay32.lib libeay32.lib\n";\
 	printf "SSLCFLAGS=-DHAVE_SSL\n";\
 	printf "!endif\n";\
 	printf "Q=@\n";\
-	printf "ALL=libcrammd5.lib libaardmail.lib aardmail-pop3c.exe aardmail-miniclient.exe\n";\
+	printf "ALL=libaardmail.lib aardmail-pop3c.exe aardmail-miniclient.exe\n";\
 	printf "!ifdef DEV\n";\
 	printf "ALL+=aardmail-smtpc.exe aardmail-sendmail.exe\n";\
 	printf "!endif\n";\
@@ -111,7 +109,7 @@ Makefile.borland:
 	$(Q)for i in 1; do \
 	printf '.c.obj:\n';\
 	printf '\t$$(Q)echo "CC $$@"\n';\
-	printf '\t$$(Q)$$(CC) $$(CFLAGS) $(INCLUDES) $(SSLCFLAGS) -o$$@ -c $$<\n';\
+	printf '\t$$(Q)$$(CC) $$(CFLAGS) $$(INCLUDES) $$(SSLCFLAGS) -o$$@ -c $$<\n';\
 	printf '\n';\
 	done >> $@
 	$(Q)for i in $(BD_BIN); do \
@@ -130,6 +128,16 @@ Makefile.borland:
 	printf '\t$$(Q)tlib $$(@F) /a $$**\n\n';\
 	done >> $@
 
+../ibaard/libibaard.a:
+	$(Q)echo "-> $@"
+	$(Q)make -C ../ibaard dep
+	$(Q)make -C ../ibaard DIET=$(DIET) SSL=$(SSL) DEV=$(DEV) BROKEN=$(BROKEN) WIN32=$(WIN32) DEBUG=$(DEBUG)
+
+ibaard/libibaard.a:
+	$(Q)echo "-> $@"
+	$(Q)make -C ibaard dep
+	$(Q)make -C ibaard DIET=$(DIET) SSL=$(SSL) DEV=$(DEV) BROKEN=$(BROKEN) WIN32=$(WIN32) DEBUG=$(DEBUG)
+
 ibaard-clean: 
 	$(Q)echo "-> cleaning up libaard"
 	$(Q)make -C ibaard clean
@@ -138,22 +146,15 @@ ibaard-clean:
 	$(Q)echo "-> cleaning up libaard"
 	$(Q)make -C ../ibaard clean
 
-clean: $(CLEANDEPS)
-	$(Q)echo "-> cleaning up"
-	$(Q)$(RM) $(ALL) *.exe *.lib *.tds *.BAK $(OBJDIR)/*.{o,obj,lib} crammd5/*.{o,obj,lib} crammd5/*.o $(OBJDIR)/*.o $(SRCDIR)/version.h dyn-*.mk
-
-distclean: clean
-	$(Q)echo "-> cleaning up everything"
-	$(Q)$(RM) -Rf ibaard Makefile.borland
-
 install: all
 	install -d $(DESTDIR)$(BINDIR)
 	install -d $(DESTDIR)$(MANDIR)/man1
 	install -m 755 $(ALL) $(DESTDIR)$(BINDIR)
 	install -m 644 doc/man/*.1 $(DESTDIR)$(MANDIR)/man1
 
-tar: clean rename
+tar: distclean Makefile.borland $(SRCDIR)/version.h rename
 	$(Q)echo "building archive ($(VERSION).tar.bz2)"
+	$(Q)cp -R ../ibaard ../$(VERSION)
 	$(Q)cd .. && tar cvvf $(VERSION).tar.bz2 $(VERSION) --use=bzip2 --exclude CVS
 	$(Q)cd .. && rm -Rf $(VERSION)
 
