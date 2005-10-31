@@ -72,4 +72,4 @@ DEPSTAT= "You need to run 'make dep'\n"
 DEPSTAT= "You need to run 'make dep'\n"
 .endif
 
-dep: dyn-conf.mk dyn-bsdmake.mk
+dep: $(SRCDIR)/version.h dyn-conf.mk dyn-bsdmake.mk

@@ -1,15 +1,16 @@
 #DIET=`which diet`
 CROSS=
-CC=gcc
-LD=gcc
-AR=ar
-RANLIB=ranlib
+CC?=gcc
+LD?=gcc
+AR?=ar
+RANLIB?=ranlib
 RM=/bin/rm -f
 INSTALL=install
 DESTDIR=
-BINDIR=/usr/bin
-MANDIR=/usr/share/man
+BINDIR?=/usr/bin
+MANDIR?=/usr/share/man
 STRIP=
+MAKE?=make
 
 OBJDIR=src
 SRCDIR=src
@@ -19,12 +20,15 @@ PREFIX?=/usr
 Q?=@
 ARFLAGS=cru
 #-pipe crashes on IRIX
-LIBS=-L. -laardmail -libaard
+LDPATH=-L. 
+LIBS=$(LDPATH) -laardmail -libaard
 INCLUDES=
 
-WARN=-Wextra -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wmissing-declarations -Wno-multichar
+WARN=-W -Wundef -Wno-endif-labels -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wmissing-declarations -Wno-multichar
 #-Wunreachable-code
-CFLAGS=-Wall -W -Os $(WARN) $(INCLUDES) 
+#-Wextra will clash with gcc3
+#-Wdeclaration-after-statement
+CFLAGS?=-Wall -W -Os $(WARN)
 LDFLAGS=-s
 DEBUG_CFLAGS=-g -Wall -W -Os $(INCLUDES)
 DEBUG_LDFLAGS=-g

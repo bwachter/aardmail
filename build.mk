@@ -21,7 +21,7 @@ dyn-conf.mk:
 	$(Q)IBAARD="";if [ -d ibaard ]; then IBAARD=ibaard; echo "-> including local libaard";\
 	else if [ -d ../ibaard ]; then IBAARD=../ibaard; echo "-> including local ../libaard";\
 	fi; fi; if [ ! -z $IBAARD ]; then\
-	printf "LIBS+=-L$$IBAARD\n";\
+	printf "LDPATH+=-L$$IBAARD\n";\
 	printf "INCLUDES+=-I$$IBAARD/src\n";\
 	printf "ALL=$$IBAARD/libibaard.a $(ALL)\n";\
 	printf "CLEANDEPS=$$IBAARD-clean\n";\
@@ -31,13 +31,13 @@ dyn-gmake.mk:
 	$(Q)for i in 1; do \
 	printf '$$(OBJDIR)/%%.o: $$(SRCDIR)/%%.c\n';\
 	printf '\t$$(Q)echo "CC $$@"\n';\
-	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(CFLAGS) -c $$< -o $$@\n';\
+	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(CFLAGS) $$(INCLUDES) -c $$< -o $$@\n';\
 	printf 'ifdef $$(STRIP)\n';\
 	printf '\t$$(Q)$$(COMMENT) -$$(CROSS)$$(STRIP) $$@\n';\
 	printf 'endif\n\n';\
 	printf '%%.o: %%.c\n';\
 	printf '\t$$(Q)echo "CC $$@"\n';\
-	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(CFLAGS) -c $$< -o $$@\n';\
+	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(CFLAGS) $$(INCLUDES) -c $$< -o $$@\n';\
 	printf 'ifdef $$(STRIP)\n';\
 	printf '\t$$(Q)$$(COMMENT) -$$(CROSS)$$(STRIP) $$@\n';\
 	printf 'endif\n\n';\
@@ -63,7 +63,7 @@ dyn-bsdmake.mk:
 	$(Q)for i in 1; do \
 	printf '.c.o:\n';\
 	printf '\t$$(Q)echo "CC $$@"\n';\
-	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(CFLAGS) -c $$< -o $$@\n';\
+	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(CFLAGS) $$(INCLUDES) -c $$< -o $$@\n';\
 	printf '.ifdef $$(STRIP)\n';\
 	printf '\t$$(Q)$$(COMMENT) -$$(CROSS)$$(STRIP) $$@\n';\
 	printf '.endif\n\n';\
@@ -127,21 +127,21 @@ Makefile.borland:
 
 ../ibaard/libibaard.a:
 	$(Q)echo "-> $@"
-	$(Q)make -C ../ibaard dep
-	$(Q)make -C ../ibaard DIET=$(DIET) SSL=$(SSL) DEV=$(DEV) BROKEN=$(BROKEN) WIN32=$(WIN32) DEBUG=$(DEBUG)
+	$(Q)cd ../ibaard && $(MAKE) dep
+	$(Q)cd ../ibaard && $(MAKE) DIET="$(DIET)" SSL="$(SSL)" DEV="$(DEV)" BROKEN="$(BROKEN)" WIN32="$(WIN32)" DEBUG="$(DEBUG)" CFLAGS="$(CFLAGS)"
 
 ibaard/libibaard.a:
 	$(Q)echo "-> $@"
-	$(Q)make -C ibaard dep
-	$(Q)make -C ibaard DIET=$(DIET) SSL=$(SSL) DEV=$(DEV) BROKEN=$(BROKEN) WIN32=$(WIN32) DEBUG=$(DEBUG)
+	$(Q)cd ibaard && $(MAKE) dep
+	$(Q)cd ibaard && $(MAKE) DIET="$(DIET)" SSL="$(SSL)" DEV="$(DEV)" BROKEN="$(BROKEN)" WIN32="$(WIN32)" DEBUG="$(DEBUG)" CFLAGS="$(CFLAGS)"
 
 ibaard-clean: 
 	$(Q)echo "-> cleaning up libaard"
-	$(Q)make -C ibaard clean
+	$(Q)cd ibaard && $(MAKE) clean
 
 ../ibaard-clean: 
 	$(Q)echo "-> cleaning up libaard"
-	$(Q)make -C ../ibaard clean
+	$(Q)cd ../ibaard && $(MAKE) clean
 
 install: all
 	install -d $(DESTDIR)$(BINDIR)
@@ -152,8 +152,8 @@ install: all
 tar: distclean Makefile.borland $(SRCDIR)/version.h rename
 	$(Q)echo "building archive ($(VERSION).tar.bz2)"
 	$(Q)cp -R ../ibaard ../$(VERSION)
-	$(Q)make -C ../$(VERSION)/ibaard distclean
-	$(Q)make -C ../$(VERSION)/ibaard Makefile.borland
+	$(Q)cd ../$(VERSION)/ibaard && $(MAKE) distclean
+	$(Q)cd ../$(VERSION)/ibaard && $(MAKE) Makefile.borland
 	$(Q)cd .. && tar cvvf $(VERSION).tar.bz2 $(VERSION) --use=bzip2 --exclude CVS
 	$(Q)cd .. && rm -Rf $(VERSION)
 
