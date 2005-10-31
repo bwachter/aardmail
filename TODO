@@ -2,7 +2,6 @@
 - add some more information to the maildir name
 - store fingerprint of servers certificate in .aardmail/somewhat; warn if the fingerprint
   does not match
-- add getopt.c for building under windows
 
 0.2-pre-1:
 - add fetchmail frontend

@@ -1,4 +1,7 @@
 0.1-pre-7:
+	Added compile fixes for Borland C
+	Added makefile generation for Borland C
+	Fixed getopt -- works now with Borland C (tested without SSL)
 
 0.1-pre-6:
 	Changed default policy for certificate verification to `paranoid'
