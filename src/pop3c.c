@@ -11,6 +11,7 @@
 #endif
 #else
 #include <sys/wait.h>
+#include <getopt.h>
 #endif
 
 #include <ibaard_network.h>
@@ -31,7 +32,7 @@ static struct {
 } pop3c;
 
 char *uniqname;
-static char *tmpstring;
+static char *tmpstring=NULL;
 
 static int pop3c_quitclose(int sd);
 static void pop3c_usage(char *program);
@@ -141,13 +142,13 @@ static long pop3c_getmessage(int sd, FILE *fd, int size){
 #else
 static long pop3c_getmessage(int sd, int fd, int size){
 #endif
-#ifdef __GNUC__
-	(void) size;
-#endif
 	char *tmp;
 	char *buf[MAXNETBUF];
 	int i, delayrn=0;
 	long fsize=0;
+#ifdef __GNUC__
+	(void) size;
+#endif
 
 	for(;;){
 		if ((i=netreadline(sd, (char *)buf)) == -1) {
@@ -418,7 +419,7 @@ int main(int argc, char** argv){
 }
 
 static void pop3c_usage(char *program){
-	char *tmpstring=NULL;
+	//char *tmpstring=NULL;
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	if (!cat(&tmpstring, "Usage: ", program, " [-b program] [-c option] [-d] [-f certificate]\n",
 					 "\t\t[-g certificate] -h hostname [-l] [-m maildir] [-n number]\n",

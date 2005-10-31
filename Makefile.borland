@@ -10,10 +10,7 @@ SSLLIBS=ssleay32.lib libeay32.lib
 SSLCFLAGS=-DHAVE_SSL
 !endif
 Q=@
-ALL=libaardmail.lib aardmail-pop3c.exe aardmail-miniclient.exe
-!ifdef DEV
-ALL+=aardmail-smtpc.exe aardmail-sendmail.exe
-!endif
+ALL=libaardmail.lib aardmail-pop3c.exe aardmail-smtpc.exe aardmail-sendmail.exe aardmail-miniclient.exe
 OBJDIR=src\\
 SRCDIR=src\\
 .PHONY: clean

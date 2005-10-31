@@ -30,7 +30,7 @@ static int maildir_harddelete=0; // shall we delete the mails, or just mark them
 
 static int maildir_sappend(maildirent *maildir_add);
 
-int maildirgname(char **uniqname){
+static int maildirgname(char **uniqname){
 	char tmpbuf[512];
 	char myhost[NI_MAXHOST];
 	time_t mytime=time(NULL);

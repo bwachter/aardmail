@@ -9,6 +9,7 @@
 #include <ibaard_getopt.h>
 #endif
 #else
+#include <getopt.h>
 #include <unistd.h>
 #include <sys/poll.h>
 #ifndef POLLRDNORM
@@ -24,7 +25,7 @@
 
 #include "aardmail.h"
 
-void miniclient_usage(char *program){
+static void miniclient_usage(char *program){
 	char *tmpstring=NULL;
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	if (!cat(&tmpstring, "Usage: ", program, " [-c option] -h hostname -s service [-t] [-v level]\n",

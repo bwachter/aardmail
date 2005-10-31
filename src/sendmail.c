@@ -2,12 +2,25 @@
 #include <stdio.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <strings.h>
 
 #include <ibaard_network.h>
 #include <ibaard_log.h>
 #include <ibaard_cat.h>
 #include <ibaard_fs.h>
+
+#ifdef __WIN32__
+#ifdef _GNUC_
+#include <getopt.h>
+#else
+#include <ibaard_getopt.h>
+#endif
+#include <windows.h>
+#include <winbase.h>
+#include <io.h>
+#else
+#include <getopt.h>
+#include <strings.h>
+#endif
 
 #include "aardmail.h"
 #include "maildir.h"
@@ -21,6 +34,11 @@ int main(int argc, char **argv){
 	int smcfg=0;
 	int i=1, isbody=0, c;
 	char buf[1024], from[1024], *mymaildir=NULL;
+#if (defined(__WIN32__)) || (defined _BROKEN_IO)
+	FILE *fd;
+#else
+	int fd;
+#endif
 
 	while ((c=getopt(argc, argv, "d:f:F:o:tvV")) != EOF){
 		switch(c){
@@ -46,11 +64,6 @@ int main(int argc, char **argv){
 		}
 	}
 
-#if (defined(__WIN32__)) || (defined _BROKEN_IO)
-	FILE *fd;
-#else
-	int fd;
-#endif
 	if (maildirfind(NULL)){
 		logmsg(L_ERROR, F_MAILDIR, "unable to find maildir", NULL);
 		return -1;

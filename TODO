@@ -1,19 +1,14 @@
 0.1:
 - add some more information to the maildir name
-- store fingerprint of servers certificate in .aardmail/somewhat; warn if the fingerprint
-  does not match
 
-0.2-pre-1:
+0.2:
 - add fetchmail frontend
 - add a sane sendmail (with manpage)
-
-0.2-pre-2:
 - make sendmail/smtpc-combination suitable for multiuser-systems
+- add pop3d
 
-0.2-pre-3:
+0.3:
 - use the now integrated cram-md5-foo
 - add base64, plain auth
-
-0.2-pre-4:
-- add pop3d
-- add auth using client certificates to pop3c (works with smtpc, not much to be done for pop3c)
+- store fingerprint of servers certificate in .aardmail/somewhat; warn if the fingerprint
+  does not match

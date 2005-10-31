@@ -22,7 +22,9 @@ ARFLAGS=cru
 LIBS=-L. -laardmail -libaard
 INCLUDES=
 
-CFLAGS=-Wall -W -Os $(INCLUDES) 
+WARN=-Wextra -Wdeclaration-after-statement -Wundef -Wno-endif-labels -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wmissing-declarations -Wno-multichar
+#-Wunreachable-code
+CFLAGS=-Wall -W -Os $(WARN) $(INCLUDES) 
 LDFLAGS=-s
 DEBUG_CFLAGS=-g -Wall -W -Os $(INCLUDES)
 DEBUG_LDFLAGS=-g

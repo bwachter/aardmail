@@ -17,6 +17,7 @@
 #include <strings.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <getopt.h>
 #endif
 
 #include <ibaard_network.h>

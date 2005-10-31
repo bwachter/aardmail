@@ -97,10 +97,7 @@ Makefile.borland:
 	printf "SSLCFLAGS=-DHAVE_SSL\n";\
 	printf "!endif\n";\
 	printf "Q=@\n";\
-	printf "ALL=libaardmail.lib aardmail-pop3c.exe aardmail-miniclient.exe\n";\
-	printf "!ifdef DEV\n";\
-	printf "ALL+=aardmail-smtpc.exe aardmail-sendmail.exe\n";\
-	printf "!endif\n";\
+	printf "ALL=libaardmail.lib aardmail-pop3c.exe aardmail-smtpc.exe aardmail-sendmail.exe aardmail-miniclient.exe\n";\
 	printf 'OBJDIR=src\\\\\n';\
 	printf 'SRCDIR=src\\\\\n';\
 	printf ".PHONY: clean\n";\

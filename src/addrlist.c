@@ -35,7 +35,6 @@ int addrlist_free(addrlist **addrlist_storage){
 			}
 		}
 	}
-	return 0;
 }
 
 int addrlist_delete(addrlist **addrlist_storage, char *address){
