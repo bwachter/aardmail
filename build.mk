@@ -155,6 +155,8 @@ install: all
 tar: distclean Makefile.borland $(SRCDIR)/version.h rename
 	$(Q)echo "building archive ($(VERSION).tar.bz2)"
 	$(Q)cp -R ../ibaard ../$(VERSION)
+	$(Q)make -C ../$(VERSION)/ibaard distclean
+	$(Q)make -C ../$(VERSION)/ibaard Makefile.borland
 	$(Q)cd .. && tar cvvf $(VERSION).tar.bz2 $(VERSION) --use=bzip2 --exclude CVS
 	$(Q)cd .. && rm -Rf $(VERSION)
 
