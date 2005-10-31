@@ -5,10 +5,12 @@ all: $(ALL)
 
 ../ibaard/libibaard.a:
 	$(Q)echo "-> $@"
+	$(Q)make -C ../ibaard dep
 	$(Q)make -C ../ibaard DIET=$(DIET) SSL=$(SSL) DEV=$(DEV) BROKEN=$(BROKEN) WIN32=$(WIN32) DEBUG=$(DEBUG)
 
 ibaard/libibaard.a:
 	$(Q)echo "-> $@"
+	$(Q)make -C ibaard dep
 	$(Q)make -C ibaard DIET=$(DIET) SSL=$(SSL) DEV=$(DEV) BROKEN=$(BROKEN) WIN32=$(WIN32) DEBUG=$(DEBUG)
 
 $(SRCDIR)/version.h: 
@@ -80,8 +82,52 @@ dyn-bsdmake.mk:
 	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.c/\.o/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
 	for j in $$DEPS; do printf "$$j "; done;\
 	printf '\n\t$$(Q)echo "AR $$@"\n';\
-	printf '\t$$(Q)$$(CROSS)$$(AR) $$(ARFLAGS) $$@ $$>\n\n';\
-	printf '\t$$(Q)$$(CROSS)$$(RANLIB) $$@\n';\
+	printf '\t$$(Q)$$(CROSS)$$(AR) $$(ARFLAGS) $$@ $$>\n';\
+	printf '\t$$(Q)$$(CROSS)$$(RANLIB) $$@\n\n';\
+	done >> $@
+
+Makefile.borland:
+	$(Q)for i in 1; do \
+	printf "CC=bcc32\n";\
+	printf "LD=bcc32\nRM=del /F\n";\
+	printf "LDFLAGS=-tWC -w- -k- -q -O2 -lq -lc -lx -lGpd -lGn -lGl -lw-\n";\
+	printf "CFLAGS=-w- -O2 -q\n";\
+	printf "LIBS=-L. libaardmail.lib ibaard.lib ws2_32.lib\n";\
+	printf "INCLUDES=-I../ibaard/src\n";\
+	printf "!ifdef SSL\n";\
+	printf "SSLLIBS=ssleay32.lib libeay32.lib\n";\
+	printf "SSLCFLAGS=-DHAVE_SSL\n";\
+	printf "!endif\n";\
+	printf "Q=@\n";\
+	printf "ALL=libcrammd5.lib libaardmail.lib aardmail-pop3c.exe aardmail-miniclient.exe\n";\
+	printf "!ifdef DEV\n";\
+	printf "ALL+=aardmail-smtpc.exe aardmail-sendmail.exe\n";\
+	printf "!endif\n";\
+	printf 'OBJDIR=src\\\\\n';\
+	printf 'SRCDIR=src\\\\\n';\
+	printf ".PHONY: clean\n";\
+	printf 'all: $$(ALL)\n';\
+	done > $@
+	$(Q)for i in 1; do \
+	printf '.c.obj:\n';\
+	printf '\t$$(Q)echo "CC $$@"\n';\
+	printf '\t$$(Q)$$(CC) $$(CFLAGS) $(INCLUDES) $(SSLCFLAGS) -o$$@ -c $$<\n';\
+	printf '\n';\
+	done >> $@
+	$(Q)for i in $(BD_BIN); do \
+	printf "$$i.exe: " ;\
+	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.exe//" | sed "s/\.c/\.obj/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
+	for j in $$DEPS; do printf "$$j "; done;\
+	printf '\n\t$$(Q)echo "LD $$@"\n';\
+	printf '\t$$(Q)$$(LD) $$(LDFLAGS) -e$$@ $$(LIBS) $$(SSLLIBS) $$**\n\n';\
+	done >> $@
+	$(Q)for i in $(BD_LIB); do \
+	TARGET=`echo $$i | sed 's/\.a/\.lib/'`;\
+	printf "$$TARGET: " ;\
+	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.c/\.obj/g" | sed "s,src/version\.h,," | sed 's,src/,\$$(OBJDIR),g'`;\
+	for j in $$DEPS; do printf "$$j "; done;\
+	printf '\n\t$$(Q)echo "TLIB $$@"\n';\
+	printf '\t$$(Q)tlib $$(@F) /a $$**\n\n';\
 	done >> $@
 
 ibaard-clean: 
@@ -94,11 +140,11 @@ ibaard-clean:
 
 clean: $(CLEANDEPS)
 	$(Q)echo "-> cleaning up"
-	$(Q)$(RM) $(ALL) *.exe $(OBJDIR)/*.{o,obj,lib} crammd5/*.{o,obj,lib} crammd5/*.o $(OBJDIR)/*.o $(SRCDIR)/version.h dyn-*.mk
+	$(Q)$(RM) $(ALL) *.exe *.lib *.tds *.BAK $(OBJDIR)/*.{o,obj,lib} crammd5/*.{o,obj,lib} crammd5/*.o $(OBJDIR)/*.o $(SRCDIR)/version.h dyn-*.mk
 
 distclean: clean
 	$(Q)echo "-> cleaning up everything"
-	$(Q)$(RM) -Rf ibaard
+	$(Q)$(RM) -Rf ibaard Makefile.borland
 
 install: all
 	install -d $(DESTDIR)$(BINDIR)

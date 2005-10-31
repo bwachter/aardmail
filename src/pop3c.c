@@ -7,7 +7,7 @@
 #ifdef _GNUC_
 #include <getopt.h>
 #else
-#include "getopt.h"
+#include <ibaard_getopt.h>
 #endif
 #else
 #include <sys/wait.h>
@@ -357,9 +357,6 @@ int main(int argc, char** argv){
 			strncpy(am_ssl_servercerts, optarg, 1024);
 			break;
 #endif
-		case 'k':
-			kirahvi();
-			exit(0);
 		case 'h':
 			strncpy(defaultauth.machine, optarg, NI_MAXHOST);
 			break;

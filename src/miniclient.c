@@ -6,7 +6,7 @@
 #ifdef _GNUC_
 #include <getopt.h>
 #else
-#include "getopt.h"
+#include <ibaard_getopt.h>
 #endif
 #else
 #include <unistd.h>

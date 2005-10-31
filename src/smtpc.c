@@ -7,7 +7,7 @@
 #ifdef _GNUC_
 #include <getopt.h>
 #else
-#include "getopt.h"
+#include <ibaard_getopt.h>
 #endif
 #include <windows.h>
 #include <winbase.h>
@@ -306,6 +306,7 @@ int main(int argc, char **argv){
 			strncpy(defaultauth.password, optarg, AM_MAXPASS);
 			break;
 		case 's':
+			if (!strcmp(optarg, "kirahvi")){kirahvi(); exit(0);}
 			strncpy(defaultauth.port, optarg, NI_MAXSERV);
 			break;
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)

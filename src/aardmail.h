@@ -8,11 +8,6 @@
 #else
 #include <string.h>
 #ifdef __WIN32__
-#ifdef _GNUC_
-#include <getopt.h>
-#else
-#include "getopt.h"
-#endif
 #include <io.h>
 #endif
 
