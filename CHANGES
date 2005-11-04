@@ -1,5 +1,6 @@
 0.1:
-	Added some more information to the Maildir names
+	Added some more information to the Maildir names (on POSIX)
+	Some small fixes
 
 0.1-pre-8:
 	Fixed all BCC warnings

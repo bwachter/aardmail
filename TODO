@@ -1,6 +1,3 @@
-0.1:
-- add some more information to the maildir name
-
 0.2:
 - add fetchmail frontend
 - add a sane sendmail (with manpage)
