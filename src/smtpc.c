@@ -50,7 +50,7 @@ static int smtpc_connectauth(authinfo *auth){
  connectauth:
 	if (gethostname(myhost, NI_MAXHOST)==-1){
 		logmsg(L_WARNING, F_GENERAL, "unable to get hostname, setting to localhost.localdomain", NULL);
-		strcpy(myhost, "localhost.localdomain");
+		strncpy(myhost, "localhost.localdomain", NI_MAXHOST);
 	}
 
 	if ((sd=netconnect(auth->machine, auth->port)) == -1)
@@ -346,9 +346,9 @@ int main(int argc, char **argv){
 
 	if (smtpc.maildir != NULL && !strcmp(smtpc.maildir, maildirpath)) { 
 		// smtpc.maildir not set or not usable, append .spool
-		cat (&mymaildir, maildirpath, "/cur", NULL);
+		cat (&mymaildir, maildirpath, "/new", NULL);
 	} else {
-		cat(&mymaildir, maildirpath, "/.spool/cur", NULL);
+		cat(&mymaildir, maildirpath, "/.spool/new", NULL);
 	}
 
 	if ((dirptr=opendir(mymaildir))==NULL){
@@ -361,6 +361,7 @@ int main(int argc, char **argv){
 	if (strcmp(defaultauth.login, "")) logmsg(L_INFO, F_GENERAL, "using password: yes", NULL);
 
 	if ((sd=smtpc_connectauth(&defaultauth))==-1) exit(-1);
+
 	// FIXME for each mail do smtpc_session; don't exit on failure, just don't delete the mail
 	for (tmpdirent=readdir(dirptr); tmpdirent!=NULL; tmpdirent=readdir(dirptr)){
 		if (!strcmp(tmpdirent->d_name, ".")) continue;

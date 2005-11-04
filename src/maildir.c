@@ -15,6 +15,9 @@
 #include <unistd.h>
 #include <netdb.h>
 #endif
+#ifdef _POSIX_SOURCE
+#include <sys/time.h>
+#endif
 
 #include <ibaard_network.h>
 #include <ibaard_log.h>
@@ -22,7 +25,7 @@
 #include <ibaard_cat.h>
 
 #include "maildir.h"
-
+// for maildirformat look at http://cr.yp.to/proto/maildir.html
 static int deliveries=0;
 static maildirent *maildir_storage;
 static int maildir_cnt=0;
@@ -33,8 +36,13 @@ static int maildir_sappend(maildirent *maildir_add);
 static int maildirgname(char **uniqname){
 	char tmpbuf[512];
 	char myhost[NI_MAXHOST];
-	time_t mytime=time(NULL);
 	pid_t mypid=getpid();
+#ifndef _POSIX_SOURCE
+	time_t mytime=time(NULL);
+#else
+	struct timeval mytime;
+	gettimeofday(&mytime, NULL);
+#endif
 
 	if (gethostname(myhost, NI_MAXHOST)==-1){
 		logmsg(L_WARNING, F_MAILDIR, "unable to get hostname, setting to localhost.localdomain", NULL);
@@ -42,9 +50,11 @@ static int maildirgname(char **uniqname){
 	}
 
 	deliveries++;
-	sprintf(tmpbuf, "%li.P%iQ%i", (unsigned long)mytime, (int) mypid, deliveries);
-#ifdef _POSIX_SOURCE
 
+#ifdef _POSIX_SOURCE
+	sprintf(tmpbuf, "%li.M%liP%iQ%i", (unsigned long)mytime.tv_sec, (unsigned long)mytime.tv_usec, (int) mypid, deliveries);
+#else
+	sprintf(tmpbuf, "%li.P%iQ%i", (unsigned long)mytime, (int) mypid, deliveries);
 #endif
 	cat(&*uniqname, tmpbuf, ".", myhost, NULL);
 
@@ -97,7 +107,7 @@ int maildiropen(char *maildir, char **uniqname){
 	if ((maildirfind(maildir)) == -1) goto errexit;
 
 	maildirgname(uniqname);
-	if ((cat(&path, maildirpath, "/new/", *uniqname, NULL))) goto errexit;
+	if ((cat(&path, maildirpath, "/tmp/", *uniqname, NULL))) goto errexit;
 	logmsg(L_INFO, F_MAILDIR, "spooling to ", path, NULL);
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
 	if ((fd=fopen(path, "w+")) == NULL) {
@@ -135,8 +145,9 @@ int maildirclose(char *maildir, char **uniqname, int fd){
 		return -1;
 	}
 
-	cat(&oldpath, maildirpath, "/new/", *uniqname, NULL);
-	cat(&newpath, maildirpath, "/cur/", *uniqname, ":2,", NULL);
+	cat(&oldpath, maildirpath, "/tmp/", *uniqname, NULL);
+	cat(&newpath, maildirpath, "/new/", *uniqname, NULL);
+	//cat(&newpath, maildirpath, "/cur/", *uniqname, ":2,", NULL);
 
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
 	if (!(status=fclose(fd))){
@@ -173,8 +184,8 @@ int maildir_init(char *maildir, char *subdir, int harddelete){
 		return -1;
 	}
 
-	if (subdir != NULL) cat(&mymaildir, maildirpath, "/", subdir, "/cur", NULL);
-	else cat(&mymaildir, maildirpath, "/cur", NULL);
+	if (subdir != NULL) cat(&mymaildir, maildirpath, "/", subdir, "/new", NULL);
+	else cat(&mymaildir, maildirpath, "/new", NULL);
 
 	if ((dirptr=opendir(mymaildir))==NULL){
 		logmsg(L_ERROR, F_MAILDIR, "unable to open maildir ", mymaildir, ": ", strerror(errno), NULL);
