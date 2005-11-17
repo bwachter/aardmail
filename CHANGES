@@ -1,3 +1,6 @@
+0.1.1:
+	Fixed memory allocation bug in in smtpc leading to truncated messages in some situations
+
 0.1:
 	Added some more information to the Maildir names (on POSIX)
 	Some small fixes

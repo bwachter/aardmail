@@ -378,6 +378,8 @@ int main(int argc, char **argv){
 			logmsg(L_ERROR, F_GENERAL, "unable to delete mail ", mymaildir, "/", tmpdirent->d_name, ": ", strerror(errno), NULL);
 			exit(-1);
 		}
+		free(mail);
+		mail=0;
 	}
 	if (smtpc_quitclose(sd)==-1) exit(-1);
 	return 0;
