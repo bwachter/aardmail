@@ -57,6 +57,8 @@ static int smtpc_connectauth(authinfo *auth){
 		return -1;
 	if ((i=netreadline(sd, buf)) == -1)
 		return -1;
+	if (i==0)
+		return -1;
 
 	// send HELO or EHLO, FIXME
 	if (have_ehlo == 1){
@@ -96,15 +98,19 @@ static int smtpc_connectauth(authinfo *auth){
 		} 
 	}
 #endif
-
 	return sd;
 }
 
 static int smtpc_getaddr(addrlist **addrlist_storage, char *msg){
 	char *ptr, isaddr=0, endaddr=0, buf[1024];
-	int i, start=0;
+	int i, start=0, folding=0;
 	for (ptr=msg,i=0;*ptr!='\0';*ptr++,i++){
-		if (*ptr=='\n') endaddr=1;
+		if (folding && *ptr!=' ') break;
+		if (folding) folding=0;
+		if (*ptr=='\n'){
+			endaddr=1;
+			folding=1;
+		}
 		if (*ptr=='<'){
 			start=i+1;
 			continue;
@@ -125,13 +131,11 @@ static int smtpc_getaddr(addrlist **addrlist_storage, char *msg){
 			addrlist_append(addrlist_storage, buf);
 			isaddr=endaddr=0;
 			start=i;
-			if (*ptr=='\n') break;
 			continue;
 		}
 		if (endaddr) {
 			endaddr=0;
 			start=i;
-			if (*ptr=='\n') break;
 		}
 	}
 	return 0;
@@ -233,10 +237,15 @@ static int smtpc_oksendline(int sd, char *msg, char *ok){
 		logmsg(L_ERROR, F_NET, "unable to read line from network: ", strerror(errno), NULL);
 		return -1;
 	}
+	if (i==0){
+		logmsg(L_ERROR, F_NET, "peer closed connection: ", strerror(errno), NULL);
+		return -1;
+	}
 
 	while (!strncmp(buf+3, "-", 1)){
 		// continuation, FIXME -- do something useful with it
 		i=netreadline(sd, buf);
+		if ((i==0)||(i==-1)) return -1;
 	}
 	
 	if (!strncmp(buf, ok, strlen(ok)))

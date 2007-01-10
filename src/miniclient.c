@@ -106,7 +106,8 @@ int main(int argc, char** argv){
 	if (!strcmp(defaultauth.port, ""))
 		miniclient_usage(argv[0]);
 
-	sd=netconnect(defaultauth.machine, defaultauth.port);
+	if ((sd=netconnect(defaultauth.machine, defaultauth.port))==-1)
+		return -1;
 
 #ifdef __WIN32__
 #ifdef __GNUC__
@@ -152,6 +153,7 @@ int main(int argc, char** argv){
 		}
 	}
 #else
+	// the UNIX part
 	pfd[0].fd=0;
 	pfd[0].events=POLLRDNORM | POLLIN;
 	pfd[1].fd=sd;
@@ -162,6 +164,7 @@ int main(int argc, char** argv){
 
 	while (strcmp(buf, "exit\n")){
 		poll(pfd, 2, -1);
+		// poll on STDIN
 		if (pfd[0].revents & (POLLRDNORM | POLLIN)){
 			if ((i=read(pfd[0].fd,buf,1024))==-1) return -1;
 			buf[i]='\0';
@@ -171,8 +174,10 @@ int main(int argc, char** argv){
 #endif
 			netwriteline(pfd[1].fd, buf);
 		}
+		// poll on network descriptor
 		if (pfd[1].revents & (POLLRDNORM | POLLIN)){
 			if ((i=netreadline(pfd[1].fd,buf))==-1) return -1;
+			if (i==0) break; // peer closed connection
 			__write1(buf);
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 			if (am_sslconf==AM_SSL_STARTTLS) {

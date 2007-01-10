@@ -62,6 +62,10 @@ static int pop3c_oksendline(int sd, char *msg){
 		logmsg(L_ERROR, F_NET, "unable to read line from network: ", strerror(errno), NULL);
 		return -1;
 	}
+	if (i==0){
+		logmsg(L_ERROR, F_NET, "peer closed connection: ", strerror(errno), NULL);
+		return -1;
+	}
 	if (!strncmp(buf, "+OK", 3))
 		return 0;
 	logmsg(L_ERROR, F_NET, "bad response: '", buf, "' after '", msg, "' from me", NULL); 
@@ -79,6 +83,10 @@ static int pop3c_getstat(int sd){
 	}
 	if ((i=netreadline(sd, buf)) == -1){
 		logmsg(L_ERROR, F_NET, "unable to read line from network: ", strerror(errno), NULL);
+		return -1;
+	}
+	if (i==0){
+		logmsg(L_ERROR, F_NET, "peer closed connection: ", strerror(errno), NULL);
 		return -1;
 	}
 	if (strncmp(buf, "+OK", 3)){
@@ -155,6 +163,10 @@ static long pop3c_getmessage(int sd, int fd, int size){
 			logmsg(L_ERROR, F_NET, "unable to read line from network", NULL);
 			return -1;
 		}
+		if (i==0){
+			logmsg(L_ERROR, F_NET, "peer closed connection: ", strerror(errno), NULL);
+			return -1;
+		}
 		//fsize+=i;
 		tmp=(char *)buf;
 		if (!(strcmp((char *)buf, ".\r\n"))){
@@ -210,6 +222,10 @@ static int pop3c_connectauth(authinfo *auth){
 		return -1;
 	if ((i=netreadline(sd, buf)) == -1)
 		return -1;
+	if (i==0){
+		logmsg(L_ERROR, F_NET, "peer closed connection: ", strerror(errno), NULL);
+		return -1;
+	}
 
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
 	// check if we have to use starttls. abort if USETLS is already set
@@ -324,6 +340,7 @@ int main(int argc, char** argv){
 	am_ssl_paranoid = L_DEADLY;
 
 	while ((c=getopt(argc, argv, "a:b:c:df:g:h:lm:n:p:r:s:tu:v:x:")) != EOF){
+
 #else
 	while ((c=getopt(argc, argv, "a:b:df:h:m:n:p:r:s:u:v:x:")) != EOF){
 #endif

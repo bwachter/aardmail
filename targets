@@ -1,5 +1,6 @@
 aardmail-miniclient.exe src/miniclient.c
 aardmail-pop3c.exe src/pop3c.c
+aardmail-pop3d.exe src/pop3d.c
 aardmail-sendmail.exe src/sendmail.c
 aardmail-smtpc.exe src/smtpc.c
 libaardmail.a src/aardmail.c src/maildir.c src/addrlist.c
