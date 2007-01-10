@@ -18,13 +18,21 @@ distclean: clean
 	$(Q)$(RM) -Rf ibaard Makefile.borland
 
 dyn-conf.mk:
-	$(Q)IBAARD="";if [ -d ibaard ]; then IBAARD=ibaard; echo "-> including local libaard";\
-	else if [ -d ../ibaard ]; then IBAARD=../ibaard; echo "-> including local ../libaard";\
-	fi; fi; if [ ! -z $$IBAARD ]; then\
-	printf "LDPATH+=-L$$IBAARD\n";\
-	printf "INCLUDES+=-I$$IBAARD/src\n";\
-	printf "ALL=$$IBAARD/libibaard.a $(ALL)\n";\
-	printf "CLEANDEPS=$$IBAARD-clean\n";\
+	$(Q)IBAARD="";\
+	if [ -d ibaard ]; then\
+	  IBAARD=ibaard;\
+	  echo "-> including local libaard";\
+	else\
+	  if [ -d ../ibaard ]; then\
+	    IBAARD=../ibaard;\
+	    echo "-> including local ../libaard";\
+	  fi;\
+	fi;\
+	if [ ! -z $$IBAARD ]; then\
+	  printf "LDPATH+=-L$$IBAARD\n";\
+	  printf "INCLUDES+=-I$$IBAARD/src\n";\
+	  printf "ALL=$$IBAARD/libibaard.a $(ALL)\n";\
+	  printf "CLEANDEPS=$$IBAARD-clean\n";\
 	fi > $@
 
 dyn-gmake.mk:
