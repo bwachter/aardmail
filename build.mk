@@ -20,7 +20,7 @@ distclean: clean
 dyn-conf.mk:
 	$(Q)IBAARD="";if [ -d ibaard ]; then IBAARD=ibaard; echo "-> including local libaard";\
 	else if [ -d ../ibaard ]; then IBAARD=../ibaard; echo "-> including local ../libaard";\
-	fi; fi; if [ ! -z $IBAARD ]; then\
+	fi; fi; if [ ! -z $$IBAARD ]; then\
 	printf "LDPATH+=-L$$IBAARD\n";\
 	printf "INCLUDES+=-I$$IBAARD/src\n";\
 	printf "ALL=$$IBAARD/libibaard.a $(ALL)\n";\
