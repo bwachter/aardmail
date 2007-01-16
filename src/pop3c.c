@@ -163,10 +163,12 @@ static long pop3c_getmessage(int sd, int fd, int size){
 			logmsg(L_ERROR, F_NET, "unable to read line from network", NULL);
 			return -1;
 		}
+		/*
 		if (i==0){
 			logmsg(L_ERROR, F_NET, "peer closed connection: ", strerror(errno), NULL);
 			return -1;
 		}
+		*/
 		//fsize+=i;
 		tmp=(char *)buf;
 		if (!(strcmp((char *)buf, ".\r\n"))){
