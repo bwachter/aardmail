@@ -7,6 +7,7 @@
 #include <ibaard_log.h>
 #include <ibaard_cat.h>
 #include <ibaard_fs.h>
+#include <ibaard_maildir.h>
 
 #ifdef __WIN32__
 #ifdef _GNUC_
@@ -23,7 +24,6 @@
 #endif
 
 #include "aardmail.h"
-#include "maildir.h"
 #include "version.h"
 
 #define AM_SM_IGNORE_DOTS 1
@@ -64,12 +64,12 @@ int main(int argc, char **argv){
 		}
 	}
 
-	if (maildirfind(NULL)){
+	if (mdfind(NULL)){
 		logmsg(L_ERROR, F_MAILDIR, "unable to find maildir", NULL);
 		return -1;
 	}
 	cat (&mymaildir, maildirpath, "/.spool", NULL);
-	fd=maildiropen(mymaildir, &uniqname);
+	fd=mdopen(mymaildir, &uniqname);
 #if (defined(__WIN32)) || (defined _BROKEN_IO)
 	if (fd == NULL)
 
@@ -102,7 +102,7 @@ int main(int argc, char **argv){
 		if (!strncmp(buf+i-2, ".\n", 2) && !(smcfg & AM_SM_IGNORE_DOTS)) break;
 		filewrite(fd, buf, i);
 	}
-	return maildirclose(mymaildir, &uniqname, fd);
+	return mdclose(mymaildir, &uniqname, fd);
  error:
 	logmsg(L_ERROR, F_GENERAL, "some stupid error occured", NULL);
 	return -1;

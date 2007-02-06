@@ -25,10 +25,10 @@
 #include <ibaard_cat.h>
 #include <ibaard_fs.h>
 #include <ibaard_authinfo.h>
+#include <ibaard_maildir.h>
 
 #include "aardmail.h"
 #include "addrlist.h"
-#include "maildir.h"
 
 static struct {
 	char *maildir;
@@ -336,7 +336,7 @@ int main(int argc, char **argv){
 	if (!strcmp(defaultauth.machine,""))
 		smtpc_usage(argv[0]);
 
-	if (maildir_init(NULL, ".spool", 0)==-1){
+	if (mdinit(NULL, ".spool", 0)==-1){
 		logmsg(L_ERROR, F_GENERAL, "unable to retrieve mails in spool", NULL);
 		return -1;
 	}
@@ -348,7 +348,7 @@ int main(int argc, char **argv){
 	if (!strcmp(defaultauth.port,""))
 		strcpy(defaultauth.port, "25");
 
-	if (maildirfind(smtpc.maildir)){
+	if (mdfind(smtpc.maildir)){
 		logmsg(L_ERROR, F_MAILDIR, "unable to find maildir", NULL);
 		return -1;
 	}

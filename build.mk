@@ -9,7 +9,7 @@ $(SRCDIR)/version.h:
 	$(Q)printf $(VERSION) >> $@
 	$(Q)printf "; http://bwachter.lart.info/projects/aardmail/\"\n#endif\n" >> $@
 
-clean: $(CLEANDEPS)
+clean: $(CLEANDEPS) 
 	$(Q)echo "-> cleaning up"
 	$(Q)$(RM) $(ALL) *.exe *.lib *.tds *.BAK $(OBJDIR)/*.{o,obj,lib} crammd5/*.{o,obj,lib} crammd5/*.o $(OBJDIR)/*.o $(SRCDIR)/version.h dyn-*.mk
 
@@ -151,11 +151,27 @@ ibaard-clean:
 	$(Q)echo "-> cleaning up libaard"
 	$(Q)cd ../ibaard && $(MAKE) clean
 
+maildir/libmaildir.a:
+	$(Q)echo "-> $@"
+	$(Q)cd maildir && $(MAKE) DIET="$(DIET)" DEV="$(DEV)" BROKEN="$(BROKEN)" WIN32="$(WIN32)" DEBUG="$(DEBUG)" CFLAGS="$(CFLAGS)"
+
+maildir-clean: 
+	$(Q)echo "-> cleaning up libmaildir"
+	$(Q)cd maildir && $(MAKE) clean
+
 install: all
 	install -d $(DESTDIR)$(BINDIR)
 	install -d $(DESTDIR)$(MANDIR)/man1
 	install -m 755 $(ALL) $(DESTDIR)$(BINDIR)
 	install -m 644 doc/man/*.1 $(DESTDIR)$(MANDIR)/man1
+
+zip: distclean Makefile.borland $(SRCDIR)/version.h rename
+	$(Q)echo "building archive ($(VERSION).zip)"
+	$(Q)cp -R ../ibaard ../$(VERSION)
+	$(Q)cd ../$(VERSION)/ibaard && $(MAKE) distclean
+	$(Q)cd ../$(VERSION)/ibaard && $(MAKE) Makefile.borland
+	$(Q)cd .. && zip -r -m $(VERSION).zip $(VERSION) -x \*/CVS/\*
+	$(Q)cd .. && rm -Rf $(VERSION)
 
 tar: distclean Makefile.borland $(SRCDIR)/version.h rename
 	$(Q)echo "building archive ($(VERSION).tar.bz2)"

@@ -19,9 +19,9 @@
 #include <ibaard_cat.h>
 #include <ibaard_authinfo.h>
 #include <ibaard_fs.h>
+#include <ibaard_maildir.h>
 
 #include "aardmail.h"
-#include "maildir.h"
 
 static struct {
 	char *pipeto;
@@ -118,7 +118,7 @@ static int pop3c_openspool(){
 		fd=am_pipe(pop3c.pipeto);
 #endif
 	else
-		fd=maildiropen(NULL, &uniqname);
+		fd=mdopen(NULL, &uniqname);
 #if (defined(__WIN32)) || (defined _BROKEN_IO)
 	if (fd == NULL)
 #else
@@ -133,14 +133,14 @@ static int pop3c_closespool(FILE *fd){
 	fflush(fd);
 	if (pop3c.pipeto) {
 		if(pclose(fd)==-1) return -1;
-	} else maildirclose(NULL, &uniqname, fd);
+	} else mdclose(NULL, &uniqname, fd);
 #else
 static int pop3c_closespool(int fd){
 	if (pop3c.pipeto){
 		close(fd);
 		wait(NULL);
 	} else
-		maildirclose(NULL, &uniqname, fd);
+		mdclose(NULL, &uniqname, fd);
 #endif
 	return 0;
 }

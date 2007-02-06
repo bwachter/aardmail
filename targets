@@ -3,5 +3,6 @@ aardmail-pop3c.exe src/pop3c.c
 aardmail-pop3d.exe src/pop3d.c
 aardmail-sendmail.exe src/sendmail.c
 aardmail-smtpc.exe src/smtpc.c
-libaardmail.a src/aardmail.c src/maildir.c src/addrlist.c
+libaardmail.a src/aardmail.c src/addrlist.c
 libcrammd5.a crammd5/client_crammd5.c crammd5/hmacmd5.c crammd5/md5.c
+mdls.exe src/mdls.c

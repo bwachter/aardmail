@@ -23,6 +23,10 @@ aardmail-pop3c.exe: $(OBJDIR)/pop3c.obj
 	$(Q)echo "LD $@"
 	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
 
+aardmail-pop3d.exe: $(OBJDIR)/pop3d.obj 
+	$(Q)echo "LD $@"
+	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
+
 aardmail-miniclient.exe: $(OBJDIR)/miniclient.obj 
 	$(Q)echo "LD $@"
 	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
