@@ -1,0 +1,3 @@
+[submodule "ibaard"]
+	path = ibaard
+	url = git://git.lart.info/ibaard
