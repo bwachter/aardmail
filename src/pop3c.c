@@ -441,7 +441,6 @@ int main(int argc, char** argv){
 }
 
 static void pop3c_usage(char *program){
-  char *tmpstring=NULL;
   if (!cat(&tmpstring, "Usage: ", program,
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
            " [-b program] [-c option] [-d] [-f certificate]\n",
