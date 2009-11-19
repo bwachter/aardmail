@@ -41,6 +41,8 @@ static int smtpc_connectauth(authinfo *auth);
 static int smtpc_session(int sd, char **msg);
 static int smtpc_quitclose(int sd);
 
+char *bindname=NULL;
+
 static int smtpc_connectauth(authinfo *auth){
   int i, sd;
   char have_ehlo=1;
@@ -53,7 +55,7 @@ static int smtpc_connectauth(authinfo *auth){
     strncpy(myhost, "localhost.localdomain", NI_MAXHOST);
   }
 
-  if ((sd=netconnect(auth->machine, auth->port)) == -1)
+  if ((sd=netconnect2(auth->machine, auth->port, bindname)) == -1)
     return -1;
   if ((i=netreadline(sd, buf)) == -1)
     return -1;
@@ -276,6 +278,9 @@ int main(int argc, char **argv){
 #endif
             )) != EOF){
     switch(c){
+      case 'a':
+        bindname = strdup(optarg);
+        break;
       case 'b':
         if (am_checkprogram(optarg)!=0) {
           logmsg(L_INFO, F_GENERAL, "not sending because program evaluated to false", NULL);
@@ -409,6 +414,7 @@ static void smtpc_usage(char *program){
            " [-b program] [-d] -h hostname [-m maildir] [-p password]\n",
            "\t\t[-s service] [-t] [-u user]","\n",
 #endif
+           "\t-a:\tbind to given address (hostnames will be resolved)\n",
            "\t-b:\tonly send mail if program exits with zero status\n",
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
            "\t-c:\tcrypto options. Options may be: 0 (off), 1 (tls, like -t),\n",

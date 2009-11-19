@@ -33,6 +33,7 @@ static void miniclient_usage(char *program){
 #else
            " -h hostname -s service [-v level]\n",
 #endif
+           "\t-a:\tbind to given address (hostnames will be resolved)\n",
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
            "\t-c:\tcrypto options. Options may be: 0 (off), 1 (tls, like -t),\n",
            "\t\tand 2 (tls, fallback to plain on error)\n",
@@ -64,17 +65,21 @@ int main(int argc, char** argv){
 #endif
   int i, sd;
   authinfo defaultauth;
+  char *bindname=NULL;
 
   memset(&defaultauth, 0, sizeof(authinfo));
   
   while((i=getopt(argc, argv,
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
-                  "c:f:h:s:tv:"
+                  "a:c:f:h:s:tv:"
 #else
-                  "h:s:v:"
+                  "a:h:s:v:"
 #endif
            )) != EOF){
     switch(i){
+      case 'a':
+        bindname = strdup(optarg);
+        break;
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
       case 'c':
         switch(atoi(optarg)){
@@ -109,7 +114,7 @@ int main(int argc, char** argv){
   if (!strcmp(defaultauth.port, ""))
     miniclient_usage(argv[0]);
 
-  if ((sd=netconnect(defaultauth.machine, defaultauth.port))==-1)
+  if ((sd=netconnect2(defaultauth.machine, defaultauth.port, bindname))==-1)
     return -1;
 
 #ifdef __WIN32__

@@ -32,6 +32,7 @@ static struct {
 } pop3c;
 
 char *uniqname;
+char *bindname=NULL;
 static char *tmpstring=NULL;
 
 static int pop3c_quitclose(int sd);
@@ -216,7 +217,7 @@ static int pop3c_connectauth(authinfo *auth){
   goto connect;
 
   connect:
-  if ((sd=netconnect(auth->machine, auth->port)) == -1)
+  if ((sd=netconnect2(auth->machine, auth->port, bindname)) == -1)
     return -1;
   if ((i=netreadline(sd, buf)) == -1)
     return -1;
@@ -346,6 +347,9 @@ int main(int argc, char** argv){
 #endif
             )) != EOF){
     switch(c){
+      case 'a':
+        bindname = strdup(optarg);
+        break;
       case 'b':
         if (am_checkprogram(optarg)!=0) {
           logmsg(L_INFO, F_GENERAL, "not polling because program evaluated to false", NULL);
@@ -448,6 +452,7 @@ static void pop3c_usage(char *program){
            " [-b program] [-d] -h hostname [-m maildir] [-p password]\n",
            "\t\t[-r number] [-s service] [-t] [-u user] [-x program]","\n",
 #endif
+           "\t-a:\tbind to given address (hostnames will be resolved)\n",
            "\t-b:\tonly fetch mail if program exits with zero status\n",
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
            "\t-c:\tcrypto options. Options may be: 0 (off), 1 (tls, like -t),\n",
