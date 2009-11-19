@@ -13,9 +13,9 @@
 typedef struct _addrlist addrlist;
 
 struct _addrlist {
-	char address[AM_MAXUSER];
-	int accepted;
-	addrlist *next;
+    char address[AM_MAXUSER];
+    int accepted;
+    addrlist *next;
 };
 
 int addrlist_append(addrlist **addrlist_storage, char *address);

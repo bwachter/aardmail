@@ -18,22 +18,25 @@ distclean: clean
 	$(Q)$(RM) -Rf ibaard Makefile.borland
 
 dyn-conf.mk:
-	$(Q)IBAARD="";\
-	if [ -d ibaard ]; then\
-	  IBAARD=ibaard;\
+	$(Q)_IBAARD="";\
+	if [ ! -z "$$IBAARD" ] && [ -d "$$IBAARD" ]; then\
+	  _IBAARD=$$IBAARD; \
+	  echo "-> including ibaard from $$IBAARD";\
+	elif [ -d ibaard ]; then\
+	  _IBAARD=ibaard;\
 	  echo "-> including local libaard";\
-	else\
-	  if [ -d ../ibaard ]; then\
-	    IBAARD=../ibaard;\
-	    echo "-> including local ../libaard";\
-	  fi;\
+	elif [ -d ../ibaard ]; then\
+	  _IBAARD=../ibaard;\
+	  echo "-> including local ../libaard";\
 	fi;\
-	if [ ! -z $$IBAARD ]; then\
-	  printf "LDPATH+=-L$$IBAARD\n";\
-	  printf "INCLUDES+=-I$$IBAARD/src\n";\
-	  printf "ALL=$$IBAARD/libibaard.a $(ALL)\n";\
-	  printf "CLEANDEPS=$$IBAARD-clean\n";\
+	if [ ! -z $$_IBAARD ]; then\
+	  printf "LDPATH+=-L$$_IBAARD\n";\
+	  printf "INCLUDES+=-I$$_IBAARD/src\n";\
+	  printf "ALL=$$_IBAARD/libibaard.a $(ALL)\n";\
+	  printf "CLEANDEPS=$$_IBAARD-clean\n";\
 	fi > $@
+
+#fixme, need to generate dynamic build rules for ibaard
 
 dyn-gmake.mk:
 	$(Q)for i in 1; do \

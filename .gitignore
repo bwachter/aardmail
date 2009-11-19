@@ -1,2 +1,5 @@
 dyn-*.mk
 version.h
+*.o
+*.a
+aardmail-*

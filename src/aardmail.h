@@ -14,21 +14,21 @@
 #ifdef __BORLANDC__
 static int __write1(const char *s)
 #else
-static inline int __write1(const char *s)
+  static inline int __write1(const char *s)
 #endif
 {
-	write(1, s, strlen(s));
-	return 0;
+  write(1, s, strlen(s));
+  return 0;
 }
 
 #ifdef __BORLANDC__
 static int __write2(const char *s)
 #else
-static inline int __write2(const char *s)
+  static inline int __write2(const char *s)
 #endif
 {
-	write(2, s, strlen(s));
-	return 0;
+  write(2, s, strlen(s));
+  return 0;
 }
 #endif // dietlibc
 
