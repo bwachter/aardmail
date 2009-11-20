@@ -1,5 +1,5 @@
 
-.PHONY: clean install tar rename upload deb maintainer-deb check dep ibaard-clean ../ibaard-clean
+.PHONY: clean install rename upload deb maintainer-deb check dep ibaard-clean dist
 
 all: $(ALL)
 
@@ -25,9 +25,6 @@ dyn-conf.mk:
 	elif [ -d ibaard ]; then\
 	  _IBAARD=ibaard;\
 	  echo "-> including local libaard";\
-	elif [ -d ../ibaard ]; then\
-	  _IBAARD=../ibaard;\
-	  echo "-> including local ../libaard";\
 	fi;\
 	if [ ! -z $$_IBAARD ]; then\
 	  printf "LDPATH+=-L$$_IBAARD\n";\
@@ -136,11 +133,6 @@ Makefile.borland:
 	printf '\t$$(Q)tlib $$(@F) /a $$**\n\n';\
 	done >> $@
 
-../ibaard/libibaard.a:
-	$(Q)echo "-> $@"
-	$(Q)cd ../ibaard && $(MAKE) dep
-	$(Q)cd ../ibaard && $(MAKE) DIET="$(DIET)" SSL="$(SSL)" DEV="$(DEV)" BROKEN="$(BROKEN)" WIN32="$(WIN32)" DEBUG="$(DEBUG)" CFLAGS="$(CFLAGS)"
-
 ibaard/libibaard.a:
 	$(Q)echo "-> $@"
 	$(Q)cd ibaard && $(MAKE) dep
@@ -149,10 +141,6 @@ ibaard/libibaard.a:
 ibaard-clean: 
 	$(Q)echo "-> cleaning up libaard"
 	$(Q)cd ibaard && $(MAKE) clean
-
-../ibaard-clean: 
-	$(Q)echo "-> cleaning up libaard"
-	$(Q)cd ../ibaard && $(MAKE) clean
 
 maildir/libmaildir.a:
 	$(Q)echo "-> $@"
@@ -168,27 +156,19 @@ install: all
 	install -m 755 $(ALL) $(DESTDIR)$(BINDIR)
 	install -m 644 doc/man/*.1 $(DESTDIR)$(MANDIR)/man1
 
-zip: distclean Makefile.borland $(SRCDIR)/version.h rename
-	$(Q)echo "building archive ($(VERSION).zip)"
-	$(Q)cp -R ../ibaard ../$(VERSION)
-	$(Q)cd ../$(VERSION)/ibaard && $(MAKE) distclean
-	$(Q)cd ../$(VERSION)/ibaard && $(MAKE) Makefile.borland
-	$(Q)cd .. && zip -r -m $(VERSION).zip $(VERSION) -x \*/CVS/\*
-	$(Q)cd .. && rm -Rf $(VERSION)
-
-tar: distclean Makefile.borland $(SRCDIR)/version.h rename
+dist: Makefile.borland $(SRCDIR)/version.h
 	$(Q)echo "building archive ($(VERSION).tar.bz2)"
-	$(Q)cp -R ../ibaard ../$(VERSION)
-	$(Q)cd ../$(VERSION)/ibaard && $(MAKE) distclean
-	$(Q)cd ../$(VERSION)/ibaard && $(MAKE) Makefile.borland
-	$(Q)cd .. && tar cvvf $(VERSION).tar.bz2 $(VERSION) --use=bzip2 --exclude CVS
-	$(Q)cd .. && rm -Rf $(VERSION)
+	git-archive-all.sh --format tar --prefix $(VERSION)/  $(VERSION).tar
+	gzip -f $(VERSION).tar
+	rm -f $(VERSION).zip
+	tar2zip $(VERSION).tar.gz
 
+# still required for deb building
 rename:
 	$(Q)if test $(CURNAME) != $(VERSION); then cd .. && cp -a $(CURNAME) $(VERSION); fi
 
-upload: tar
-	scp ../$(VERSION).tar.bz2 bwachter@lart.info:/home/bwachter/public_html/projects/download/snapshots
+upload: dist
+	scp ../$(VERSION).* bwachter@lart.info:/home/bwachter/public_html/projects/download/snapshots
 
 maintainer-deb: rename
 	$(Q)cd ../$(VERSION) && ./debchangelog && dpkg-buildpackage -rfakeroot

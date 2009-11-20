@@ -39,7 +39,7 @@ aardmail-sendmail.exe: $(OBJDIR)/sendmail.obj
 	$(Q)echo "LD $@"
 	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
 
-libaardmail.lib: $(OBJDIR)aardmail.obj $(OBJDIR)maildir.obj $(OBJDIR)addrlist.obj 
+libaardmail.lib: $(OBJDIR)aardmail.obj $(OBJDIR)addrlist.obj 
 	$(Q)echo "TLIB $@"
 	$(Q)tlib $(@F) /a $**
 
