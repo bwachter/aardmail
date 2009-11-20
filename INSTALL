@@ -12,6 +12,9 @@ by executing the following command within the source directory:
     
     git submodule update --init
 
+If you already got the initialized submodule, but would like to
+jump to a newer release execute the above command without the --init
+
 If you're building from a release tarball a version of libaard is
 already included.
 
