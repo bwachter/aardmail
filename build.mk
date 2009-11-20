@@ -1,5 +1,5 @@
 
-.PHONY: clean install rename upload deb maintainer-deb check dep ibaard-clean dist
+.PHONY: clean install rename upload deb maintainer-deb check dep ibaard-clean dist 
 
 all: $(ALL)
 
@@ -9,7 +9,7 @@ $(SRCDIR)/version.h:
 	$(Q)printf $(VERSION) >> $@
 	$(Q)printf "; http://bwachter.lart.info/projects/aardmail/\"\n#endif\n" >> $@
 
-clean: $(CLEANDEPS) 
+clean: ibaard-clean 
 	$(Q)echo "-> cleaning up"
 	$(Q)$(RM) $(ALL) *.exe *.lib *.tds *.BAK $(OBJDIR)/*.{o,obj,lib} crammd5/*.{o,obj,lib} crammd5/*.o $(OBJDIR)/*.o $(SRCDIR)/version.h dyn-*.mk
 
@@ -29,8 +29,8 @@ dyn-conf.mk:
 	if [ ! -z $$_IBAARD ]; then\
 	  printf "LDPATH+=-L$$_IBAARD\n";\
 	  printf "INCLUDES+=-I$$_IBAARD/src\n";\
-	  printf "ALL=$$_IBAARD/libibaard.a $(ALL)\n";\
-	  printf "CLEANDEPS=$$_IBAARD-clean\n";\
+	  printf "ALL=libibaard.a $(ALL)\n";\
+	  printf "_IBAARD=$$_IBAARD\n";\
 	fi > $@
 
 #fixme, need to generate dynamic build rules for ibaard
@@ -133,22 +133,15 @@ Makefile.borland:
 	printf '\t$$(Q)tlib $$(@F) /a $$**\n\n';\
 	done >> $@
 
-ibaard/libibaard.a:
+libibaard.a:
 	$(Q)echo "-> $@"
-	$(Q)cd ibaard && $(MAKE) dep
-	$(Q)cd ibaard && $(MAKE) DIET="$(DIET)" SSL="$(SSL)" DEV="$(DEV)" BROKEN="$(BROKEN)" WIN32="$(WIN32)" DEBUG="$(DEBUG)" CFLAGS="$(CFLAGS)"
+	$(Q)cd $(_IBAARD) && $(MAKE) dep
+	$(Q)cd $(_IBAARD) && $(MAKE) DIET="$(DIET)" SSL="$(SSL)" DEV="$(DEV)" BROKEN="$(BROKEN)" WIN32="$(WIN32)" DEBUG="$(DEBUG)" CFLAGS="$(CFLAGS)"
+	$(Q)cp $(_IBAARD)/libibaard.a .
 
 ibaard-clean: 
 	$(Q)echo "-> cleaning up libaard"
-	$(Q)cd ibaard && $(MAKE) clean
-
-maildir/libmaildir.a:
-	$(Q)echo "-> $@"
-	$(Q)cd maildir && $(MAKE) DIET="$(DIET)" DEV="$(DEV)" BROKEN="$(BROKEN)" WIN32="$(WIN32)" DEBUG="$(DEBUG)" CFLAGS="$(CFLAGS)"
-
-maildir-clean: 
-	$(Q)echo "-> cleaning up libmaildir"
-	$(Q)cd maildir && $(MAKE) clean
+	$(Q)cd $(_IBAARD) && $(MAKE) clean
 
 install: all
 	install -d $(DESTDIR)$(BINDIR)
