@@ -6,16 +6,14 @@
 1.1 libaard
 -----------
 
-The current version of aardmail relies on libaard. You can get
-the latest version via anonymous cvs:
+The current version of aardmail relies on libaard. An appropriate
+version is included as a git submodule, which you can initialize
+by executing the following command within the source directory:
+    
+    git submodule update --init
 
-    cvs -d:pserver:cvs@cvs.pimp.lart.info:/cvs co ibaard
-
-You can either install it system wide, or just drop the source
-it ibaard in the aardmail build directory.
-
-If there is a directory ibaard inside of the source tree it will be 
-built automatically, with the same options given for aardmail.
+If you're building from a release tarball a version of libaard is
+already included.
 
 1.2 Building with gcc and compatible
 ------------------------------------
