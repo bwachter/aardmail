@@ -1,10 +1,17 @@
-#!/bin/sh
+#!/usr/bin/perl
 
-cat CHANGES | sed 's/^\t/  * /' | \
-sed -r 's/^(.*):$/\n -- Bernd Wachter \<bwachter@lart.info\>  Sun, 42 Jun 2342 23:42:05 +0200\n\naardmail \(\1\) unstable; urgency=low/' > debian/changelog.tmp
-LINECNT=`wc -l debian/changelog.tmp | sed 's/ .*$//'`
-LINECNT=`echo $LINECNT-2 | bc`
-tail -$LINECNT debian/changelog.tmp > debian/changelog
-rm debian/changelog.tmp
+use strict;
 
+open(F, "<CHANGES")||die "Unable to open changelog: $!";
+my @lines=<F>;
+close(F);
+
+my $lines=join('', @lines);
+
+$lines=~s/\t/  * /g;
+$lines=~s/(\d.*?): (\d*)(.*?\n\n)/aardmail ($1) unstable; urgency=low\n$3\n -- Bernd Wachter <bwachter\@lart.info>  @{[`date -R -d $2`]}\n\n/gs;
+
+open(F, ">debian/changelog")||die "Unable to open changelog: $!";
+print F $lines;
+close(F);
 
