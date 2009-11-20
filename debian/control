@@ -7,7 +7,7 @@ Standards-Version: 3.6.1
 
 Package: aardmail
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}
 Description: Mail related tools like a pop3-client to retrieve mails
  aardmail is a package with useful tools for different kinds of mailhandling. 
  Currently included are pop3c, a client to retrieve mails from a pop3 server, 

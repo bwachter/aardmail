@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 export DH_OPTIONS
+export DH_COMPAT=4
+#export DH_VERBOSE=1
 
 
 build: build-arch
