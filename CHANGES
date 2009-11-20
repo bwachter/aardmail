@@ -1,46 +1,46 @@
-0.2:
+0.2: 20091231
 	Added folding for address headers in smtpc
 	Fixed deadlocks on unexpected shutdown of peer
 
-0.1.1:
+0.1.1: 20051117
 	Fixed memory allocation bug in in smtpc leading to truncated messages in some situations
 
-0.1:
+0.1: 20051104
 	Added some more information to the Maildir names (on POSIX)
 	Some small fixes
 
-0.1-pre-8:
+0.1-pre-8: 20051031
 	Fixed all BCC warnings
 	Added correct error messages for SSL
 	Fixed incorrect retrying to establish stls-connections in pop3c
 	Fixed BCC makefiles (SSL-flags missing)
 	Removed crammd from building
 
-0.1-pre-7:
+0.1-pre-7: 20051031
 	Added compile fixes for Borland C
 	Added makefile generation for Borland C
 	Fixed getopt -- works now with Borland C (tested without SSL)
 
-0.1-pre-6:
+0.1-pre-6: 20051029
 	Changed default policy for certificate verification to `paranoid'
 	Added certfile for verifying server certs
 	Added verification of certificates
 	Updated build system to include libaard in build process 
 
-0.1-pre-5:
+0.1-pre-5: 20051028
 	Fixed missing isheader-check in smtpc
 	Moved common functions to libaard
 	Added support for cert auth to pop3c
 	Added another loglevel (verbose) between info and debug
 	Fixed compile issues on BSD; added a Makefile for BSD make
 
-0.1-pre-4:
+0.1-pre-4: 20050713
 	Added Makefile for Borland CC
 	Fixed all sources to compile with Borland C (and most likely other windows compilers, too)
 	Added client cert and address parsing to smtpc
 	Added absolutely minimalistic sendmail
 
-0.1-pre-3:
+0.1-pre-3: 20050623
 	Added smtpc (`single user')
 	Added (ugly) plaintext reconnect on TLS-failure if wanted by the user
 	Completed netaddrinfo() emulation code (most of the new code stolen from libesmtp).
@@ -48,12 +48,11 @@
 	Made miniclient working sometimes under Windows (braindead API kept me from finishing it)
 	Put all the aardmail objects into libaardmail
 
-0.1-pre-2:
+0.1-pre-2: 20050623
 	Fixed stupid TLS bug introduced by supporting reauth
 	Major cleanup and moving general purpose functions out of pop3c
 
-0.1-pre-1:
-
+0.1-pre-1: 20050605
 	Added support for building debian packages
 	Added manpages
 	Completed authinfo support

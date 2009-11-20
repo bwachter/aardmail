@@ -1,7 +1,7 @@
 include system.mk
 
-VERSIONNR=$(shell head -1 CHANGES|sed 's/://')
-VERSION=aardmail-$(shell head -1 CHANGES|sed 's/://')
+VERSIONNR=$(shell head -1 CHANGES|sed 's/:.*//')
+VERSION=aardmail-$(VERSIONNR)
 CURNAME=$(notdir $(shell pwd))
 
 ifdef DEBUG

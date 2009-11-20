@@ -1,6 +1,6 @@
 .include "system.mk"
 
-VERSIONNR!=head -1 CHANGES|sed 's/://'
+VERSIONNR!=head -1 CHANGES|sed 's/:.*//'
 VERSION=aardmail-$(VERSIONNR)
 #CURNAME=$(notdir $(shell pwd))
 OS!=uname
