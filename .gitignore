@@ -1,6 +1,8 @@
 dyn-*.mk
 version.h
 *.o
+*.obj
+*.lib
 *.a
 aardmail-*
 debian/changelog

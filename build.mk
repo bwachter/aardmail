@@ -105,7 +105,7 @@ Makefile.borland:
 	printf "SSLCFLAGS=-DHAVE_SSL\n";\
 	printf "!endif\n";\
 	printf "Q=@\n";\
-	printf "ALL=libaardmail.lib aardmail-pop3c.exe aardmail-smtpc.exe aardmail-sendmail.exe aardmail-miniclient.exe\n";\
+	printf "ALL=ibaard/ibaard.lib libaardmail.lib aardmail-pop3c.exe aardmail-smtpc.exe aardmail-sendmail.exe aardmail-miniclient.exe\n";\
 	printf 'OBJDIR=src\\\\\n';\
 	printf 'SRCDIR=src\\\\\n';\
 	printf ".PHONY: clean\n";\
@@ -131,6 +131,16 @@ Makefile.borland:
 	for j in $$DEPS; do printf "$$j "; done;\
 	printf '\n\t$$(Q)echo "TLIB $$@"\n';\
 	printf '\t$$(Q)tlib $$(@F) /a $$**\n\n';\
+	done >> $@
+	$(Q)for i in 1; do \
+	printf 'ibaard/ibaard.lib:\n';\
+	printf '\t$$(Q)cd ibaard\n';\
+	printf '\t$$(Q)make -f Makefile.borland\n';\
+	printf '\t$$(Q)cd ..\n';\
+	printf '\nclean:\n';\
+	printf '\t$$(RM) *.exe *.lib *.tds src\*.obj\n';\
+	printf '\t$$(Q)cd ibaard\n';\
+	printf '\t$$(Q)make -f Makefile.borland clean\n';\
 	done >> $@
 
 libibaard.a:

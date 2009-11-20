@@ -10,7 +10,7 @@ SSLLIBS=ssleay32.lib libeay32.lib
 SSLCFLAGS=-DHAVE_SSL
 !endif
 Q=@
-ALL=libaardmail.lib aardmail-pop3c.exe aardmail-smtpc.exe aardmail-sendmail.exe aardmail-miniclient.exe
+ALL=ibaard/ibaard.lib libaardmail.lib aardmail-pop3c.exe aardmail-smtpc.exe aardmail-sendmail.exe aardmail-miniclient.exe
 OBJDIR=src\\
 SRCDIR=src\\
 .PHONY: clean
@@ -43,3 +43,12 @@ libaardmail.lib: $(OBJDIR)aardmail.obj $(OBJDIR)addrlist.obj
 	$(Q)echo "TLIB $@"
 	$(Q)tlib $(@F) /a $**
 
+ibaard/ibaard.lib:
+	$(Q)cd ibaard
+	$(Q)make -f Makefile.borland
+	$(Q)cd ..
+
+clean:
+	$(RM) *.exe *.lib *.tds src\*.obj
+	$(Q)cd ibaard
+	$(Q)make -f Makefile.borland clean
