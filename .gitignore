@@ -6,6 +6,9 @@ version.h
 *.a
 aardmail-*
 debian/changelog
+debian/aardmail/
+debian/aardmail.debhelper.log
+build-arch-stamp
 GPATH
 GRTAGS
 GSYMS

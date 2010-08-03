@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 export DH_OPTIONS
-export DH_COMPAT=4
-#export DH_VERBOSE=1
+export DH_COMPAT=5
+export DH_VERBOSE=1
 
 
 build: build-arch
@@ -25,7 +25,7 @@ install-arch:
 	dh_testroot
 	dh_clean -k -s 
 	dh_installdirs -s
-	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/aardmail
 	dh_install -s
 
 binary-common:
@@ -51,18 +51,4 @@ binary-arch: build-arch install-arch
 
 binary: binary-arch
 .PHONY: build clean binary-arch binary install install-arch
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
