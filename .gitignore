@@ -6,3 +6,7 @@ version.h
 *.a
 aardmail-*
 debian/changelog
+GPATH
+GRTAGS
+GSYMS
+GTAGS
