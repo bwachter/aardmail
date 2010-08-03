@@ -1,10 +1,11 @@
-0.2: 20091231
+0.2-pre-1: 20100804
         Added folding for address headers in smtpc
         Fixed deadlocks on unexpected shutdown of peer
         Added source IP binding
         pop3c now catches non-zero exit states of the MDA
         Added support for smtp-auth (PLAIN) to smtpc
         Added identity support to smtpc and sendmail
+        Compile with SSL by default
 
 0.1.1: 20051117
         Fixed memory allocation bug in in smtpc leading to truncated messages in some situations
