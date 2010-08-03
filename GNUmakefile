@@ -22,7 +22,7 @@ endif
 ifeq ($(shell uname),IRIX64)
 STRIP=
 ifdef DEBUG
-CFLAGS=-Wall -W -Os 
+CFLAGS=-Wall -W -Os
 LDFLAGS=-g
 else
 CFLAGS=-g -Wall -W -Os
@@ -44,7 +44,7 @@ LIBS+=$(GNUTLS_LIBS)
 CFLAGS+=$(GNUTLS_CFLAGS)
 endif
 
-ifdef SSL
+ifeq ($(SSL),1)
 LIBS+=$(SSL_LIBS)
 CFLAGS+=$(SSL_CFLAGS)
 endif

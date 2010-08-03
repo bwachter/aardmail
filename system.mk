@@ -11,6 +11,7 @@ BINDIR?=/usr/bin
 MANDIR?=/usr/share/man
 STRIP=
 MAKE?=make
+SSL?=1
 
 OBJDIR=src
 SRCDIR=src
@@ -20,7 +21,7 @@ PREFIX?=/usr
 Q?=@
 ARFLAGS=cru
 #-pipe crashes on IRIX
-LDPATH=-L. 
+LDPATH=-L.
 LIBS=$(LDPATH) -laardmail -libaard
 INCLUDES=
 
@@ -33,7 +34,7 @@ LDFLAGS=-s
 DEBUG_CFLAGS=-g -Wall -W -Os $(INCLUDES)
 DEBUG_LDFLAGS=-g
 
-BD_BIN=aardmail-pop3c$(EXE) aardmail-pop3d$(EXE) aardmail-miniclient$(EXE) aardmail-smtpc$(EXE) aardmail-sendmail$(EXE) 
+BD_BIN=aardmail-pop3c$(EXE) aardmail-pop3d$(EXE) aardmail-miniclient$(EXE) aardmail-smtpc$(EXE) aardmail-sendmail$(EXE)
 BD_LIB=libaardmail.a
 
 ALL=$(BD_LIB) $(BD_BIN)
