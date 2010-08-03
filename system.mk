@@ -8,6 +8,7 @@ RM=/bin/rm -f
 INSTALL=install
 DESTDIR=
 BINDIR?=/usr/bin
+LIBDIR?=/usr/lib
 MANDIR?=/usr/share/man
 STRIP=
 MAKE?=make

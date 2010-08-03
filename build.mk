@@ -155,8 +155,10 @@ ibaard-clean:
 
 install: all
 	install -d $(DESTDIR)$(BINDIR)
+	install -d $(DESTDIR)$(LIBDIR)
 	install -d $(DESTDIR)$(MANDIR)/man1
-	install -m 755 $(ALL) $(DESTDIR)$(BINDIR)
+	install -m 755 $(BD_BIN) $(DESTDIR)$(BINDIR)
+	install -m 644 $(BD_LIB) $(DESTDIR)$(LIBDIR)
 	install -m 644 doc/man/*.1 $(DESTDIR)$(MANDIR)/man1
 
 dist: Makefile.borland $(SRCDIR)/version.h
