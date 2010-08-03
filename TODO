@@ -1,4 +1,6 @@
 0.2:
+- split debian package into bin and devel
+- install headers
 - add fetchmail frontend
 - add a sane sendmail (with manpage)
 - make sendmail/smtpc-combination suitable for multiuser-systems

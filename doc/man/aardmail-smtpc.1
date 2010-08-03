@@ -1,11 +1,11 @@
-.TH "aardmail-smtpc" 1 "June 14, 2005"
+.TH "aardmail-smtpc" 1 "August 4, 2010"
 .SH NAME
 aardmail-smtpc \- client to send mail via smtp
 .SH "SYNOPSIS"
 \fBaardmail-pop3c\fR [\fB\-b\ \fIprogram\fR\fR] [\fB\-c\ \fIoption\fR\fR] [\fB\-d\fR\fR] \fB\-h\ \fIhostname\fR\fR [\fB\-l\fR\fR] [\fB\-m\ \fImaildir\fR\fR] [\fB\-n\ \fInumber\fR\fR] [\fB\-p\ \fIpassword\fR\fR] [\fB\-r\ \fInumber\fR\fR] [\fB\-s\ \fIservice\fR\fR] [\fB\-t\fR\fR] [\fB\-u\ \fIuser\fR\fR] [\fB\-v\ \fIlevel\fR\fR] [\fB\-x\ \fIprogram\fR\fR]
 .SH "DESCRIPTION"
 .PP
-\fBaardmail-smtpc\fR is a simple client to send mail via SMTP, getting the mails from a Maildir as spool. You can either configure your MUA to save outgoing mail there, or tell your MUA to use \fBaardmail-sendmail\fR which will do that part for you (and a bit more). If compiled with SSL-support it's possible to use TLS-encrypted connections, with or without starttls. 
+\fBaardmail-smtpc\fR is a simple client to send mail via SMTP, getting the mails from a Maildir as spool. You can either configure your MUA to save outgoing mail there, or tell your MUA to use \fBaardmail-sendmail\fR which will do that part for you (and a bit more). If compiled with SSL-support it's possible to use TLS-encrypted connections, with or without starttls.
 .SH "OPTIONS"
 .PP
 When called without arguments aardmail-smtpc will give a short overview of the available options.
@@ -32,7 +32,7 @@ The hostname to connect to. This can be either a name resolvable via DNS or a nu
 Use TLS with starttls and exit if an error occurs (like -c 3)
 .TP
 .B \-m maildir
-Use maildir as spool. The default is to use ~/Maildir/.spool 
+Use maildir as spool. The default is to use ~/Maildir/.spool
 .TP
 .B \-n number
 Only send number mails

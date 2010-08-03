@@ -1,4 +1,4 @@
-.TH "aardmail-pop3c" 1 "June 4, 2005"
+.TH "aardmail-pop3c" 1 "August 3, 2010"
 .SH NAME
 aardmail-pop3c \- client to retrieve mail via pop3
 .SH "SYNOPSIS"
@@ -10,14 +10,8 @@ aardmail-pop3c \- client to retrieve mail via pop3
 .PP
 When called without arguments aardmail-pop3c will give a short overview of the available options.
 .TP
-.B \-5
-Use CRAM-MD5 authentification; like -a crammd5
-.TP
-.B \-a authmethod
-Use the method for auth; possible values are plain, crammd5 and cert. Defaults to plain unless a certificate is set \fBand\fR no password is set.
-.TP
 .B \-b program
-Execute the program and only poll mails if it exits with zero exit status. That's useful if you poll mail on your notebook via cron but only want to get mail in special environments. You can specify parameters, but since the string gets parsed in the client you need to quote the spaces.
+Execute the program and only poll mails if it exits with zero exit status. This is useful if you poll mail on your notebook via cron but only want to get mail in special environments. You can specify parameters, but since the string gets parsed in the client you need to quote the spaces.
 .TP
 .B \-c option
 General option to control cryptography settings. Valid options are 0 for no encryption, 1 for TLS with exit on error (like -t), 2 for TLS with fallback to no encryption on error, 3 for TLS using starttls and exit on error (like -l) and 4 for TLS using starttls with fallback to no encryption on error.
@@ -25,6 +19,11 @@ General option to control cryptography settings. Valid options are 0 for no encr
 .B \-d
 Don't delete the mails after retrieval. The default is to delete successfully retrieved mails.
 .TP
+.B \-f filename
+The certificate file to use for authentication. The certificate will be presented to the remote server on request. So far I don't know of any pop3 daemon supporting certificate authentication, though.
+.TP
+.B \-g filename
+The certificate file used to verify the the remote hosts certificate. Defaults to ~/.aardmail/cacerts.pem|~/.libaard/cacerts.pem
 .B \-h hostname
 The hostname to connect to. This can be either a name resolvable via DNS or a numeric IP
 .TP

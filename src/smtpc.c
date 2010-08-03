@@ -448,6 +448,7 @@ static void smtpc_usage(char *program){
            "\t-g:\tthe certificate file to use for verification\n",
 #endif
            "\t-h:\tspecify the hostname to connect to\n",
+           "\t-i:\tspecify the identity to use\n",
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
            "\t-l:\tuse starttls, exit on error (like -c 3)\n",
 #endif
