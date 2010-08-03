@@ -97,9 +97,21 @@ static int smtpc_connectauth(authinfo *auth){
         am_sslconf = 0;
         goto connectauth;
       } else return -1;
-    } 
+    }
   }
 #endif
+
+  // now that we might have a tls connection, check if we need to do password
+  // authentication (cert auth is handled automatically by openssl callback)
+  // FIXME: check for methods the server offers
+  if (strcmp(auth->login, "")){
+    // dirty hack, get the base64 hash from .authinfo
+    if ((smtpc_oksendline(sd, cati("AUTH PLAIN ", auth->login, "\r\n", NULL), "235"))==-1){
+      smtpc_quitclose(sd);
+      return -1;
+    }
+  }
+
   return sd;
 }
 
@@ -124,7 +136,7 @@ static int smtpc_getaddr(addrlist **addrlist_storage, char *msg){
     }
     if (*ptr==',' || *ptr==';' || *ptr==' ') {
       if (isaddr==0) start=i+1;
-      else 	endaddr=1;
+      else      endaddr=1;
     }
     if (isaddr && endaddr){
       strncpy(buf, msg+start, i-start);
@@ -148,7 +160,7 @@ static int smtpc_session(int sd, char **msg){
   char **buf=NULL, **bufptr, *ptr, prevchar='\n';
   int isheader=1;
 
-  //	if ((*addrlist_storage = malloc(sizeof(addrlist))) == NULL);
+  //    if ((*addrlist_storage = malloc(sizeof(addrlist))) == NULL);
   if ((rcptlist=malloc(sizeof(addrlist))) == NULL ||
       (fromlist=malloc(sizeof(addrlist))) == NULL){
     logmsg(L_ERROR, F_GENERAL, "Unable to malloc() memory for addrlist", NULL);
@@ -249,7 +261,7 @@ static int smtpc_oksendline(int sd, char *msg, char *ok){
     i=netreadline(sd, buf);
     if ((i==0)||(i==-1)) return -1;
   }
-	
+
   if (!strncmp(buf, ok, strlen(ok)))
     return 0;
   logmsg(L_ERROR, F_NET, "bad response: '", buf, "' after '", msg, "' from me", NULL);
@@ -260,7 +272,7 @@ int main(int argc, char **argv){
   int c, sd;
   authinfo defaultauth;
   unsigned long len;
-  char *mail=0, *mymaildir=NULL;
+  char *mail=0, *mymaildir=NULL, *identity=NULL;
   DIR *dirptr;
   struct dirent *tmpdirent;
 
@@ -270,11 +282,11 @@ int main(int argc, char **argv){
   am_ssl_paranoid = L_DEADLY;
 #endif
 
-  while ((c=getopt(argc, argv, 
+  while ((c=getopt(argc, argv,
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
-                   "b:c:df:g:h:lm:p:r:s:tu:v:x:"
+                   "a:b:c:df:g:h:i:lm:p:r:s:tu:v:x:"
 #else
-                   "a:b:dh:m:p:r:s:u:v:x:"
+                   "a:b:dh:i:m:p:r:s:u:v:x:"
 #endif
             )) != EOF){
     switch(c){
@@ -312,6 +324,9 @@ int main(int argc, char **argv){
       case 'h':
         strncpy(defaultauth.machine, optarg, NI_MAXHOST);
         break;
+      case 'i':
+        identity=strdup(optarg);
+        break;
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
       case 'l':
         am_sslconf = AM_SSL_STARTTLS;
@@ -345,6 +360,8 @@ int main(int argc, char **argv){
   if (!strcmp(defaultauth.machine,""))
     smtpc_usage(argv[0]);
 
+  // currently useless, need to change mdinit to return a list
+  // with mails in a maildir, and replace below code
   if (mdinit(NULL, ".spool", 0)==-1){
     logmsg(L_ERROR, F_GENERAL, "unable to retrieve mails in spool", NULL);
     return -1;
@@ -362,11 +379,15 @@ int main(int argc, char **argv){
     return -1;
   }
 
-  if (smtpc.maildir != NULL && !strcmp(smtpc.maildir, maildirpath)) { 
-    // smtpc.maildir not set or not usable, append .spool
+  if (smtpc.maildir != NULL && !strcmp(smtpc.maildir, maildirpath)) {
     cat (&mymaildir, maildirpath, "/new", NULL);
   } else {
-    cat(&mymaildir, maildirpath, "/.spool/new", NULL);
+    // smtpc.maildir not set or not usable, prepend .spool
+    // check if we need to insert identity string
+    if (identity)
+      cat(&mymaildir, maildirpath, "/.spool/", identity, "/new", NULL);
+    else
+      cat(&mymaildir, maildirpath, "/.spool/new", NULL);
   }
 
   if ((dirptr=opendir(mymaildir))==NULL){
@@ -386,7 +407,7 @@ int main(int argc, char **argv){
     if (!strcmp(tmpdirent->d_name, "..")) continue;
     logmsg(L_DEBUG, F_GENERAL, "processing ", cati(mymaildir, "/", tmpdirent->d_name, NULL), NULL);
     if (openreadclose(cati(mymaildir, "/", tmpdirent->d_name, NULL), &mail, &len)){
-      logmsg(L_ERROR, F_GENERAL, "error reading mail ", cati(mymaildir, "/", tmpdirent->d_name, NULL), 
+      logmsg(L_ERROR, F_GENERAL, "error reading mail ", cati(mymaildir, "/", tmpdirent->d_name, NULL),
              ": ", strerror(errno), NULL);
       continue;
     }
