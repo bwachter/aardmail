@@ -2,13 +2,18 @@
 .SH NAME
 aardmail-pop3c \- client to retrieve mail via pop3
 .SH "SYNOPSIS"
-\fBaardmail-pop3c\fR [\fB\-b\ \fIprogram\fR\fR] [\fB\-c\ \fIoption\fR\fR] [\fB\-d\fR\fR] \fB\-h\ \fIhostname\fR\fR [\fB\-l\fR\fR] [\fB\-m\ \fImaildir\fR\fR] [\fB\-n\ \fInumber\fR\fR] [\fB\-p\ \fIpassword\fR\fR] [\fB\-r\ \fInumber\fR\fR] [\fB\-s\ \fIservice\fR\fR] [\fB\-t\fR\fR] [\fB\-u\ \fIuser\fR\fR] [\fB\-v\ \fIlevel\fR\fR] [\fB\-x\ \fIprogram\fR\fR]
+\fBaardmail-pop3c\fR [\fB-a\ \fIhostname\fR\fR] [\fB\-b\ \fIprogram\fR\fR] [\fB\-c\ \fIoption\fR\fR] [\fB\-d\fR\fR] [\fB-f\ \fIfilename\fR\fR] [\fB-g\ \fIfilename\fR\fR] \fB\-h\ \fIhostname\fR\fR [\fB\-l\fR\fR] [\fB\-m\ \fImaildir\fR\fR] [\fB\-n\ \fInumber\fR\fR] [\fB\-p\ \fIpassword\fR\fR] [\fB\-r\ \fInumber\fR\fR] [\fB\-s\ \fIservice\fR\fR] [\fB\-t\fR\fR] [\fB\-u\ \fIuser\fR\fR] [\fB\-v\ \fIlevel\fR\fR] [\fB\-x\ \fIprogram\fR\fR]
 .SH "DESCRIPTION"
 .PP
 \fBaardmail-pop3c\fR is a simple client to retrieve mail via pop3. If compiled with SSL-support it's possible to use TLS-encrypted connections, with or without starttls. It can either deliver into a \fBMaildir\fR (default) or to an external program using a pipe (like \fBprocmail\fR). It should be able to replace \fBfetchmail\fR if you just want to get mails from a pop3-server.
+
+For details about storing authentication information see \fBaardmail-authinfo\fR.
 .SH "OPTIONS"
 .PP
 When called without arguments aardmail-pop3c will give a short overview of the available options.
+.TP
+.B \-a hostname
+Bind to \fIhostname\fR for outgoing connections. \fIhostname\fR may be either an IP address or a resolvable hostname. If DNS returns more than one address the first one is being used.
 .TP
 .B \-b program
 Execute the program and only poll mails if it exits with zero exit status. This is useful if you poll mail on your notebook via cron but only want to get mail in special environments. You can specify parameters, but since the string gets parsed in the client you need to quote the spaces.
@@ -24,6 +29,7 @@ The certificate file to use for authentication. The certificate will be presente
 .TP
 .B \-g filename
 The certificate file used to verify the the remote hosts certificate. Defaults to ~/.aardmail/cacerts.pem|~/.libaard/cacerts.pem
+.TP
 .B \-h hostname
 The hostname to connect to. This can be either a name resolvable via DNS or a numeric IP
 .TP
@@ -58,7 +64,7 @@ Set the verbosity. Valid values are 0 (no logging), 1 (deadly), 2 (error), 3 (wa
 Specifies a program which will get the retrieved mails using a pipe. A new pipe will be opened for every mail, procmail is known to work fine.
 .SH "SEE ALSO"
 .PP
-aardmail (1).
+aardmail (1), aardmail-authinfo (1).
 .SH "AUTHOR"
 .PP
 aardmail was written by Bernd 'Aard' Wachter <bwachter@lart\&.info>. It can be obtained at \fIhttp://bwachter.lart.info/projects/aardmail/\fP

@@ -2,19 +2,18 @@
 .SH NAME
 aardmail-smtpc \- client to send mail via smtp
 .SH "SYNOPSIS"
-\fBaardmail-pop3c\fR [\fB\-b\ \fIprogram\fR\fR] [\fB\-c\ \fIoption\fR\fR] [\fB\-d\fR\fR] \fB\-h\ \fIhostname\fR\fR [\fB\-l\fR\fR] [\fB\-m\ \fImaildir\fR\fR] [\fB\-n\ \fInumber\fR\fR] [\fB\-p\ \fIpassword\fR\fR] [\fB\-r\ \fInumber\fR\fR] [\fB\-s\ \fIservice\fR\fR] [\fB\-t\fR\fR] [\fB\-u\ \fIuser\fR\fR] [\fB\-v\ \fIlevel\fR\fR] [\fB\-x\ \fIprogram\fR\fR]
+\fBaardmail-pop3c\fR [\fB-a\ \fIhostname\fR\fR] [\fB\-b\ \fIprogram\fR\fR] [\fB\-c\ \fIoption\fR\fR] [\fB\-d\fR\fR] [\fB-f\ \fIfilename\fR\fR] [\fB-g\ \fIfilename\fR\fR] \fB\-h\ \fIhostname\fR\fR [\fB-i\ \fIidentity\fR\fR] [\fB\-l\fR\fR] [\fB\-m\ \fImaildir\fR\fR] [\fB\-n\ \fInumber\fR\fR] [\fB\-p\ \fIpassword\fR\fR] [\fB\-s\ \fIservice\fR\fR] [\fB\-t\fR\fR] [\fB\-u\ \fIuser\fR\fR] [\fB\-v\ \fIlevel\fR\fR]
 .SH "DESCRIPTION"
 .PP
 \fBaardmail-smtpc\fR is a simple client to send mail via SMTP, getting the mails from a Maildir as spool. You can either configure your MUA to save outgoing mail there, or tell your MUA to use \fBaardmail-sendmail\fR which will do that part for you (and a bit more). If compiled with SSL-support it's possible to use TLS-encrypted connections, with or without starttls.
+
+Supported authentication methods currently are: SSL certificates, AUTH PLAIN. See \fBaardmail-authinfo\fR for details about storing authentication information.
 .SH "OPTIONS"
 .PP
 When called without arguments aardmail-smtpc will give a short overview of the available options.
 .TP
-.B \-5
-Use CRAM-MD5 authentification; like -a crammd5
-.TP
-.B \-a authmethod
-Use the method for auth; possible values are no, plain, crammd5 and cert. Defaults to no unless a certificate \fBor\fR a password is set.
+.B \-a hostname
+Bind to \fIhostname\fR for outgoing connections. \fIhostname\fR may be either an IP address or a resolvable hostname. If DNS returns more than one address the first one is being used.
 .TP
 .B \-b program
 Execute the program and only send mails if it exits with zero exit status. That's useful if you start smtpc on your notebook via cron but only want to send mail in special environments. You can specify parameters, but since the string gets parsed in the client you need to quote the spaces.
@@ -25,6 +24,12 @@ General option to control cryptography settings. Valid options are 0 for no encr
 .B \-d
 Don't delete the mails after successful sending. The default is to delete delivered mails.
 .TP
+.B \-f filename
+The certificate file to use for authentication. The certificate will be presented to the remote server on request. So far I don't know of any pop3 daemon supporting certificate authentication, though.
+.TP
+.B \-g filename
+The certificate file used to verify the the remote hosts certificate. Defaults to ~/.aardmail/cacerts.pem|~/.libaard/cacerts.pem
+.TP
 .B \-h hostname
 The hostname to connect to. This can be either a name resolvable via DNS or a numeric IP
 .TP
@@ -33,9 +38,6 @@ Use TLS with starttls and exit if an error occurs (like -c 3)
 .TP
 .B \-m maildir
 Use maildir as spool. The default is to use ~/Maildir/.spool
-.TP
-.B \-n number
-Only send number mails
 .TP
 .B \-p password
 Authentify using the given password. Don't use this option, use a .authinfo file instead
@@ -48,12 +50,14 @@ Use TLS and exit on error. Same like -c 1.
 .TP
 .B \-u username
 Specify the username to use. When setting up .authinfo properly you usually only need this option if you want to send mail under different account names from the same server (you usually don't want this)
+
+If you need to use AUTH PLAIN you can set the username to precomputed credentials in base64. For more details see \fBaardmail-authinfo\fR.
 .TP
 .B \-v level
 Set the verbosity. Valid values are 0 (no logging), 1 (deadly), 2 (error), 3 (warning) and 4 (info). The default is 2. It does not matter if you specify levels bigger than 4.
 .SH "SEE ALSO"
 .PP
-aardmail (1), aardmail-sendmail (1).
+aardmail (1), aardmail-sendmail (1), aardmail-authinfo (1).
 .SH "AUTHOR"
 .PP
 aardmail was written by Bernd 'Aard' Wachter <bwachter@lart\&.info>. It can be obtained at \fIhttp://bwachter.lart.info/projects/aardmail/\fP
