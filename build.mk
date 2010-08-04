@@ -173,7 +173,7 @@ rename:
 	$(Q)if test $(CURNAME) != $(VERSION); then cd .. && cp -a $(CURNAME) $(VERSION); fi
 
 upload: dist
-	scp ../$(VERSION).* bwachter@lart.info:/home/bwachter/public_html/projects/download/snapshots
+	scp $(VERSION).* bwachter@lart.info:/home/bwachter/public_html/projects/download/snapshots
 
 maintainer-deb: rename
 	$(Q)cd ../$(VERSION) && ./debchangelog && dpkg-buildpackage -rfakeroot
