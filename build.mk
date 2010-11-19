@@ -1,5 +1,5 @@
 
-.PHONY: clean install rename upload deb maintainer-deb check dep ibaard-clean dist 
+.PHONY: clean install rename upload deb maintainer-deb check dep deb ibaard-clean dist 
 
 all: $(ALL)
 
@@ -55,7 +55,7 @@ dyn-gmake.mk:
 	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.exe//" | sed "s/\.c/\.o/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
 	for j in $$DEPS; do printf "$$j "; done;\
 	printf '\n\t$$(Q)echo "LD $$@"\n';\
-	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(LDFLAGS) -o $$@ $$^ $$(LIBS)\n\n';\
+	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(LDFLAGS) -o bin/$$@ $$^ $$(LIBS)\n\n';\
 	done >> $@
 	$(Q)for i in $(BD_LIB); do \
 	printf "$$i:" ;\
@@ -81,7 +81,7 @@ dyn-bsdmake.mk:
 	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.exe//" | sed "s/\.c/\.o/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
 	for j in $$DEPS; do printf "$$j "; done;\
 	printf '\n\t$$(Q)echo "LD $$@"\n';\
-	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(LDFLAGS) -o $$@ $$> $$(LIBS)\n\n';\
+	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(LDFLAGS) -o bin/$$@ $$> $$(LIBS)\n\n';\
 	done >> $@
 	$(Q)for i in $(BD_LIB); do \
 	printf "$$i:" ;\
@@ -157,7 +157,7 @@ install: all
 	install -d $(DESTDIR)$(BINDIR)
 	install -d $(DESTDIR)$(LIBDIR)
 	install -d $(DESTDIR)$(MANDIR)/man1
-	install -m 755 $(BD_BIN) $(DESTDIR)$(BINDIR)
+	install -m 755 bin/* $(DESTDIR)$(BINDIR)
 	install -m 644 $(BD_LIB) $(DESTDIR)$(LIBDIR)
 	install -m 644 doc/man/*.1 $(DESTDIR)$(MANDIR)/man1
 

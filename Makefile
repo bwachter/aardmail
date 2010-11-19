@@ -73,3 +73,4 @@ DEPSTAT= "You need to run 'make dep'\n"
 .endif
 
 dep: $(SRCDIR)/version.h dyn-conf.mk dyn-bsdmake.mk
+	mkdir -p bin

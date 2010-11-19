@@ -64,3 +64,4 @@ include dyn-gmake.mk
 endif
 
 dep: $(SRCDIR)/version.h dyn-conf.mk dyn-gmake.mk
+	mkdir -p bin
