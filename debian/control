@@ -1,9 +1,9 @@
 Source: aardmail
 Section: mail
 Priority: optional
-Maintainer: Bernd Wachter <bwachter@lart.info>
-Build-Depends: debhelper (>= 4.0.0)
-Standards-Version: 3.6.1
+Maintainer: Bernd Wachter <bwachter-pkg@lart.info>
+Build-Depends: debhelper (>= 5), libssl-dev
+Standards-Version: 3.7.3
 
 Package: aardmail
 Architecture: any
@@ -12,3 +12,15 @@ Description: Mail related tools like a pop3-client to retrieve mails
  aardmail is a package with useful tools for different kinds of mailhandling. 
  Currently included are pop3c, a client to retrieve mails from a pop3 server, 
  and miniclient for testing connectiens. All programs are SSL-enabled.
+
+Package: aardmail-dbg
+Section: devel
+Architecture: any
+Depends: aardmail (= ${binary:Version})
+Description: Debug symbols for aardmail
+
+Package: aardmail-dev
+Section: devel
+Architecture: any
+Depends: libssl-dev
+Description: Development files for aardmail

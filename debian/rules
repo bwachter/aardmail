@@ -1,54 +1,89 @@
 #!/usr/bin/make -f
-export DH_OPTIONS
-export DH_COMPAT=5
-export DH_VERBOSE=1
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
 
 
-build: build-arch
-build-arch: build-arch-stamp
-build-arch-stamp: 
-	$(MAKE) dep
+
+
+
+configure: configure-stamp
+configure-stamp:
+	dh_testdir
+	# Add here commands to configure the package.
+
+	make dep
+	touch configure-stamp
+
+
+build: build-stamp
+
+build-stamp: configure-stamp  
+	dh_testdir
+
+	# Add here commands to compile the package.
 	$(MAKE) SSL=1
-	touch build-arch-stamp
 
-clean:
+	touch $@
+
+clean: 
 	dh_testdir
 	dh_testroot
-	rm -f build-arch-stamp
+	rm -f build-stamp configure-stamp
+
+	# Add here commands to clean up after the build process.
 	-$(MAKE) clean
+
 	dh_clean 
 
-install: install-arch
-
-install-arch:
+install: build
 	dh_testdir
 	dh_testroot
-	dh_clean -k -s 
-	dh_installdirs -s
-	$(MAKE) install DESTDIR=$(CURDIR)/debian/aardmail
-	dh_install -s
+	dh_clean -k 
+	dh_installdirs
 
-binary-common:
+	$(MAKE) DESTDIR=$(CURDIR)/debian/tmp install
+
+# Build architecture-independent files here.
+binary-indep: build install
+# We have nothing to do by default.
+
+# Build architecture-dependent files here.
+binary-arch: build install
 	dh_testdir
 	dh_testroot
-	dh_installchangelogs CHANGES
+	dh_installchangelogs 
 	dh_installdocs
 	dh_installexamples
+	dh_install --sourcedir=debian/tmp -v
+#	dh_installmenu
+#	dh_installdebconf	
+#	dh_installlogrotate
+#	dh_installemacsen
+#	dh_installpam
+#	dh_installmime
+#	dh_python
+#	dh_installinit
+#	dh_installcron
+#	dh_installinfo
 	dh_installman
 	dh_link
-	dh_strip
-	dh_compress 
+	dh_strip --keep-debug --dbg-package=aardmail-dbg
+	dh_compress
 	dh_fixperms
-	dh_makeshlibs
+#	dh_perl
+#	dh_makeshlibs
 	dh_installdeb
 	dh_shlibdeps
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
 
-binary-arch: build-arch install-arch
-	$(MAKE) -f debian/rules DH_OPTIONS=-a binary-common
-
-binary: binary-arch
-.PHONY: build clean binary-arch binary install install-arch
-
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install configure
