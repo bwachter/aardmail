@@ -23,10 +23,10 @@ STRIP=strip -x
 .if $(OS) == IRIX64
 STRIP=test
 .ifdef DEBUG
-CFLAGS=-Wall -W -Os 
+CFLAGS=-Wall -W -Os $(INCLUDES)
 LDFLAGS=-g
 .else
-CFLAGS=-g -Wall -W -Os
+CFLAGS=-g -Wall -W -Os $(INCLUDES)
 .endif
 .endif
 .if $(OS) == FreeBSD

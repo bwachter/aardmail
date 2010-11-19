@@ -22,10 +22,10 @@ endif
 ifeq ($(shell uname),IRIX64)
 STRIP=
 ifdef DEBUG
-CFLAGS=-Wall -W -Os
+CFLAGS=-Wall -W -Os $(INCLUDES)
 LDFLAGS=-g
 else
-CFLAGS=-g -Wall -W -Os
+CFLAGS=-g -Wall -W -Os $(INCLUDES)
 endif
 endif
 endif
