@@ -1,0 +1,2 @@
+- segfault when authinfo entry not set, but using identities with username
+- new/cur/tmp need to exist even with identities
