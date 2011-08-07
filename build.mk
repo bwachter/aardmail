@@ -9,6 +9,10 @@ $(SRCDIR)/version.h: CHANGES
 	$(Q)printf $(VERSION) >> $@
 	$(Q)printf "; http://bwachter.lart.info/projects/aardmail/\"\n#endif\n" >> $@
 
+aardmail.spec: CHANGES
+	$(Q)echo "-> $@"
+	$(Q)sed -i "s/Version:.*/Version: $(VERSION)/" $@
+
 clean: ibaard-clean 
 	$(Q)echo "-> cleaning up"
 	$(Q)$(RM) $(ALL) *.exe *.lib *.tds *.BAK $(OBJDIR)/*.{o,obj,lib} crammd5/*.{o,obj,lib} crammd5/*.o $(OBJDIR)/*.o $(SRCDIR)/version.h dyn-*.mk

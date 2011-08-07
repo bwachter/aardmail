@@ -63,5 +63,5 @@ ifeq (dyn-gmake.mk,$(wildcard dyn-gmake.mk))
 include dyn-gmake.mk
 endif
 
-dep: $(SRCDIR)/version.h dyn-conf.mk dyn-gmake.mk
+dep: $(SRCDIR)/version.h dyn-conf.mk dyn-gmake.mk aardmail.spec
 	mkdir -p bin
