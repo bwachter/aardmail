@@ -3,7 +3,7 @@
 
 all: $(ALL)
 
-$(SRCDIR)/version.h: 
+$(SRCDIR)/version.h: CHANGES
 	$(Q)echo "-> $@"
 	$(Q)printf "#ifndef AM_VERSION_H\n#define AM_VERSION_H\n#define AM_VERSION \"" > $@
 	$(Q)printf $(VERSION) >> $@
