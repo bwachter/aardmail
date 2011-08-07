@@ -1,0 +1,213 @@
+.TH "src/aardmail.h" 3 "Sun Aug 7 2011" "aardmail" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+src/aardmail.h \- 
+.SH SYNOPSIS
+.br
+.PP
+\fC#include <ibaard_types.h>\fP
+.br
+\fC#include <ibaard.h>\fP
+.br
+\fC#include 'version.h'\fP
+.br
+
+.SS "Defines"
+
+.in +1c
+.ti -1c
+.RI "#define \fBF_GENERAL\fP   'GENERAL'"
+.br
+.RI "\fIGeneral log messages. \fP"
+.ti -1c
+.RI "#define \fBF_NET\fP   'NET'"
+.br
+.RI "\fINetwork related log messages. \fP"
+.ti -1c
+.RI "#define \fBF_MAILDIR\fP   'MAILDIR'"
+.br
+.RI "\fILog messages from Maildir handling. \fP"
+.ti -1c
+.RI "#define \fBF_AUTHINFO\fP   'AUTHINFO'"
+.br
+.RI "\fILog messages related to authinfo parsing. \fP"
+.ti -1c
+.RI "#define \fBF_ADDRLIST\fP   'ADDRLIST'"
+.br
+.RI "\fILog messages from addrlist handling. \fP"
+.ti -1c
+.RI "#define \fBF_SSL\fP   'SSL'"
+.br
+.RI "\fILog messages in the SSL code. \fP"
+.in -1c
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "int \fBam_checkprogram\fP (char *program)"
+.br
+.ti -1c
+.RI "int \fBam_pipe\fP (char *\fBpipeto\fP)"
+.br
+.ti -1c
+.RI "void \fBam_unimplemented\fP ()"
+.br
+.in -1c
+.SH "Detailed Description"
+.PP 
+\fBAuthor:\fP
+.RS 4
+Bernd Wachter <bwachter@lart.info> 
+.RE
+.PP
+\fBDate:\fP
+.RS 4
+2005-2011 
+.RE
+.PP
+
+.PP
+Definition in file \fBaardmail.h\fP.
+.SH "Function Documentation"
+.PP 
+.SS "int am_checkprogram (char * program)"Execute a program to test exit status
+.PP
+This function is used to determine based on the exit status of a program if emails should be retreived/sent. A possible way to use it would be writing a small program querying the connection status from connection managers.
+.PP
+\fBParameters:\fP
+.RS 4
+\fIprogram\fP a path to the program to execute 
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+0 if program executed successfully, -1 on error 
+.RE
+.PP
+
+.PP
+Definition at line 25 of file aardmail.c.
+.PP
+.nf
+                                  {
+#ifndef __WIN32__
+  pid_t pid;
+  int status, i;
+  char **buf, **bufptr, *ptr;
+
+  if ((buf=malloc(sizeof(char*)*(strlen(program)+2)))==NULL) return -1;
+
+  bufptr=buf;
+  *bufptr++=program;
+  for (ptr=program;*ptr;ptr++){
+    if (*ptr==' '){
+      *ptr=0;
+      *bufptr++=ptr+1;
+    }
+  } *bufptr++=NULL;
+
+  if ((pid=fork())==-1){
+    logmsg(L_ERROR, F_GENERAL, 'fork() failed: ', strerror(errno), NULL);
+    return -1;
+  }
+
+  if (pid==0){
+    execvp(buf[0], buf);
+    logmsg(L_DEADLY, F_GENERAL, 'execvp() failed: ', strerror(errno), NULL);
+  } else {
+    free(buf);
+    waitpid(pid, &status, 0);
+    if (WIFEXITED(status)){
+      i=WEXITSTATUS(status);
+      if (i==0) return 0;
+      else return -1;
+    }
+  }
+  return -1; // should never happen... ;)
+#else
+  (void) program;
+  return 0;
+#endif
+}
+.fi
+.SS "int am_pipe (char * pipeto)"Open a pipe and redirect stdio
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipeto\fP 
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+the file descriptor connected to pipetos STDIN 
+.RE
+.PP
+
+.PP
+Definition at line 67 of file aardmail.c.
+.PP
+.nf
+                         {
+  int pipefd[2];
+  pid_t pid;
+  int fd;
+  char **buf, **bufptr, *ptr;
+
+  if ((buf=malloc(sizeof(char*)*(strlen(pipeto)+2)))==NULL) return -1;
+
+  bufptr=buf;
+  *bufptr++=pipeto;
+  for (ptr=pipeto;*ptr;ptr++){
+    if (*ptr==' '){
+      *ptr=0;
+      *bufptr++=ptr+1;
+    }
+  } *bufptr++=NULL;
+
+  if (pipe(pipefd)==-1){
+    logmsg(L_ERROR, F_GENERAL, 'pipe() failed: ', strerror(errno), NULL);
+    return -1;
+  }
+
+  if ((pid=fork())==-1){
+    logmsg(L_ERROR, F_GENERAL, 'fork() failed: ', strerror(errno), NULL);
+    return -1;
+  }
+
+  if (pid == 0){
+    close(0);
+    fd=dup(pipefd[0]);
+    close(pipefd[0]);
+    close(pipefd[1]);
+
+    execvp(buf[0], buf);
+    logmsg(L_DEADLY, F_GENERAL, 'execvp() failed: ', strerror(errno), NULL);
+  } else {
+    free(buf);
+    close(pipefd[0]);
+    return pipefd[1];
+  }
+  return -1;
+}
+.fi
+.SS "void am_unimplemented ()"Placeholder function for unimplemented features
+.PP
+\fBReturns:\fP
+.RS 4
+nothing, but exits the program 
+.RE
+.PP
+
+.PP
+Definition at line 111 of file aardmail.c.
+.PP
+.nf
+                       {
+  __write2('Sorry, this function is currently unimplemented. Exit.\n');
+  exit(0);
+}
+.fi
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for aardmail from the source code.

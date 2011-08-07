@@ -1,0 +1,171 @@
+.TH "src/addrlist.c" 3 "Sun Aug 7 2011" "aardmail" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+src/addrlist.c \- 
+.SH SYNOPSIS
+.br
+.PP
+\fC#include <stdlib.h>\fP
+.br
+\fC#include <string.h>\fP
+.br
+\fC#include <unistd.h>\fP
+.br
+\fC#include <ibaard_log.h>\fP
+.br
+\fC#include <ibaard_fs.h>\fP
+.br
+\fC#include <ibaard_cat.h>\fP
+.br
+\fC#include 'addrlist.h'\fP
+.br
+
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "int \fBaddrlist_free\fP (\fBaddrlist\fP **addrlist_storage)"
+.br
+.ti -1c
+.RI "int \fBaddrlist_delete\fP (\fBaddrlist\fP **addrlist_storage, char *address)"
+.br
+.ti -1c
+.RI "int \fBaddrlist_append\fP (\fBaddrlist\fP **addrlist_storage, char *address)"
+.br
+.in -1c
+.SH "Detailed Description"
+.PP 
+\fBAuthor:\fP
+.RS 4
+Bernd Wachter <bwachter@lart.info> 
+.RE
+.PP
+\fBDate:\fP
+.RS 4
+2005-2011 
+.RE
+.PP
+
+.PP
+Definition in file \fBaddrlist.c\fP.
+.SH "Function Documentation"
+.PP 
+.SS "int addrlist_append (\fBaddrlist\fP ** addrlist_storage, char * address)"Append an address to an addrlist list
+.PP
+\fBParameters:\fP
+.RS 4
+\fIaddrlist_storage\fP the list to append to 
+.br
+\fIaddress\fP the address to append 
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+0 on success, -1 on error 
+.RE
+.PP
+
+.PP
+Definition at line 62 of file addrlist.c.
+.PP
+.nf
+                                                               {
+  addrlist *p;
+
+  logmsg(L_DEBUG, F_ADDRLIST, 'adding ', address, ' to addrlist structure',  NULL);
+  p=*addrlist_storage;
+  if (!strcmp(p->address, '')){
+    strcpy(p->address,address);
+    p->next=NULL;
+  } else {
+    while (p->next != NULL) p=p->next;
+    if ((p->next=malloc(sizeof(addrlist))) == NULL) {
+      logmsg(L_ERROR, F_ADDRLIST, 'unable to malloc() memory for new addrlist element', NULL);
+      return -1;
+    }
+    strcpy(p->next->address,address);
+    p->next->next=NULL;
+  }
+  return 0;
+}
+.fi
+.SS "int addrlist_delete (\fBaddrlist\fP ** addrlist_storage, char * address)"Delete an address to an addrlist list
+.PP
+\fBParameters:\fP
+.RS 4
+\fIaddrlist_storage\fP the list to delete from 
+.br
+\fIaddress\fP the address to delete 
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+0 on success, -1 on error 
+.RE
+.PP
+
+.PP
+Definition at line 44 of file addrlist.c.
+.PP
+.nf
+                                                               {
+  addrlist *p, *prev_p;
+  logmsg(L_DEBUG, F_ADDRLIST, 'removing ', address, ' from addrlist structure',  NULL);
+  if (*addrlist_storage == NULL){
+    logmsg(L_WARNING, F_ADDRLIST, 'trying to remove an element from empty addrlist', NULL);
+    return -1;
+  } else {
+    for (p=prev_p=*addrlist_storage; p->next != NULL; prev_p=p, p=p->next){
+      if (!strcmp(p->address, address)){ // we found a matching entry
+        prev_p->next=p->next;
+        free(p);
+        return 0;
+      }
+    }
+  }
+  return 0; // no key found, but no error either
+}
+.fi
+.SS "int addrlist_free (\fBaddrlist\fP ** addrlist_storage)"Completely free an addrlist list
+.PP
+\fBParameters:\fP
+.RS 4
+\fIaddrlist_storage\fP the list to free 
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+0 on success, -1 on error 
+.RE
+.PP
+
+.PP
+Definition at line 22 of file addrlist.c.
+.PP
+.nf
+                                              {
+  addrlist *p, *next_p;
+  if (*addrlist_storage == NULL){
+    logmsg(L_WARNING, F_ADDRLIST, 'trying to empty an empty addrlist', NULL);
+    return -1;
+  } else {
+    p=*addrlist_storage;
+    while(1){
+      if (p->next==NULL){
+        logmsg(L_DEBUG, F_ADDRLIST, 'removing ', p->address, NULL);
+        free(p);
+        return 0;
+      } else {
+        logmsg(L_DEBUG, F_ADDRLIST, 'removing ', p->address, NULL);
+        next_p=p->next;
+        free(p);
+        p=next_p;
+      }
+    }
+  }
+}
+.fi
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for aardmail from the source code.

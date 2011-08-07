@@ -30,9 +30,9 @@ WARN=-W -Wundef -Wno-endif-labels -Wshadow -Wpointer-arith -Wbad-function-cast -
 #-Wunreachable-code
 #-Wextra will clash with gcc3
 #-Wdeclaration-after-statement
-CFLAGS?=-Wall -W -Os $(WARN)
+CFLAGS?=-Wall -W -Os $(WARN) -D_GNU_SOURCE
 LDFLAGS=-s
-DEBUG_CFLAGS=-g -Wall -W -Os $(INCLUDES)
+DEBUG_CFLAGS=-g -Wall -W -Os $(INCLUDES) -D_GNU_SOURCE
 DEBUG_LDFLAGS=-g
 
 BD_BIN=aardmail-pop3c$(EXE) aardmail-pop3d$(EXE) aardmail-miniclient$(EXE) aardmail-smtpc$(EXE) aardmail-sendmail$(EXE)

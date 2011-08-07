@@ -1,3 +1,9 @@
+/**
+ * @file smtpc.c
+ * @author Bernd Wachter <bwachter@lart.info>
+ * @date 2005-2011
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -30,17 +36,58 @@
 #include "aardmail.h"
 #include "addrlist.h"
 
+/// Structure holding runtime configuration values for smtpc
 static struct {
+    /// The maildir to use
     char *maildir;
+    /// Don't delete mail after sending, currently not used
+    /// @todo implement
     int keepmail;
 } smtpc;
 
+/** Print usage information and exit()
+ *
+ * @param program path to the program to prefix help with (usually argv[0]
+ */
 static void smtpc_usage(char *program);
+
+/** Send a command expecting a one-line response to sd
+ *
+ * @param sd The filedescriptor to write to
+ * @param msg The command to send
+ * @param ok The response to expect, or the beginning of it. For example, if ok
+ *        is 220 only 220 will be accepted, if it is 2 all responses starting with
+ *        2 are ok
+ * @return -1 on error, 0 on success
+ */
 static int smtpc_oksendline(int sd, char *msg, char *ok);
+
+/** Connect to remote server and optionally authenticate
+ *
+ * Greet server with EHLO or HELO, establish SSL connection if required,
+ * perform AUTH PLAIN if requested and connection is secure.
+ *
+ * @param auth Pointer to authinfo structure containing login details
+ * @return -1 on error, a file descriptor to the connection on success
+ */
 static int smtpc_connectauth(authinfo *auth);
+
+/** Send one message by SMTP
+ *
+ * @param sd The file descriptor of the SMTP connection
+ * @param msg The message to send
+ * @return -1 on error, 0 on success
+ */
 static int smtpc_session(int sd, char **msg);
+
+/** End smtp session by writing 'quit' to specified file descriptor
+ *
+ * @param sd The filedescriptor to write to
+ * @return -1 on error, close(sd) on success (=server response starts with 2)
+ */
 static int smtpc_quitclose(int sd);
 
+/// The hostname or IP address smtpc binds to, if specified
 char *bindname=NULL;
 
 static int smtpc_connectauth(authinfo *auth){
@@ -115,10 +162,20 @@ static int smtpc_connectauth(authinfo *auth){
   return sd;
 }
 
+/** Find addresses and store them into an addrlist structure
+ *
+ * Typically this function gets called for individual lists for
+ * to/from/cc/bcc, as soon as the message parsing function encounters
+ * one of those headers.
+ *
+ * @param addrlist_storage Pointer to the addrlist structure to use
+ * @param msg Text to search for addresses
+ * @return Currently always returns 0
+ */
 static int smtpc_getaddr(addrlist **addrlist_storage, char *msg){
   char *ptr, isaddr=0, endaddr=0, buf[1024];
   int i, start=0, folding=0;
-  for (ptr=msg,i=0;*ptr!='\0';*ptr++,i++){
+  for (ptr=msg,i=0;*ptr!='\0';ptr++,i++){
     if (folding && *ptr!=' ') break;
     if (folding) folding=0;
     if (*ptr=='\n'){
@@ -268,6 +325,12 @@ static int smtpc_oksendline(int sd, char *msg, char *ok){
   return -1;
 }
 
+/** Main entry point
+ *
+ * @param argc Argument count
+ * @param argv Argument array
+ * @return -1 on error, 0 on success
+ */
 int main(int argc, char **argv){
   int c, sd;
   authinfo defaultauth;
@@ -408,7 +471,7 @@ int main(int argc, char **argv){
     logmsg(L_DEBUG, F_GENERAL, "processing ", cati(mymaildir, "/", tmpdirent->d_name, NULL), NULL);
     if (openreadclose(cati(mymaildir, "/", tmpdirent->d_name, NULL), &mail, &len)){
       logmsg(L_ERROR, F_GENERAL, "error reading mail ", cati(mymaildir, "/", tmpdirent->d_name, NULL),
-             ": ", strerror(errno), NULL);
+": ", strerror(errno), NULL);
       continue;
     }
     if (smtpc_session(sd, &mail)==-1) {

@@ -1,0 +1,58 @@
+.TH "src/sendmail.h" 3 "Sun Aug 7 2011" "aardmail" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+src/sendmail.h \- 
+.SH SYNOPSIS
+.br
+.PP
+.SS "Enumerations"
+
+.in +1c
+.ti -1c
+.RI "enum \fBAM_HEADERCHECKS\fP { \fBAM_HASFROM\fP = 1, \fBAM_HASTO\fP = 2, \fBAM_HASDATE\fP = 4 }"
+.br
+.RI "\fIConstants used to remember which headers are present. \fP"
+.in -1c
+.SH "Detailed Description"
+.PP 
+\fBAuthor:\fP
+.RS 4
+Bernd Wachter <bwachter@lart.info> 
+.RE
+.PP
+\fBDate:\fP
+.RS 4
+2005-2011 
+.RE
+.PP
+
+.PP
+Definition in file \fBsendmail.h\fP.
+.SH "Enumeration Type Documentation"
+.PP 
+.SS "enum \fBAM_HEADERCHECKS\fP"
+.PP
+Constants used to remember which headers are present. 
+.PP
+\fBEnumerator: \fP
+.in +1c
+.TP
+\fB\fIAM_HASTO \fP\fP
+From: header exists. 
+.TP
+\fB\fIAM_HASDATE \fP\fP
+To: header exists. 
+.PP
+Definition at line 11 of file sendmail.h.
+.PP
+.nf
+                     {
+  AM_HASFROM=1, 
+  AM_HASTO  =2, 
+  AM_HASDATE=4, 
+};
+.fi
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for aardmail from the source code.

@@ -1,3 +1,9 @@
+/**
+ * @file addrlist.c
+ * @author Bernd Wachter <bwachter@lart.info>
+ * @date 2005-2011
+ */
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -13,15 +19,13 @@
 
 #include "addrlist.h"
 
-static int i=0;
-
 int addrlist_free(addrlist **addrlist_storage){
   addrlist *p, *next_p;
   if (*addrlist_storage == NULL){
     logmsg(L_WARNING, F_ADDRLIST, "trying to empty an empty addrlist", NULL);
     return -1;
   } else {
-    p=*addrlist_storage; 
+    p=*addrlist_storage;
     while(1){
       if (p->next==NULL){
         logmsg(L_DEBUG, F_ADDRLIST, "removing ", p->address, NULL);
@@ -61,7 +65,6 @@ int addrlist_append(addrlist **addrlist_storage, char *address){
   logmsg(L_DEBUG, F_ADDRLIST, "adding ", address, " to addrlist structure",  NULL);
   p=*addrlist_storage;
   if (!strcmp(p->address, "")){
-    i++;
     strcpy(p->address,address);
     p->next=NULL;
   } else {
@@ -72,7 +75,6 @@ int addrlist_append(addrlist **addrlist_storage, char *address){
     }
     strcpy(p->next->address,address);
     p->next->next=NULL;
-    i++;
   }
   return 0;
 }

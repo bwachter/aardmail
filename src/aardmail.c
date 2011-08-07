@@ -1,3 +1,9 @@
+/**
+ * @file aardmail.c
+ * @author Bernd Wachter <bwachter@lart.info>
+ * @date 2005-2011
+ */
+
 #include <fcntl.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -106,4 +112,3 @@ void am_unimplemented(){
   __write2("Sorry, this function is currently unimplemented. Exit.\n");
   exit(0);
 }
-

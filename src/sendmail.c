@@ -1,3 +1,9 @@
+/**
+ * @file sendmail.c
+ * @author Bernd Wachter <bwachter@lart.info>
+ * @date 2005-2011
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -26,10 +32,18 @@
 #include "aardmail.h"
 #include "version.h"
 
+/// Flag to check if single dots in input will end the message, or are ignored
 #define AM_SM_IGNORE_DOTS 1
 
+/// The unique name of a file inside a Maildir (i.e., where sendmail spools to)
 char *uniqname;
 
+/** Main entry point
+ *
+ * @param argc Argument count
+ * @param argv Argument array
+ * @return -1 on error, 0 on success
+ */
 int main(int argc, char **argv){
   int smcfg=0;
   int i=1, isbody=0, c;

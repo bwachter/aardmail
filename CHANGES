@@ -1,4 +1,8 @@
-0.2-pre-1: 20110713
+0.2~pre3:
+        Regenerate version.h when CHANGES gets updated
+        Add doxygen documentation
+
+0.2~pre2: 20110713
         Packaging related fixes
         Bump ibaard, fixing glibc build issues, creat() and documentation
 

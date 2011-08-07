@@ -1,0 +1,185 @@
+.TH "src/sendmail.c" 3 "Sun Aug 7 2011" "aardmail" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+src/sendmail.c \- 
+.SH SYNOPSIS
+.br
+.PP
+\fC#include <stdlib.h>\fP
+.br
+\fC#include <stdio.h>\fP
+.br
+\fC#include <errno.h>\fP
+.br
+\fC#include <fcntl.h>\fP
+.br
+\fC#include <ibaard_network.h>\fP
+.br
+\fC#include <ibaard_log.h>\fP
+.br
+\fC#include <ibaard_cat.h>\fP
+.br
+\fC#include <ibaard_fs.h>\fP
+.br
+\fC#include <ibaard_maildir.h>\fP
+.br
+\fC#include <getopt.h>\fP
+.br
+\fC#include <strings.h>\fP
+.br
+\fC#include 'aardmail.h'\fP
+.br
+\fC#include 'version.h'\fP
+.br
+
+.SS "Defines"
+
+.in +1c
+.ti -1c
+.RI "#define \fBAM_SM_IGNORE_DOTS\fP   1"
+.br
+.RI "\fIFlag to check if single dots in input will end the message, or are ignored. \fP"
+.in -1c
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "int \fBmain\fP (int argc, char **argv)"
+.br
+.in -1c
+.SS "Variables"
+
+.in +1c
+.ti -1c
+.RI "char * \fBuniqname\fP"
+.br
+.RI "\fIThe unique name of a file inside a Maildir (i.e., where sendmail spools to). \fP"
+.in -1c
+.SH "Detailed Description"
+.PP 
+\fBAuthor:\fP
+.RS 4
+Bernd Wachter <bwachter@lart.info> 
+.RE
+.PP
+\fBDate:\fP
+.RS 4
+2005-2011 
+.RE
+.PP
+
+.PP
+Definition in file \fBsendmail.c\fP.
+.SH "Function Documentation"
+.PP 
+.SS "int main (int argc, char ** argv)"Main entry point
+.PP
+\fBParameters:\fP
+.RS 4
+\fIargc\fP Argument count 
+.br
+\fIargv\fP Argument array 
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+-1 on error, 0 on success 
+.RE
+.PP
+
+.PP
+Definition at line 47 of file sendmail.c.
+.PP
+.nf
+                               {
+  int smcfg=0;
+  int i=1, isbody=0, c;
+  char buf[1024], from[1024], *mymaildir=NULL;
+  char *identity=NULL;
+#if (defined(__WIN32__)) || (defined _BROKEN_IO)
+  FILE *fd;
+#else
+  int fd;
+#endif
+
+  while ((c=getopt(argc, argv, 'a:d:f:F:o:tvV')) != EOF){
+    switch(c){
+      case 'a':
+        identity=strdup(optarg);
+        break;
+      case 'd':
+        loglevel(atoi(optarg));
+        break;
+      case 'f': // set the from: line. will be overwritten if there's a From:-line
+        break;
+      case 'F':
+        break; // set the fullname
+      case 'o':
+        if (optarg[0]=='i') smcfg|=AM_SM_IGNORE_DOTS; // ignore single dots
+        break;
+      case 't':
+        //FIXME
+        break;
+      case 'v':
+        loglevel(4);
+        break;
+      case 'V':
+        __write1(cati('aardmail-sendmail ', AM_VERSION, '\n', NULL));
+        exit(0);
+    }
+  }
+
+  if (mdfind(NULL)){
+    logmsg(L_ERROR, F_MAILDIR, 'unable to find maildir', NULL);
+    return -1;
+  }
+
+  if (identity)
+    cat (&mymaildir, maildirpath, '/.spool/', identity, NULL);
+  else
+    cat (&mymaildir, maildirpath, '/.spool', NULL);
+
+  fd=mdopen(mymaildir, &uniqname);
+#if (defined(__WIN32)) || (defined _BROKEN_IO)
+  if (fd == NULL)
+
+#else
+    if (fd == -1)
+#endif
+    {
+      logmsg(L_ERROR, F_GENERAL, 'opening spool failed', NULL);
+      return -1;
+    }
+  while (i>0){
+    i=read(0, buf, 1024);
+    if (!isbody){
+      if (!strncasecmp(buf, 'from:', 5)){
+        logmsg(L_DEBUG, F_GENERAL, 'Found from: ', buf, NULL);
+      }
+      if (!strncmp(buf, '\n', 1)) {
+        isbody=1;
+        if (!strncmp(from, '\0', 1)){
+          logmsg(L_ERROR, F_GENERAL, 'Unable to figure out From:', NULL);
+          goto error;
+        }
+        // header time ;)
+      }
+    }
+    if (!strncmp(buf+i-2, '\r\n', 2)) {
+      logmsg(L_ERROR, F_GENERAL, 'Having \\r\\n in the input is bad for your karma', NULL);
+      goto error;
+    }
+    if (!strncmp(buf+i-2, '.\n', 2) && !(smcfg & AM_SM_IGNORE_DOTS)) break;
+    filewrite(fd, buf, i);
+  }
+  return mdclose(mymaildir, &uniqname, fd);
+
+  error:
+  logmsg(L_ERROR, F_GENERAL, 'some stupid error occured', NULL);
+  return -1;
+}
+.fi
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for aardmail from the source code.
