@@ -157,9 +157,11 @@ install: all
 	install -d $(DESTDIR)$(BINDIR)
 	install -d $(DESTDIR)$(LIBDIR)
 	install -d $(DESTDIR)$(MANDIR)/man1
+	install -d $(DESTDIR)$(MANDIR)/man3
 	install -m 755 bin/* $(DESTDIR)$(BINDIR)
 	install -m 644 $(BD_LIB) $(DESTDIR)$(LIBDIR)
-	install -m 644 doc/man/*.1 $(DESTDIR)$(MANDIR)/man1
+	install -m 644 doc/man/man1/*.1 $(DESTDIR)$(MANDIR)/man1
+	install -m 644 doc/man/man3/*.3 $(DESTDIR)$(MANDIR)/man3
 
 dist: Makefile.borland $(SRCDIR)/version.h
 	$(Q)echo "building archive ($(VERSION).tar.bz2)"
