@@ -9,8 +9,14 @@
 
 #include <ibaard_authinfo.h>
 
+#include <aardmail.h>
+
+typedef struct _pop3c pop3c_configuration;
+
+extern pop3c_configuration pop3c;
+
 /// Structure holding runtime configuration values for pop3c
-static struct {
+struct _pop3c {
     /// Path to the local MDA; if unset, spool to Maildir
     char *pipeto;
     /// Path to the users maildir
@@ -19,9 +25,15 @@ static struct {
     int keepmail;
     /// The number of messages on the server
     int msgcount;
+    /// The number of messages on the server, as string
+    char *msgcount_str;
     /// Limit number of mails to retrieve
     int onlyget;
-} pop3c;
+    /// The hostname or IP address pop3c binds to, if specifiedsm
+    char *bindname;
+    /// Don't download messages, only return the number of mails
+    int onlystat;
+};
 
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
 #define FDTYPE FILE*

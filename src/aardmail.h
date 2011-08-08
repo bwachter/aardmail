@@ -8,6 +8,7 @@
 #define _AARDMAIL_H
 
 #include <ibaard_types.h>
+#include <ibaard_log.h>
 #include <ibaard.h>
 
 #include "version.h"
