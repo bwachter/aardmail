@@ -3,6 +3,7 @@ include system.mk
 VERSIONNR=$(shell head -1 CHANGES|sed 's/:.*//')
 VERSION=aardmail-$(VERSIONNR)
 CURNAME=$(notdir $(shell pwd))
+MK_ALL=$$^
 
 ifdef DEBUG
 CFLAGS=$(DEBUG_CFLAGS)
@@ -64,4 +65,4 @@ include dyn-gmake.mk
 endif
 
 dep: $(SRCDIR)/version.h dyn-conf.mk dyn-gmake.mk aardmail.spec
-	mkdir -p bin
+	$(Q)mkdir -p bin

@@ -4,6 +4,8 @@ VERSIONNR!=head -1 CHANGES|sed 's/:.*//'
 VERSION=aardmail-$(VERSIONNR)
 #CURNAME=$(notdir $(shell pwd))
 OS!=uname
+IFDOT=.
+MK_ALL=$$>
 
 .ifdef DEBUG
 CFLAGS=$(DEBUG_CFLAGS)
@@ -72,5 +74,5 @@ DEPSTAT= "You need to run 'make dep'\n"
 DEPSTAT= "You need to run 'make dep'\n"
 .endif
 
-dep: $(SRCDIR)/version.h dyn-conf.mk dyn-bsdmake.mk aardmail.spec
-	mkdir -p bin
+dep: $(SRCDIR)/version.h dyn-conf.mk dyn-bsdmake.mk dyn-gmake.mk aardmail.spec
+	$(Q)mkdir -p bin

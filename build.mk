@@ -21,7 +21,13 @@ distclean: clean
 	$(Q)echo "-> cleaning up everything"
 	$(Q)$(RM) -Rf ibaard Makefile.borland
 
-dyn-conf.mk:
+#dyn-makefile: 
+#	$(Q)for i in 1; do \
+#	$(MK_IFDEF) WIN32
+
+
+dyn-conf.mk: targets build.mk
+	$(Q)echo "ALL=" > $@
 	$(Q)_IBAARD="";\
 	if [ ! -z "$$IBAARD" ] && [ -d "$$IBAARD" ]; then\
 	  _IBAARD=$$IBAARD; \
@@ -33,45 +39,59 @@ dyn-conf.mk:
 	if [ ! -z $$_IBAARD ]; then\
 	  printf "LDPATH+=-L$$_IBAARD\n";\
 	  printf "INCLUDES+=-I$$_IBAARD/src\n";\
-	  printf "ALL=libibaard.a $(ALL)\n";\
+	  printf "ALL+=libibaard.a\n";\
 	  printf "_IBAARD=$$_IBAARD\n";\
-	fi > $@
+	fi >> $@
+	$(Q)for i in $(BD_LIB); do \
+	  printf "ALL+=$$i.a $$i.so\n";\
+	done >> $@
+	$(Q)echo "ALL+=$(BD_BIN)" >> $@
 
 #fixme, need to generate dynamic build rules for ibaard
 
-dyn-gmake.mk:
+dyn-binary-targets.mk: targets build.mk system.mk
+	$(Q)echo > $@
+	$(Q)for i in $(BD_BIN); do \
+	echo -n "DEP LD $$i... " >&2;\
+	printf "$$i: " ;\
+	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.exe//" | sed "s/\.c/\.o/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
+	for j in $$DEPS; do echo -n "$$j " >&2; printf "$$j "; done;\
+	printf '\n\t$$(Q)echo "LD $$@"\n';\
+	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(LDFLAGS) $$(INCLUDES) -o bin/$$@ $(MK_ALL) $$(LIBS)\n\n';\
+	echo "" >&2 ;\
+	done 2>&1 >> $@
+
+dyn-library-targets.mk: targets build.mk system.mk
+	$(Q)echo > $@
+	$(Q)for i in $(BD_LIB); do \
+	echo -n "DEP LIB $$i... " >&2;\
+	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.lib//" | sed "s/\.c/\.o/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
+	printf "$$i.a:" ;\
+	for j in $$DEPS; do printf "$$j "; done;\
+	printf '\n\t$$(Q)echo "AR $$@"\n';\
+	printf '\t$$(Q)$$(CROSS)$$(AR) $$(ARFLAGS) $$@ $(MK_ALL)\n';\
+	printf '\t$$(Q)$$(CROSS)$$(RANLIB) $$@\n';\
+	printf '\n';\
+	printf "$$i.so:" ;\
+	for j in $$DEPS; do echo -n "$$j " >&2; printf "$$j "; done;\
+	printf '\n\t$$(Q)echo "SO $$@"\n';\
+	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) -shared -Wl,-soname,$$@ $$(INCLUDES) -o $$@ $(MK_ALL)\n';\
+	printf '\n';\
+	echo "" >&2 ;\
+	done 2>&1 >> $@
+
+dyn-gmake.mk: dyn-binary-targets.mk dyn-library-targets.mk
 	$(Q)for i in 1; do \
-	printf '$$(OBJDIR)/%%.o: $$(SRCDIR)/%%.c\n';\
-	printf '\t$$(Q)echo "CC $$@"\n';\
-	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(CFLAGS) $$(INCLUDES) -c $$< -o $$@\n';\
-	printf 'ifdef $$(STRIP)\n';\
-	printf '\t$$(Q)$$(COMMENT) -$$(CROSS)$$(STRIP) $$@\n';\
-	printf 'endif\n\n';\
 	printf '%%.o: %%.c\n';\
 	printf '\t$$(Q)echo "CC $$@"\n';\
 	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(CFLAGS) $$(INCLUDES) -c $$< -o $$@\n';\
 	printf 'ifdef $$(STRIP)\n';\
 	printf '\t$$(Q)$$(COMMENT) -$$(CROSS)$$(STRIP) $$@\n';\
 	printf 'endif\n\n';\
+	printf 'include dyn-binary-targets.mk dyn-library-targets.mk' ;\
 	done > $@
-	$(Q)for i in $(BD_BIN); do \
-	printf "$$i: " ;\
-	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.exe//" | sed "s/\.c/\.o/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
-	for j in $$DEPS; do printf "$$j "; done;\
-	printf '\n\t$$(Q)echo "LD $$@"\n';\
-	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(LDFLAGS) -o bin/$$@ $$^ $$(LIBS)\n\n';\
-	done >> $@
-	$(Q)for i in $(BD_LIB); do \
-	printf "$$i:" ;\
-	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.c/\.o/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
-	for j in $$DEPS; do printf "$$j "; done;\
-	printf '\n\t$$(Q)echo "AR $$@"\n';\
-	printf '\t$$(Q)$$(CROSS)$$(AR) $$(ARFLAGS) $$@ $$^\n';\
-	printf '\t$$(Q)$$(CROSS)$$(RANLIB) $$@\n';\
-	printf '\n';\
-	done >> $@
 
-dyn-bsdmake.mk:
+dyn-bsdmake.mk: dyn-binary-targets.mk dyn-library-targets.mk
 	$(Q)for i in 1; do \
 	printf '.c.o:\n';\
 	printf '\t$$(Q)echo "CC $$@"\n';\
@@ -79,22 +99,8 @@ dyn-bsdmake.mk:
 	printf '.ifdef $$(STRIP)\n';\
 	printf '\t$$(Q)$$(COMMENT) -$$(CROSS)$$(STRIP) $$@\n';\
 	printf '.endif\n\n';\
+	printf 'include dyn-binary-targets.mk dyn-library-targets.mk' ;\
 	done > $@
-	$(Q)for i in $(BD_BIN); do \
-	printf "$$i: " ;\
-	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.exe//" | sed "s/\.c/\.o/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
-	for j in $$DEPS; do printf "$$j "; done;\
-	printf '\n\t$$(Q)echo "LD $$@"\n';\
-	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(LDFLAGS) -o bin/$$@ $$> $$(LIBS)\n\n';\
-	done >> $@
-	$(Q)for i in $(BD_LIB); do \
-	printf "$$i:" ;\
-	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.c/\.o/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
-	for j in $$DEPS; do printf "$$j "; done;\
-	printf '\n\t$$(Q)echo "AR $$@"\n';\
-	printf '\t$$(Q)$$(CROSS)$$(AR) $$(ARFLAGS) $$@ $$>\n';\
-	printf '\t$$(Q)$$(CROSS)$$(RANLIB) $$@\n\n';\
-	done >> $@
 
 Makefile.borland:
 	$(Q)for i in 1; do \

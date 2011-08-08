@@ -5,6 +5,7 @@ version.h
 *.obj
 *.lib
 *.a
+*.so*
 debian/aardmail/
 debian/aardmail-dev/
 debian/aardmail-dbg/

@@ -23,35 +23,17 @@
 #include <ibaard_network.h>
 #include <ibaard_log.h>
 #include <ibaard_cat.h>
-#include <ibaard_authinfo.h>
 #include <ibaard_fs.h>
 #include <ibaard_maildir.h>
 
 #include "aardmail.h"
+#include "aardmail-pop3c.h"
 
-/// Structure holding runtime configuration values for pop3c
-static struct {
-    /// Path to the local MDA; if unset, spool to Maildir
-    char *pipeto;
-    /// Path to the users maildir
-    char *maildir;
-    /// Flag to indicate if mail should be deleted after retrieval
-    int keepmail;
-    /// The number of messages on the server
-    int msgcount;
-    /// Limit number of mails to retrieve
-    int onlyget;
-} pop3c;
-
-#if (defined(__WIN32__)) || (defined _BROKEN_IO)
-#define FDTYPE FILE*
-#define FDINVAL NULL
-#else
-/// Type of file descriptors on this platform
-#define FDTYPE int
-/// Return value of open functions on this platform
-#define FDINVAL -1
-#endif
+/** Print usage information and exit()
+ *
+ * @param program path to the program to prefix help with (usually argv[0]
+ */
+static void pop3c_usage(char *program);
 
 /// The unique name of a file inside a Maildir (i.e., where pop3c spools to)
 char *uniqname;
@@ -60,93 +42,7 @@ char *bindname=NULL;
 /// Generic buffer to temporary copy strings into
 static char *tmpstring=NULL;
 
-/** End pop3 session by writing 'quit' to specified file descriptor
- *
- * @param sd The filedescriptor to write to
- * @return -1 on error, close(sd) on success
- */
-static int pop3c_quitclose(int sd);
-
-/** Print usage information and exit()
- *
- * @param program path to the program to prefix help with (usually argv[0]
- */
-static void pop3c_usage(char *program);
-
-/** Send a command expecting a one-line response to sd
- *
- * @param sd The filedescriptor to write to
- * @param msg The command to send
- * @return -1 on error, 0 on success (=server responded with +OK)
- */
-static int pop3c_oksendline(int sd, char *msg);
-
-/** Ask the server for the number of messages (STAT)
- *
- * @param sd The servers file descriptor
- * @return -1 on error, the number of messages on success
- */
-static int pop3c_getstat(int sd);
-
-/** Open the spool fd
- *
- * Depending on command line flags, open a file in a Maildir, or a pipe to a
- * local MDA.
- *
- * @return A file descriptor to the mail, or negative numbers on error (return
- *         values of popen(), mdopen() or am_open(), depending on configuration)
- */
-static FDTYPE pop3c_openspool();
-
-/** Close the fd for a mail
- *
- * Close and flush the fd, and -- for mails spooled into a Maildir -- move
- * the mail to the correct directory
- *
- * @param fd The file descriptor of the mail
- * @return 0 on success, negative numbers on error (return values of clase(),
- *         mdclose() or pclose(), depending on configuration)
- */
-static int pop3c_closespool(FDTYPE fd);
-
-/** Download one message from server and save to provided file descriptor
- *
- * @param sd The servers file descriptor
- * @param fd The file descriptor of the local mail file
- * @param size unused
- * @return -1 on error, the size of the mail on success
- */
-static long pop3c_getmessage(int sd, FDTYPE fd, int size);
-
-/** Connect and authenticate to a POP3 server
- *
- * Connect, set up SSL if required, and send user and password
- *
- * @param auth Pointer to an authinfo structure
- * @return -1 on error, file descriptor for the connection on success
- */
-static int pop3c_connectauth(authinfo *auth);
-
-/** Download message(s) from server
- *
- * Depending on command line switches this will download some or all messages
- * from the server, keeping or deleting it on the server.
- *
- * Messages are either saved in the local Maildir, or sent to a local MDA
- * through a pipe.
- *
- * This function only sets up the environment and takes care of opening
- * an fd to store the message, the dirty work gets done in pop3c_openspool(),
- * pop3c_getmessage() and pop3c_closespool()
- *
- * @param sd The file descriptor to use
- * @return -1 on error, 0 on success
- */
-static int pop3c_session(int sd);
-
-
-
-static int pop3c_oksendline(int sd, char *msg){
+int pop3c_oksendline(int sd, char *msg){
   char buf[MAXNETBUF];
   int i;
 
@@ -168,7 +64,7 @@ static int pop3c_oksendline(int sd, char *msg){
   return -1;
 }
 
-static int pop3c_getstat(int sd){
+int pop3c_getstat(int sd){
   char *tmp, *tmp2;
   char buf[MAXNETBUF];
   int i;
@@ -201,7 +97,7 @@ static int pop3c_getstat(int sd){
   return atoi(tmp2);
 }
 
-static FDTYPE pop3c_openspool(){
+FDTYPE pop3c_openspool(){
   FDTYPE fd;
   if (pop3c.pipeto){
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
@@ -217,7 +113,7 @@ static FDTYPE pop3c_openspool(){
   return fd;
 }
 
-static int pop3c_closespool(FDTYPE fd){
+int pop3c_closespool(FDTYPE fd){
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
   fflush(fd);
   if (pop3c.pipeto) {
@@ -235,7 +131,7 @@ static int pop3c_closespool(FDTYPE fd){
   return 0;
 }
 
-static long pop3c_getmessage(int sd, FDTYPE fd, int size){
+long pop3c_getmessage(int sd, FDTYPE fd, int size){
   char *tmp;
   char *buf[MAXNETBUF];
   int i, delayrn=0;
@@ -298,7 +194,7 @@ static long pop3c_getmessage(int sd, FDTYPE fd, int size){
 }
 }
 
-static int pop3c_connectauth(authinfo *auth){
+int pop3c_connectauth(authinfo *auth){
   int i, sd;
   char buf[1024];
 
@@ -357,13 +253,13 @@ static int pop3c_connectauth(authinfo *auth){
   return sd;
 }
 
-static int pop3c_quitclose(int sd){
+int pop3c_quitclose(int sd){
   if ((pop3c_oksendline(sd, "quit\r\n")) == -1)
     return -1;
   return (close(sd));
 }
 
-static int pop3c_session(int sd){
+int pop3c_session(int sd){
   FDTYPE fd;
   int i;
   char *pop3_msgnrbuf[1024];
