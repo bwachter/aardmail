@@ -21,8 +21,7 @@ already included.
 1.2 Building with gcc and compatible
 ------------------------------------
 
-make dep, followed by make, specifying options using the following
-variables:
+Type make, specifying options using the following variables:
 
 SSL=0|1
         Enable/Disable SSL-Support and link against OpenSSL (or any
@@ -39,7 +38,7 @@ DIET=
         Set to the dietwrapper if you want to link against dietlibc
 
 To create windows binaries using mingw you'd do something like
-# make dep WIN32=1 && make CROSS=i386-mingw32-  WIN32=1
+# make CROSS=i386-mingw32-  WIN32=1
 
 1.3 Building with Borland C
 ---------------------------

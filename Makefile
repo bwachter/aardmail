@@ -61,18 +61,17 @@ CFLAGS+=$(DEV_CFLAGS)
 .endif
 
 .if exists(dyn-conf.mk)
-.include "dyn-conf.mk"  
-.else   
-DEPSTAT= "You need to run 'make dep'\n"
+.include "dyn-conf.mk"
+.else
+ALL=dep
 .endif
 
 .include "build.mk"
 
 .if exists(dyn-bsdmake.mk)
-.include "dyn-bsdmake.mk"  
-.else   
-DEPSTAT= "You need to run 'make dep'\n"
+.include "dyn-bsdmake.mk" 
 .endif
 
-dep: $(SRCDIR)/version.h dyn-conf.mk dyn-bsdmake.mk dyn-gmake.mk aardmail.spec
+dep: $(SRCDIR)/version.h dyn-conf.mk dyn-bsdmake.mk aardmail.spec
 	$(Q)mkdir -p bin
+	$(MAKE)

@@ -58,6 +58,10 @@ ifeq (dyn-conf.mk,$(wildcard dyn-conf.mk))
 include dyn-conf.mk
 endif
 
+ifneq (dyn-gmake.mk,$(wildcard dyn-gmake.mk))
+ALL=dep
+endif
+
 include build.mk
 
 ifeq (dyn-gmake.mk,$(wildcard dyn-gmake.mk))
@@ -66,3 +70,4 @@ endif
 
 dep: $(SRCDIR)/version.h dyn-conf.mk dyn-gmake.mk aardmail.spec
 	$(Q)mkdir -p bin
+	$(MAKE)
