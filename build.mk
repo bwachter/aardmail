@@ -1,5 +1,5 @@
 
-.PHONY: clean install upload deb maintainer-deb rpm check dep deb ibaard-clean dist 
+.PHONY: clean install upload deb maintainer-deb rpm check dep deb ibaard-clean dist
 
 all: $(ALL)
 
@@ -167,33 +167,43 @@ install: all
 	install -m 644 doc/man/man3/*.3 $(DESTDIR)$(MANDIR)/man3
 
 dist: Makefile.borland $(SRCDIR)/version.h
-	$(Q)echo "building archive ($(VERSION).tar.bz2)"
-	git-archive-all.sh --format tar --prefix $(VERSION)/  $(VERSION).tar
-	gzip -f $(VERSION).tar
-	rm -f $(VERSION).zip
-	tar2zip $(VERSION).tar.gz
+	$(Q)pwd|sed 's,.*/,,'|grep -q '-'; \
+	  if [ $$? -eq 0 ]; then \
+	    echo "Directory in dist format, skipping tarball creation"; \
+	  else \
+	    echo "building archive ($(VERSION).tar.gz)" ;\
+	    git-archive-all.sh --format tar --prefix $(VERSION)/  $(VERSION).tar ;\
+	    gzip -f $(VERSION).tar ;\
+	    rm -f $(VERSION).zip ;\
+	    tar2zip $(VERSION).tar.gz ;\
+	  fi
 
 upload: dist
 	scp $(VERSION).* bwachter@lart.info:/home/bwachter/public_html/projects/download/snapshots
 
-maintainer-deb: dist
-	$(Q)tar xf $(VERSION).tar.gz && \
-	  cd $(VERSION) && ./debchangelog && \
-	  dpkg-buildpackage -rfakeroot
-	$(Q)cd .. && rm -Rf $(VERSION)
+maintainer-deb:
+	$(MAKE) deb DPKGFLAGS=-ap
 
 deb: dist
-	$(Q)tar xf $(VERSION).tar.gz && \
-	  cd $(VERSION) && ./debchangelog && \
-	  dpkg-buildpackage -rfakeroot -us -uc
-	$(Q)cd .. && rm -Rf $(VERSION)
+	$(Q)pwd|sed 's,.*/,,'|grep -q '-'; \
+	  if [ $$? -ne 0 ]; then \
+	    rm -Rf $(VERSION) && \
+	    tar xf $(VERSION).tar.gz && \
+	    cd $(VERSION) ;\
+	  fi ;\
+	  if [ -z "$$DPKGFLAGS" ]; then DPKGFLAGS="-us -uc"; fi ;\
+	  ./debchangelog && \
+	  dpkg-buildpackage -rfakeroot $$DPKGFLAGS
 
 rpm: dist
-	$(Q)if [ ! -z "`git status -s aardmail.spec`" ]; then \
+	$(Q)if [ -d .git ] && [ ! -z "`git status -s aardmail.spec`" ]; then \
 	  echo "aardmail.spec updated, but not comitted. Can't continue."; \
 	  false; \
 	fi
-	$(Q)rpmbuild -ta $(VERSION).tar.gz
+	$(Q)if [ -f $(VERSION).tar.gz ]; then rpmbuild -ta $(VERSION).tar.gz ;\
+	  elif [ -f ../$(VERSION).tar.gz ]; then rpmbuild -ta ../$(VERSION).tar.gz ;\
+	  else echo "$(VERSION).tar.gz or ../$(VERSION).tar.gz not found, unable to build RPM" ;\
+	fi
 
 help:
 	$(Q)echo "Variables for building:"
