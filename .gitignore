@@ -5,6 +5,10 @@ version.h
 *.obj
 *.lib
 *.a
+*.dsc
+*.deb
+*.changes
+aardmail-*/
 debian/aardmail/
 debian/aardmail-dev/
 debian/aardmail-dbg/
@@ -19,3 +23,5 @@ GRTAGS
 GSYMS
 GTAGS
 doc/html
+*.tar.gz
+*.zip

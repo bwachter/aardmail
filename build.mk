@@ -1,5 +1,5 @@
 
-.PHONY: clean install rename upload deb maintainer-deb check dep deb ibaard-clean dist 
+.PHONY: clean install upload deb maintainer-deb check dep deb ibaard-clean dist 
 
 all: $(ALL)
 
@@ -44,13 +44,13 @@ dyn-gmake.mk:
 	printf '$$(OBJDIR)/%%.o: $$(SRCDIR)/%%.c\n';\
 	printf '\t$$(Q)echo "CC $$@"\n';\
 	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(CFLAGS) $$(INCLUDES) -c $$< -o $$@\n';\
-	printf 'ifdef $$(STRIP)\n';\
+	printf 'ifdef STRIP\n';\
 	printf '\t$$(Q)$$(COMMENT) -$$(CROSS)$$(STRIP) $$@\n';\
 	printf 'endif\n\n';\
 	printf '%%.o: %%.c\n';\
 	printf '\t$$(Q)echo "CC $$@"\n';\
 	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(CFLAGS) $$(INCLUDES) -c $$< -o $$@\n';\
-	printf 'ifdef $$(STRIP)\n';\
+	printf 'ifdef STRIP\n';\
 	printf '\t$$(Q)$$(COMMENT) -$$(CROSS)$$(STRIP) $$@\n';\
 	printf 'endif\n\n';\
 	done > $@
@@ -76,7 +76,7 @@ dyn-bsdmake.mk:
 	printf '.c.o:\n';\
 	printf '\t$$(Q)echo "CC $$@"\n';\
 	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(CFLAGS) $$(INCLUDES) -c $$< -o $$@\n';\
-	printf '.ifdef $$(STRIP)\n';\
+	printf '.ifdef STRIP\n';\
 	printf '\t$$(Q)$$(COMMENT) -$$(CROSS)$$(STRIP) $$@\n';\
 	printf '.endif\n\n';\
 	done > $@
@@ -149,7 +149,6 @@ Makefile.borland:
 
 libibaard.a:
 	$(Q)echo "-> $@"
-	$(Q)cd $(_IBAARD) && $(MAKE) dep
 	$(Q)cd $(_IBAARD) && $(MAKE) DIET="$(DIET)" SSL="$(SSL)" DEV="$(DEV)" BROKEN="$(BROKEN)" WIN32="$(WIN32)" DEBUG="$(DEBUG)" CFLAGS="$(CFLAGS)"
 	$(Q)cp $(_IBAARD)/libibaard.a .
 
@@ -174,19 +173,19 @@ dist: Makefile.borland $(SRCDIR)/version.h
 	rm -f $(VERSION).zip
 	tar2zip $(VERSION).tar.gz
 
-# still required for deb building
-rename:
-	$(Q)if test $(CURNAME) != $(VERSION); then cd .. && cp -a $(CURNAME) $(VERSION); fi
-
 upload: dist
 	scp $(VERSION).* bwachter@lart.info:/home/bwachter/public_html/projects/download/snapshots
 
-maintainer-deb: rename
-	$(Q)cd ../$(VERSION) && ./debchangelog && dpkg-buildpackage -rfakeroot
+maintainer-deb: dist
+	$(Q)tar xf $(VERSION).tar.gz && \
+	  cd $(VERSION) && ./debchangelog && \
+	  dpkg-buildpackage -rfakeroot
 	$(Q)cd .. && rm -Rf $(VERSION)
 
-deb: rename
-	$(Q)cd ../$(VERSION) && ./debchangelog && dpkg-buildpackage -rfakeroot -us -uc
+deb: dist
+	$(Q)tar xf $(VERSION).tar.gz && \
+	  cd $(VERSION) && ./debchangelog && \
+	  dpkg-buildpackage -rfakeroot -us -uc
 	$(Q)cd .. && rm -Rf $(VERSION)
 
 help:
