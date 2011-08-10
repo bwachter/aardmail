@@ -6,6 +6,9 @@ open(F, "<CHANGES")||die "Unable to open changelog: $!";
 my @lines=<F>;
 close(F);
 
+$lines[0]=~s/(\d.*?:)\s*\n/$1 @{[`date +%Y%m%d`]}/s
+  if ($lines[0]=~/(\d.*?):\s*\n/s);
+
 my $lines=join('', @lines);
 
 $lines=~s/\t/  * /g;
@@ -14,4 +17,3 @@ $lines=~s/(\d.*?): (\d*)(.*?\n\n)/aardmail ($1) unstable; urgency=low\n$3\n -- B
 open(F, ">debian/changelog")||die "Unable to open changelog: $!";
 print F $lines;
 close(F);
-
