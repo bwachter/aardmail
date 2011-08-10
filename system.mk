@@ -24,7 +24,7 @@ ARFLAGS=cru
 #-pipe crashes on IRIX
 LDPATH=-L.
 LIBS=$(LDPATH) -laardmail -libaard
-INCLUDES=
+INCLUDES=-Isrc
 
 WARN=-W -Wundef -Wno-endif-labels -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wmissing-declarations -Wno-multichar
 #-Wunreachable-code
@@ -35,14 +35,12 @@ LDFLAGS=-s
 DEBUG_CFLAGS=-g -Wall -W -Os $(INCLUDES) -D_GNU_SOURCE
 DEBUG_LDFLAGS=-g
 
-DEFAULT_CFLAGS=-D_GNU_SOURCE
+DEFAULT_CFLAGS=-D_GNU_SOURCE -fPIC
 
 CFLAGS+=$(DEFAULT_CFLAGS)
 
 BD_BIN=aardmail-pop3c$(EXE) aardmail-pop3d$(EXE) aardmail-miniclient$(EXE) aardmail-smtpc$(EXE) aardmail-sendmail$(EXE)
-BD_LIB=libaardmail.a
-
-ALL=$(BD_LIB) $(BD_BIN)
+BD_LIB=libaardmail
 
 SOLARIS_LIBS=-lresolv -lsocket
 WIN32_LIBS=-lws2_32 -lwsock32 -lgdi32

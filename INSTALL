@@ -21,8 +21,7 @@ already included.
 1.2 Building with gcc and compatible
 ------------------------------------
 
-make dep, followed by make, specifying options using the following
-variables:
+Type make, specifying options using the following variables:
 
 SSL=0|1
         Enable/Disable SSL-Support and link against OpenSSL (or any
@@ -42,7 +41,7 @@ GNU make and BSD make are supported. On platforms shipping a prehistoric
 make (like Solaris) you'll need to have gmake installed.
 
 To create windows binaries using mingw you'd do something like
-# make dep WIN32=1 && make CROSS=i386-mingw32-  WIN32=1
+# make CROSS=i386-mingw32-  WIN32=1
 
 On debian-based distributions you can get a .deb package with 'make deb',
 on RPM based distributions you'll get an RPM with 'make rpm'.
