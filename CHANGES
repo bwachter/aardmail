@@ -1,4 +1,10 @@
-0.2~pre3:
+0.2:
+        Add easy building of RPM
+        Bump ibaard to 0.2 for release
+        Fix building on Solaris/gmake/gcc
+        Fix debian packaging
+
+0.2~pre3: 20110807
         Regenerate version.h when CHANGES gets updated
         Add doxygen documentation
         Add spec file

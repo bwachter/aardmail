@@ -1,5 +1,5 @@
 
-.PHONY: clean install upload deb maintainer-deb check dep deb ibaard-clean dist 
+.PHONY: clean install upload deb maintainer-deb rpm check dep deb ibaard-clean dist 
 
 all: $(ALL)
 
@@ -11,7 +11,7 @@ $(SRCDIR)/version.h: CHANGES
 
 aardmail.spec: CHANGES
 	$(Q)echo "-> $@"
-	$(Q)sed -i "s/Version:.*/Version: $(VERSION)/" $@
+	$(Q)sed -i "s/Version:.*/Version: $(VERSIONNR)/" $@
 
 clean: ibaard-clean 
 	$(Q)echo "-> cleaning up"
@@ -187,6 +187,13 @@ deb: dist
 	  cd $(VERSION) && ./debchangelog && \
 	  dpkg-buildpackage -rfakeroot -us -uc
 	$(Q)cd .. && rm -Rf $(VERSION)
+
+rpm: dist
+	$(Q)if [ ! -z "`git status -s aardmail.spec`" ]; then \
+	  echo "aardmail.spec updated, but not comitted. Can't continue."; \
+	  false; \
+	fi
+	$(Q)rpmbuild -ta $(VERSION).tar.gz
 
 help:
 	$(Q)echo "Variables for building:"
