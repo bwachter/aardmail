@@ -1,5 +1,5 @@
 Name: aardmail
-Version: aardmail-0.2~pre3
+Version: 0.2
 Release: 1
 Summary: Mail related tools
 Group: System/Base
