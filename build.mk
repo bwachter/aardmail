@@ -1,33 +1,23 @@
+LIBS+=-laardmail -libaard
+BD_BIN=aardmail-pop3c$(EXE) aardmail-pop3d$(EXE) aardmail-miniclient$(EXE) aardmail-smtpc$(EXE) aardmail-sendmail$(EXE)
+BD_LIB=aardmail
 
 .PHONY: clean install upload deb maintainer-deb rpm check dep deb ibaard-clean dist
 
 all: $(ALL)
 
 $(SRCDIR)/version.h: CHANGES
-	$(Q)echo "-> $@"
-	$(Q)printf "#ifndef AM_VERSION_H\n#define AM_VERSION_H\n#define AM_VERSION \"" > $@
-	$(Q)printf $(VERSION) >> $@
-	$(Q)printf "; http://bwachter.lart.info/projects/aardmail/\"\n#endif\n" >> $@
+	$(Q)echo "-> $@"; for i in 1; do \
+	  printf "#ifndef AM_VERSION_H\n#define AM_VERSION_H\n#define AM_VERSION \"" ;\
+	  printf $(VERSION) ;\
+	  printf "; http://bwachter.lart.info/projects/aardmail/\"\n#endif\n" ;\
+	done > $@
 
-aardmail.spec: CHANGES
-	$(Q)echo "-> $@"
-	$(Q)sed -i "s/Version:.*/Version: $(VERSIONNR)/" $@
-
-clean: ibaard-clean 
+clean: ibaard-clean common-clean 
 	$(Q)echo "-> cleaning up"
-	$(Q)$(RM) $(ALL) *.exe *.lib *.tds *.BAK $(OBJDIR)/*.{o,obj,lib} crammd5/*.{o,obj,lib} crammd5/*.o $(OBJDIR)/*.o $(SRCDIR)/version.h dyn-*.mk
+	$(Q)$(RM) crammd5/*.{o,obj,lib} crammd5/*.o $(SRCDIR)/version.h
 
-distclean: clean
-	$(Q)echo "-> cleaning up everything"
-	$(Q)$(RM) -Rf ibaard Makefile.borland
-
-#dyn-makefile: 
-#	$(Q)for i in 1; do \
-#	$(MK_IFDEF) WIN32
-
-
-dyn-conf.mk: targets build.mk
-	$(Q)echo "ALL=" > $@
+dyn-conf-local.mk: targets build.mk
 	$(Q)_IBAARD="";\
 	if [ ! -z "$$IBAARD" ] && [ -d "$$IBAARD" ]; then\
 	  _IBAARD=$$IBAARD; \
@@ -37,70 +27,13 @@ dyn-conf.mk: targets build.mk
 	  echo "-> including local libaard";\
 	fi;\
 	if [ ! -z $$_IBAARD ]; then\
-	  printf "LDPATH+=-L$$_IBAARD\n";\
+	  printf "LIBS+=-L$$_IBAARD\n";\
 	  printf "INCLUDES+=-I$$_IBAARD/src\n";\
 	  printf "ALL+=libibaard.a\n";\
 	  printf "_IBAARD=$$_IBAARD\n";\
-	fi >> $@
-	$(Q)for i in $(BD_LIB); do \
-	  printf "ALL+=$$i.a $$i.so\n";\
-	done >> $@
-	$(Q)echo "ALL+=$(BD_BIN)" >> $@
+	fi > $@
 
 #fixme, need to generate dynamic build rules for ibaard
-
-dyn-binary-targets.mk: targets build.mk system.mk
-	$(Q)echo > $@
-	$(Q)for i in $(BD_BIN); do \
-	echo -n "DEP LD $$i... " >&2;\
-	printf "$$i: " ;\
-	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.exe//" | sed "s/\.c/\.o/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
-	for j in $$DEPS; do echo -n "$$j " >&2; printf "$$j "; done;\
-	printf '\n\t$$(Q)echo "LD $$@"\n';\
-	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(LDFLAGS) $$(INCLUDES) -o bin/$$@ $(MK_ALL) $$(LIBS)\n\n';\
-	echo "" >&2 ;\
-	done 2>&1 >> $@
-
-dyn-library-targets.mk: targets build.mk system.mk
-	$(Q)echo > $@
-	$(Q)for i in $(BD_LIB); do \
-	echo -n "DEP LIB $$i... " >&2;\
-	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.lib//" | sed "s/\.c/\.o/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
-	printf "$$i.a:" ;\
-	for j in $$DEPS; do printf "$$j "; done;\
-	printf '\n\t$$(Q)echo "AR $$@"\n';\
-	printf '\t$$(Q)$$(CROSS)$$(AR) $$(ARFLAGS) $$@ $(MK_ALL)\n';\
-	printf '\t$$(Q)$$(CROSS)$$(RANLIB) $$@\n';\
-	printf '\n';\
-	printf "$$i.so:" ;\
-	for j in $$DEPS; do echo -n "$$j " >&2; printf "$$j "; done;\
-	printf '\n\t$$(Q)echo "SO $$@"\n';\
-	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) -shared -Wl,-soname,$$@ $$(INCLUDES) -o $$@ $(MK_ALL)\n';\
-	printf '\n';\
-	echo "" >&2 ;\
-	done 2>&1 >> $@
-
-dyn-gmake.mk: dyn-binary-targets.mk dyn-library-targets.mk
-	$(Q)for i in 1; do \
-	printf '%%.o: %%.c\n';\
-	printf '\t$$(Q)echo "CC $$@"\n';\
-	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(CFLAGS) $$(INCLUDES) -c $$< -o $$@\n';\
-	printf 'ifdef $$(STRIP)\n';\
-	printf '\t$$(Q)$$(COMMENT) -$$(CROSS)$$(STRIP) $$@\n';\
-	printf 'endif\n\n';\
-	printf 'include dyn-binary-targets.mk dyn-library-targets.mk' ;\
-	done > $@
-
-dyn-bsdmake.mk: dyn-binary-targets.mk dyn-library-targets.mk
-	$(Q)for i in 1; do \
-	printf '.c.o:\n';\
-	printf '\t$$(Q)echo "CC $$@"\n';\
-	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(CC) $$(CFLAGS) $$(INCLUDES) -c $$< -o $$@\n';\
-	printf '.ifdef STRIP\n';\
-	printf '\t$$(Q)$$(COMMENT) -$$(CROSS)$$(STRIP) $$@\n';\
-	printf '.endif\n\n';\
-	printf 'include dyn-binary-targets.mk dyn-library-targets.mk' ;\
-	done > $@
 
 Makefile.borland:
 	$(Q)for i in 1; do \
@@ -116,7 +49,7 @@ Makefile.borland:
 	printf "!endif\n";\
 	printf "Q=@\n";\
 	printf "ALL=ibaard/ibaard.lib libaardmail.lib aardmail-pop3c.exe aardmail-smtpc.exe aardmail-sendmail.exe aardmail-miniclient.exe\n";\
-	printf 'OBJDIR=src\\\\\n';\
+	printf 'BD_OBJ=src\\\\\n';\
 	printf 'SRCDIR=src\\\\\n';\
 	printf ".PHONY: clean\n";\
 	printf 'all: $$(ALL)\n';\
@@ -129,7 +62,7 @@ Makefile.borland:
 	done >> $@
 	$(Q)for i in $(BD_BIN); do \
 	printf "$$i.exe: " ;\
-	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.exe//" | sed "s/\.c/\.obj/g" | sed 's,src/,\$$(OBJDIR)/,g'`;\
+	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.exe//" | sed "s/\.c/\.obj/g" | sed 's,src/,\$$(BD_OBJ)/,g'`;\
 	for j in $$DEPS; do printf "$$j "; done;\
 	printf '\n\t$$(Q)echo "LD $$@"\n';\
 	printf '\t$$(Q)$$(LD) $$(LDFLAGS) -e$$@ $$(LIBS) $$(SSLLIBS) $$**\n\n';\
@@ -137,7 +70,7 @@ Makefile.borland:
 	$(Q)for i in $(BD_LIB); do \
 	TARGET=`echo $$i | sed 's/\.a/\.lib/'`;\
 	printf "$$TARGET: " ;\
-	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.c/\.obj/g" | sed "s,src/version\.h,," | sed 's,src/,\$$(OBJDIR),g'`;\
+	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.c/\.obj/g" | sed "s,src/version\.h,," | sed 's,src/,\$$(BD_OBJ),g'`;\
 	for j in $$DEPS; do printf "$$j "; done;\
 	printf '\n\t$$(Q)echo "TLIB $$@"\n';\
 	printf '\t$$(Q)tlib $$(@F) /a $$**\n\n';\
@@ -167,7 +100,7 @@ install: all
 	install -d $(DESTDIR)$(LIBDIR)
 	install -d $(DESTDIR)$(MANDIR)/man1
 	install -d $(DESTDIR)$(MANDIR)/man3
-	install -m 755 bin/* $(DESTDIR)$(BINDIR)
+	install -m 755 $(BD_BINDIR)* $(DESTDIR)$(BINDIR)
 	install -m 644 $(BD_LIB) $(DESTDIR)$(LIBDIR)
 	install -m 644 doc/man/man1/*.1 $(DESTDIR)$(MANDIR)/man1
 	install -m 644 doc/man/man3/*.3 $(DESTDIR)$(MANDIR)/man3
@@ -186,30 +119,6 @@ dist: Makefile.borland $(SRCDIR)/version.h
 
 upload: dist
 	scp $(VERSION).* bwachter@lart.info:/home/bwachter/public_html/projects/download/snapshots
-
-maintainer-deb:
-	$(MAKE) deb DPKGFLAGS=-ap
-
-deb: dist
-	$(Q)pwd|sed 's,.*/,,'|grep -q '-'; \
-	  if [ $$? -ne 0 ]; then \
-	    rm -Rf $(VERSION) && \
-	    tar xf $(VERSION).tar.gz && \
-	    cd $(VERSION) ;\
-	  fi ;\
-	  if [ -z "$$DPKGFLAGS" ]; then DPKGFLAGS="-us -uc"; fi ;\
-	  ./debchangelog && \
-	  dpkg-buildpackage -rfakeroot $$DPKGFLAGS
-
-rpm: dist
-	$(Q)if [ -d .git ] && [ ! -z "`git status -s aardmail.spec`" ]; then \
-	  echo "aardmail.spec updated, but not comitted. Can't continue."; \
-	  false; \
-	fi
-	$(Q)if [ -f $(VERSION).tar.gz ]; then rpmbuild -ta $(VERSION).tar.gz ;\
-	  elif [ -f ../$(VERSION).tar.gz ]; then rpmbuild -ta ../$(VERSION).tar.gz ;\
-	  else echo "$(VERSION).tar.gz or ../$(VERSION).tar.gz not found, unable to build RPM" ;\
-	fi
 
 help:
 	$(Q)echo "Variables for building:"

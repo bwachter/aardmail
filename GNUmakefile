@@ -1,9 +1,29 @@
 include system.mk
 
+# Allow overwriting of some common configuration values
+ifeq (config.mk,$(wildcard config.mk))
+include config.mk
+endif
+
+include mk/config.mk
+
+ifeq (project.mk,$(wildcard project.mk))
+include project.mk
+endif
+
+NAME=aardmail
 VERSIONNR=$(shell head -1 CHANGES|sed 's/:.*//')
-VERSION=aardmail-$(VERSIONNR)
+MAJOR=$(shell echo $(VERSIONNR)|sed 's/~.*//;s/\..*//')
+MINOR=$(shell echo $(VERSIONNR)|sed 's/~.*//;s/[0-9]*\.//;s/\.[0-9]*//')
+RELEASE=$(shell echo $(VERSIONNR)|sed 's/~.*//;s/[0-9]*\.[0-9]*\.*//;s/^$$/0/;')
+VERSION=$(NAME)-$(VERSIONNR)
 CURNAME=$(notdir $(shell pwd))
 MK_ALL=$$^
+MK_INCLUDE=include
+
+ifndef RELEASE
+RELEASE=0
+endif
 
 ifdef DEBUG
 CFLAGS=$(DEBUG_CFLAGS)
@@ -62,12 +82,12 @@ ifneq (dyn-gmake.mk,$(wildcard dyn-gmake.mk))
 ALL=dep
 endif
 
-include build.mk
+include build.mk mk/common-targets.mk mk/packaging-targets.mk
 
 ifeq (dyn-gmake.mk,$(wildcard dyn-gmake.mk))
 include dyn-gmake.mk
 endif
 
 dep: $(SRCDIR)/version.h dyn-conf.mk dyn-gmake.mk aardmail.spec
-	$(Q)mkdir -p bin
+	$(Q)mkdir -p $(BD_BINDIR)
 	$(MAKE)

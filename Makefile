@@ -73,5 +73,5 @@ ALL=dep
 .endif
 
 dep: $(SRCDIR)/version.h dyn-conf.mk dyn-bsdmake.mk aardmail.spec
-	$(Q)mkdir -p bin
+	$(Q)mkdir -p $(BD_BINDIR)
 	$(MAKE)

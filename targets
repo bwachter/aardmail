@@ -3,5 +3,5 @@ aardmail-pop3c.exe src/pop3c.c src/aardmail.h src/aardmail-pop3c.h
 aardmail-pop3d.exe src/pop3d.c src/aardmail.h
 aardmail-sendmail.exe src/sendmail.c src/aardmail.h
 aardmail-smtpc.exe src/smtpc.c src/aardmail.h
-libaardmail.lib src/aardmail.c src/addrlist.c src/aardmail.h src/pop3c_oksendline.c src/pop3c_getstat.c src/pop3c_openspool.c src/pop3c_closespool.c src/pop3c_quitclose.c src/pop3c_connectauth.c src/pop3c_session.c src/pop3c_getmessage.c src/pop3c_init.c
+aardmail.lib src/aardmail.c src/addrlist.c src/aardmail.h src/pop3c_oksendline.c src/pop3c_getstat.c src/pop3c_openspool.c src/pop3c_closespool.c src/pop3c_quitclose.c src/pop3c_connectauth.c src/pop3c_session.c src/pop3c_getmessage.c src/pop3c_init.c
 libcrammd5.a crammd5/client_crammd5.c crammd5/hmacmd5.c crammd5/md5.c

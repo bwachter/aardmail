@@ -18,10 +18,6 @@
 
 #include "aardmail.h"
 
-#ifdef _DEV
-#warning Enabling experimental code. Unless you're a developer and can file very detailed bugreports that's not what you want
-#endif
-
 int am_checkprogram(char *program){
 #ifndef __WIN32__
   pid_t pid;
