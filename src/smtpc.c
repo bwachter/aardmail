@@ -339,6 +339,8 @@ int main(int argc, char **argv){
   DIR *dirptr;
   struct dirent *tmpdirent;
 
+  memset(&defaultauth, 0, sizeof(authinfo));
+
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
   am_sslconf = 0;
   netsslcacert(".aardmail");
