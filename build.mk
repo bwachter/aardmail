@@ -29,7 +29,7 @@ dyn-conf-local.mk: targets build.mk
 	if [ ! -z $$_IBAARD ]; then\
 	  printf "LIBS+=-L$$_IBAARD\n";\
 	  printf "INCLUDES+=-I$$_IBAARD/src\n";\
-	  printf "ALL+=libibaard.a\n";\
+	  printf "ALL+=lib/libibaard.a\n";\
 	  printf "_IBAARD=$$_IBAARD\n";\
 	fi > $@
 
@@ -86,10 +86,10 @@ Makefile.borland:
 	printf '\t$$(Q)make -f Makefile.borland clean\n';\
 	done >> $@
 
-libibaard.a:
+lib/libibaard.a:
 	$(Q)echo "-> $@"
 	$(Q)cd $(_IBAARD) && $(MAKE) DIET="$(DIET)" SSL="$(SSL)" DEV="$(DEV)" BROKEN="$(BROKEN)" WIN32="$(WIN32)" DEBUG="$(DEBUG)" CFLAGS="$(CFLAGS)"
-	$(Q)cp $(_IBAARD)/libibaard.a .
+	$(Q)cp $(_IBAARD)/lib/libibaard.a lib/
 
 ibaard-clean: 
 	$(Q)echo "-> cleaning up libaard"
@@ -101,7 +101,7 @@ install: all
 	install -d $(DESTDIR)$(MANDIR)/man1
 	install -d $(DESTDIR)$(MANDIR)/man3
 	install -m 755 $(BD_BINDIR)* $(DESTDIR)$(BINDIR)
-	install -m 644 $(BD_LIB) $(DESTDIR)$(LIBDIR)
+	install -m 644 lib/lib$(BD_LIB).a $(DESTDIR)$(LIBDIR)
 	install -m 644 doc/man/man1/*.1 $(DESTDIR)$(MANDIR)/man1
 	install -m 644 doc/man/man3/*.3 $(DESTDIR)$(MANDIR)/man3
 

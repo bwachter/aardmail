@@ -2,7 +2,7 @@ common-clean:
 	$(Q)$(RM) $(BD_OBJ)/*.{o,obj,lib} dyn-*.mk *.{a,exe,lib,tds} *.so* $(BD_BINDIR)/* $(BD_LIBDIR)/*
 
 dyn-conf.mk: targets build.mk $(LOCAL_CONF)
-	$(Q)echo "ALL=" > $@	
+	$(Q)echo "ALL=" > $@
 	$(Q)if [ -n "$(LOCAL_CONF)" ]; then echo "$(MK_INCLUDE) $(LOCAL_CONF)"; fi >> $@
 	$(Q)for i in $(BD_LIB); do \
 	  if [ "x$(STATIC_LIBRARY)" = "x1" ]; then printf "ALL+=$(BD_LIBDIR)lib$$i.a\n"; fi ;\
