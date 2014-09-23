@@ -51,8 +51,11 @@ int pop3c_session(int sd){
         if (cat(&tmpstring, "dele ", pop3_msgnrbuf, "\r\n", NULL))
           return -1;
         else
-          if ((pop3c_oksendline(sd, tmpstring)) == -1)
+          if ((pop3c_oksendline(sd, tmpstring)) == -1) {
+            free(tmpstring);
             return -1;
+          }
+        free(tmpstring);
       }
     }
   }

@@ -62,8 +62,11 @@ int pop3c_connectauth(authinfo *auth){
 #endif
 
   if (!cat(&tmpstring, "pass ", auth->password, "\r\n", NULL)){
-    if ((pop3c_oksendline(sd, tmpstring)) == -1)
+    if ((pop3c_oksendline(sd, tmpstring)) == -1){
+      free(tmpstring);
       return -1;
+    }
+    free(tmpstring);
   }
 
   return sd;
