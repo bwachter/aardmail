@@ -55,9 +55,12 @@ int pop3c_session(int sd){
             free(tmpstring);
             return -1;
           }
-        free(tmpstring);
       }
     }
   }
+
+  // cat() takes care of freeing used buffers, so freeing it
+  // is only required at the end
+  free(tmpstring);
   return 0;
 }
