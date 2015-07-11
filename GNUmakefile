@@ -65,11 +65,6 @@ LIBS+=$(GNUTLS_LIBS)
 CFLAGS+=$(GNUTLS_CFLAGS)
 endif
 
-ifeq ($(SSL),1)
-LIBS+=$(SSL_LIBS)
-CFLAGS+=$(SSL_CFLAGS)
-endif
-
 ifdef DEV
 CFLAGS+=$(DEV_CFLAGS)
 endif
@@ -83,6 +78,11 @@ ALL=dep
 endif
 
 include build.mk mk/common-targets.mk mk/packaging-targets.mk
+
+ifeq ($(SSL),1)
+LIBS+=$(SSL_LIBS)
+CFLAGS+=$(SSL_CFLAGS)
+endif
 
 ifeq (dyn-gmake.mk,$(wildcard dyn-gmake.mk))
 include dyn-gmake.mk
