@@ -1,5 +1,5 @@
 Name: aardmail
-Version: 0.3~pre1
+Version: 0.3
 Release: 1
 Summary: Mail related tools
 Group: System/Base
@@ -28,7 +28,7 @@ Requires: %{name} = %{version}-%{release}
 
 %files devel
 %defattr(-,root,root,-)
-%{_libdir}/*.a
+/usr/lib/*.a
 %doc %{_datadir}/man/man3/*
 
 %prep
@@ -36,8 +36,7 @@ Requires: %{name} = %{version}-%{release}
 
 
 %build
-make dep
-make
+make Q=
 
 %install
 make DESTDIR=%{buildroot} install

@@ -1,4 +1,9 @@
-0.2:
+0.3: 20150712
+        Fix some memory leaks and initialization issues
+        Modularize build system. This may cause breakage on platforms
+          not using GNU make
+
+0.2: 20110810
         Add easy building of RPM
         Bump ibaard to 0.2 for release
         Fix building on Solaris/gmake/gcc
