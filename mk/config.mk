@@ -29,7 +29,9 @@ WARN?=-W -Wundef -Wno-endif-labels -Wshadow -Wpointer-arith -Wbad-function-cast 
 ARFLAGS?=cru
 
 CFLAGS?=-Wall -W -Os
-DEFAULT_CFLAGS?=-D_GNU_SOURCE -fPIC $(WARN) -std=c99 -D_XPG6 -D_SVID_SOURCE -D_XOPEN_SOURCE=500
+# on old systems it might be required to use -D_SVID_SOURCE
+
+DEFAULT_CFLAGS?=-D_GNU_SOURCE -fPIC $(WARN) -std=c99 -D_XPG6 -D_DEFAULT_SOURCE -D_XOPEN_SOURCE=500
 DEBUG_CFLAGS?=-g -Wall -W -O0 -fprofile-arcs -ftest-coverage
 INCLUDES+=-I$(SRCDIR)
 
