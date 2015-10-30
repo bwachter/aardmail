@@ -1,3 +1,6 @@
+0.3.1: 20151030
+        Drop from detection for sendmail until sendmail emulation is complete
+
 0.3: 20150712
         Fix some memory leaks and initialization issues
         Modularize build system. This may cause breakage on platforms
