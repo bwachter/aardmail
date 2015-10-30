@@ -112,8 +112,8 @@ int main(int argc, char **argv){
       if (!strncmp(buf, "\n", 1)) {
         isbody=1;
         if (!strncmp(from, "\0", 1)){
-          logmsg(L_ERROR, F_GENERAL, "Unable to figure out From:", NULL);
-          goto error;
+          logmsg(L_WARNING, F_GENERAL, "Unable to figure out From:", NULL);
+          //goto error;
         }
         // header time ;)
       }
