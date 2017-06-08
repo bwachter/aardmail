@@ -95,14 +95,14 @@ int main(int argc, char **argv){
   fd=mdopen(mymaildir, &uniqname);
 #if (defined(__WIN32)) || (defined _BROKEN_IO)
   if (fd == NULL)
-
 #else
-    if (fd == -1)
+  if (fd == -1)
 #endif
-    {
-      logmsg(L_ERROR, F_GENERAL, "opening spool failed", NULL);
-      return -1;
-    }
+  {
+    logmsg(L_ERROR, F_GENERAL, "opening spool failed", NULL);
+    return -1;
+  }
+
   while (i>0){
     i=read(0, buf, 1024);
     if (!isbody){
@@ -110,6 +110,7 @@ int main(int argc, char **argv){
         logmsg(L_DEBUG, F_GENERAL, "Found from: ", buf, NULL);
       }
       if (!strncmp(buf, "\n", 1)) {
+        logmsg(L_DEBUG, F_GENERAL, "Finished reading headers", NULL);
         isbody=1;
         if (!strncmp(from, "\0", 1)){
           logmsg(L_WARNING, F_GENERAL, "Unable to figure out From:", NULL);
