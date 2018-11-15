@@ -173,11 +173,25 @@ static int smtpc_connectauth(authinfo *auth){
  * @return Currently always returns 0
  */
 static int smtpc_getaddr(addrlist **addrlist_storage, char *msg){
-  char *ptr, isaddr=0, endaddr=0, buf[1024];
+  char *ptr, isaddr=0, isquote=0, endaddr=0, buf[1024];
   int i, start=0, folding=0;
   for (ptr=msg,i=0;*ptr!='\0';ptr++,i++){
     if (folding && *ptr!=' ') break;
     if (folding) folding=0;
+    if (*ptr=='\\'){
+      isquote=1;
+      continue;
+    } else {
+      // we could just check for @ here, but probably don't care about
+      // _any_ quoted characters - \ is illegal in addresses unless in
+      // double quotes. Double quotes are currently fully ignored (see
+      // comment below)
+      if (isquote){
+        isquote=0;
+        continue;
+      }
+      isquote=0;
+    }
     if (*ptr=='\n'){
       endaddr=1;
       folding=1;
@@ -191,6 +205,9 @@ static int smtpc_getaddr(addrlist **addrlist_storage, char *msg){
       isaddr=1;
       continue;
     }
+    // TODO: those are allowed inside of quotes - though very rarely used.
+    //       track quotes as well, and don't reset the start when inside of
+    //       quotes
     if (*ptr==',' || *ptr==';' || *ptr==' ') {
       if (isaddr==0) start=i+1;
       else      endaddr=1;
