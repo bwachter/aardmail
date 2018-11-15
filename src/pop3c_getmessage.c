@@ -33,16 +33,26 @@ long pop3c_getmessage(int sd, FDTYPE fd, int size){
     if (!(strcmp((char *)buf, ".\r\n"))){
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
       fwrite(buf, 1, i-2, fd);
+      if (ferror(fd)){
+        logmsg(L_DEADLY, F_GENERAL, "writing to spool failed: ", strerror(errno), NULL);
+      }
 #else
-      write(fd, buf, i-2);
+      if (write(fd, buf, i-2) == -1){
+        logmsg(L_DEADLY, F_GENERAL, "writing to spool failed: ", strerror(errno), NULL);
+      }
 #endif
       return(fsize);
     } else {
       if (delayrn){
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
         fwrite("\n", 1, 1, fd);
+        if (ferror(fd)){
+          logmsg(L_DEADLY, F_GENERAL, "writing to spool failed: ", strerror(errno), NULL);
+        }
 #else
-        write(fd, "\n", 1);
+        if (write(fd, "\n", 1) == -1){
+          logmsg(L_DEADLY, F_GENERAL, "writing to spool failed: ", strerror(errno), NULL);
+        }
 #endif
         delayrn=0;
       }
@@ -59,14 +69,27 @@ long pop3c_getmessage(int sd, FDTYPE fd, int size){
           tmp++;
 #if (defined(__WIN32__)) || (defined _BROKEN_IO)
           fwrite(tmp, 1, i, fd);
-        } else
-          fwrite(buf, 1, i+1, fd);
+          if (ferror(fd)){
+            logmsg(L_DEADLY, F_GENERAL, "writing to spool failed: ", strerror(errno), NULL);
+          }
 #else
-        write(fd, tmp, i);
-      } else
-          write(fd, buf, i+1);
+          if (write(fd, tmp, i) == -1){
+            logmsg(L_DEADLY, F_GENERAL, "writing to spool failed: ", strerror(errno), NULL);
+          }
 #endif
+        } else {
+#if (defined(__WIN32__)) || (defined _BROKEN_IO)
+          fwrite(buf, 1, i+1, fd);
+          if (ferror(fd)){
+            logmsg(L_DEADLY, F_GENERAL, "writing to spool failed: ", strerror(errno), NULL);
+          }
+#else
+          if (write(fd, buf, i+1) == -1){
+            logmsg(L_DEADLY, F_GENERAL, "writing to spool failed: ", strerror(errno), NULL);
+          }
+#endif
+        }
+      }
     }
   }
-}
 }
