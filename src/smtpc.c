@@ -359,7 +359,7 @@ int main(int argc, char **argv){
   memset(&defaultauth, 0, sizeof(authinfo));
 
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
-  am_sslconf = 0;
+  am_sslconf = AM_SSL_USETLS;
   netsslcacert(".aardmail");
   am_ssl_paranoid = L_DEADLY;
 #endif
@@ -454,7 +454,7 @@ int main(int argc, char **argv){
       logmsg(L_WARNING, F_GENERAL, "no record found in authinfo", NULL);
 
   if (!strcmp(defaultauth.port,""))
-    strcpy(defaultauth.port, "25");
+    strcpy(defaultauth.port, "465");
 
   if (mdfind(smtpc.maildir)){
     logmsg(L_ERROR, F_MAILDIR, "unable to find maildir", NULL);
@@ -522,7 +522,7 @@ static void smtpc_usage(char *program){
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
            "\t-c:\tcrypto options. Options may be: 0 (off), 1 (tls, like -t),\n",
            "\t\t2 (tls, fallback to plain on error), 3 (starttls, no fallback)\n",
-           "\t\tand 4 (starttls, fallback to plain on error)\n",
+           "\t\tand 4 (starttls, fallback to plain on error). Default is 1.\n",
 #endif
            "\t-d:\tdon't delete mail after sending (default is to delete)\n",
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
@@ -539,6 +539,7 @@ static void smtpc_usage(char *program){
            "\t-s:\tthe service to connect to. Must be resolvable if non-numeric.\n",
 #if (defined HAVE_SSL) || (defined HAVE_MATRIXSSL)
            "\t-t:\tuse tls. If tls is not possible the program will exit (like -c 1)\n",
+           "\t\tThis is the default setting.\n",
 #endif
            "\t-u:\tthe username to use. You usually don't need this option.\n",
            "\t-v:\tset the loglevel, valid values are 0 (no logging), 1 (deadly),\n",
