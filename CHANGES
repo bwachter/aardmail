@@ -1,3 +1,7 @@
+0.3.2: 20181121
+        Don't treat escaped @ as part of an address in smtpc address detection
+        Properly handle and report errors when writing to spool
+
 0.3.1: 20151030
         Drop from detection for sendmail until sendmail emulation is complete
 
