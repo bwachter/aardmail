@@ -49,6 +49,10 @@ else
 CFLAGS=-g -Wall -W -Os $(INCLUDES)
 endif
 endif
+ifeq ($(shell uname),Darwin)
+CFLAGS+=-D_DARWIN_C_SOURCE -I/opt/homebrew/Cellar/openssl@1.1/1.1.1w/include
+LDFLAGS=-L/opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib -F/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/ -framework System
+endif
 endif
 
 ifdef BROKEN
