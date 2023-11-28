@@ -1,0 +1,39 @@
+name: build and publish
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build_linux:
+    name: Build on Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Build
+        run: |
+          make
+#  build_mac_x86:
+#    name: Build on MacOS/intel
+#    runs-on: macOS-latest
+#    steps:
+#      - name: Checkout Code
+#        uses: actions/checkout@v3
+#        with:
+#          submodules: recursive
+#      - name: Build
+#        run: |
+#          brew install openssl
+#          make
+#      - name: Archive artifacts
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: macOS-x86_64
+#          path: |
+#            bin/*
