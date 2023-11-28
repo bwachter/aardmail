@@ -442,13 +442,6 @@ int main(int argc, char **argv){
   if (!strcmp(defaultauth.machine,""))
     smtpc_usage(argv[0]);
 
-  // currently useless, need to change mdinit to return a list
-  // with mails in a maildir, and replace below code
-  if (mdinit(NULL, ".spool", 0)==-1){
-    logmsg(L_ERROR, F_GENERAL, "unable to retrieve mails in spool", NULL);
-    return -1;
-  }
-
   if (!authinfo_init())
     if (authinfo_lookup(&defaultauth)==-1)
       logmsg(L_WARNING, F_GENERAL, "no record found in authinfo", NULL);
