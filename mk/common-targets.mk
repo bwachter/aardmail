@@ -19,7 +19,7 @@ dyn-binary-targets.mk: targets build.mk system.mk
 	DEPS=`awk -v target=$$i -f mk/build-deps.awk targets`;\
 	for j in $$DEPS; do echo -n "$$j " >&2; printf "$$j "; done;\
 	printf '\n\t$$(Q)echo "LD $$@"\n';\
-	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(LINKER) $$(LDFLAGS) -o $$@ $(MK_ALL) $$(LIBS)\n\n';\
+	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(LINKER) $$(LDFLAGS) $$(INCLUDES) -o $$@ $(MK_ALL) $$(LIBS)\n\n';\
 	  echo "" >&2 ;\
 	done 2>&1 >> $@
 
@@ -28,7 +28,7 @@ dyn-library-targets.mk: targets build.mk system.mk
 	$(Q)echo > $@; mkdir -p $(BD_LIBDIR); for i in $(BD_LIB); do \
 	  _LIB=lib$$i ;\
 	  echo -n "DEP LIB $$i... " >&2;\
-	DEPS=`awk -v target=$$i -f mk/build-deps.awk targets`;\
+	  DEPS=`awk -v target=$$i -f mk/build-deps.awk targets`;\
 	  printf "$(BD_LIBDIR)$$_LIB.a:" ;\
 	for j in $$DEPS; do printf "$$j "; done;\
 	printf '\n\t$$(Q)echo "AR $$@"\n';\
@@ -74,7 +74,8 @@ dyn-tests.mk: build.mk system.mk
 	done >> $@
 	$(Q)for i in 1; do \
 	  printf '\n\t$$(Q)echo "LD $$@"\n' ;\
-	  printf '\t$$(Q)$$(DIET) $$(CROSS)$$(LINKER) $$(LDFLAGS) -o $$@ $(MK_ALL) $$(LIBS) -lcheck ' ;\
+	  printf '\t$$(Q)$$(DIET) $$(CROSS)$$(LINKER) $$(LDFLAGS) $$(INCLUDES) -o $$@ $(MK_ALL) $$(LIBS) -lcheck ' ;\
 	  printf "`echo $(BD_LIB)|awk '{for (i=1;i<=NF;i++) printf " -l"$$i}'`\n" ;\
 	  printf '\t$$(Q)rm -Rf test-run && mkdir -p test-run && ./$$@\n\n' ;\
+	  printf '\t$$(Q)if [ -n "$$(MEMCHECK)" ]; then rm -Rf test-run && mkdir -p test-run && valgrind $$(VALGRIND_OPTS) ./$$@; fi\n\n' ;\
 	done >> $@
