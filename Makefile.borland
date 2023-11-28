@@ -1,5 +1,5 @@
 CC=bcc32
-LD=bcc32
+LINKER=bcc32
 RM=del /F
 LDFLAGS=-tWC -w- -k- -q -O2 -lq -lc -lx -lGpd -lGn -lGl -lw-
 CFLAGS=-w- -O2 -q
@@ -19,27 +19,27 @@ all: $(ALL)
 	$(Q)echo "CC $@"
 	$(Q)$(CC) $(CFLAGS) $(INCLUDES) $(SSLCFLAGS) -o$@ -c $<
 
-aardmail-pop3c.exe: $(OBJDIR)/pop3c.obj 
+aardmail-pop3c.exe: $(OBJDIR)/pop3c.obj
 	$(Q)echo "LD $@"
-	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
+	$(Q)$(LINKER) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
 
-aardmail-pop3d.exe: $(OBJDIR)/pop3d.obj 
+aardmail-pop3d.exe: $(OBJDIR)/pop3d.obj
 	$(Q)echo "LD $@"
-	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
+	$(Q)$(LINKER) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
 
-aardmail-miniclient.exe: $(OBJDIR)/miniclient.obj 
+aardmail-miniclient.exe: $(OBJDIR)/miniclient.obj
 	$(Q)echo "LD $@"
-	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
+	$(Q)$(LINKER) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
 
-aardmail-smtpc.exe: $(OBJDIR)/smtpc.obj 
+aardmail-smtpc.exe: $(OBJDIR)/smtpc.obj
 	$(Q)echo "LD $@"
-	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
+	$(Q)$(LINKER) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
 
-aardmail-sendmail.exe: $(OBJDIR)/sendmail.obj 
+aardmail-sendmail.exe: $(OBJDIR)/sendmail.obj
 	$(Q)echo "LD $@"
-	$(Q)$(LD) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
+	$(Q)$(LINKER) $(LDFLAGS) -e$@ $(LIBS) $(SSLLIBS) $**
 
-libaardmail.lib: $(OBJDIR)aardmail.obj $(OBJDIR)addrlist.obj 
+libaardmail.lib: $(OBJDIR)aardmail.obj $(OBJDIR)addrlist.obj
 	$(Q)echo "TLIB $@"
 	$(Q)tlib $(@F) /a $**
 

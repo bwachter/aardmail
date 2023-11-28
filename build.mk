@@ -13,7 +13,7 @@ $(SRCDIR)/version.h: CHANGES
 	  printf "; http://bwachter.lart.info/projects/aardmail/\"\n#endif\n" ;\
 	done > $@
 
-clean: ibaard-clean common-clean 
+clean: ibaard-clean common-clean
 	$(Q)echo "-> cleaning up"
 	$(Q)$(RM) crammd5/*.{o,obj,lib} crammd5/*.o $(SRCDIR)/version.h
 
@@ -38,7 +38,7 @@ dyn-conf-local.mk: targets build.mk
 Makefile.borland:
 	$(Q)for i in 1; do \
 	printf "CC=bcc32\n";\
-	printf "LD=bcc32\nRM=del /F\n";\
+	printf "LINKER=bcc32\nRM=del /F\n";\
 	printf "LDFLAGS=-tWC -w- -k- -q -O2 -lq -lc -lx -lGpd -lGn -lGl -lw-\n";\
 	printf "CFLAGS=-w- -O2 -q\n";\
 	printf "LIBS=-Libaard libaardmail.lib ibaard.lib ws2_32.lib\n";\
@@ -65,7 +65,7 @@ Makefile.borland:
 	DEPS=`grep $$i targets | sed "s/\$$i//" | sed "s/\.exe//" | sed "s/\.c/\.obj/g" | sed 's,src/,\$$(BD_OBJ)/,g'`;\
 	for j in $$DEPS; do printf "$$j "; done;\
 	printf '\n\t$$(Q)echo "LD $$@"\n';\
-	printf '\t$$(Q)$$(LD) $$(LDFLAGS) -e$$@ $$(LIBS) $$(SSLLIBS) $$**\n\n';\
+	printf '\t$$(Q)$$(LINKER) $$(LDFLAGS) -e$$@ $$(LIBS) $$(SSLLIBS) $$**\n\n';\
 	done >> $@
 	$(Q)for i in $(BD_LIB); do \
 	TARGET=`echo $$i | sed 's/\.a/\.lib/'`;\
@@ -91,7 +91,7 @@ lib/libibaard.a:
 	$(Q)cd $(_IBAARD) && $(MAKE) DIET="$(DIET)" SSL="$(SSL)" DEV="$(DEV)" BROKEN="$(BROKEN)" WIN32="$(WIN32)" DEBUG="$(DEBUG)" CFLAGS="$(CFLAGS)"
 	$(Q)cp $(_IBAARD)/lib/libibaard.a lib/
 
-ibaard-clean: 
+ibaard-clean:
 	$(Q)echo "-> cleaning up libaard"
 	$(Q)cd $(_IBAARD) && $(MAKE) clean
 

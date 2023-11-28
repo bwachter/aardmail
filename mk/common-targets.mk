@@ -19,7 +19,7 @@ dyn-binary-targets.mk: targets build.mk system.mk
 	DEPS=`awk -v target=$$i -f mk/build-deps.awk targets`;\
 	for j in $$DEPS; do echo -n "$$j " >&2; printf "$$j "; done;\
 	printf '\n\t$$(Q)echo "LD $$@"\n';\
-	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(LD) $$(LDFLAGS) -o $$@ $(MK_ALL) $$(LIBS)\n\n';\
+	printf '\t$$(Q)$$(DIET) $$(CROSS)$$(LINKER) $$(LDFLAGS) -o $$@ $(MK_ALL) $$(LIBS)\n\n';\
 	  echo "" >&2 ;\
 	done 2>&1 >> $@
 
@@ -74,7 +74,7 @@ dyn-tests.mk: build.mk system.mk
 	done >> $@
 	$(Q)for i in 1; do \
 	  printf '\n\t$$(Q)echo "LD $$@"\n' ;\
-	  printf '\t$$(Q)$$(DIET) $$(CROSS)$$(LD) $$(LDFLAGS) -o $$@ $(MK_ALL) $$(LIBS) -lcheck ' ;\
+	  printf '\t$$(Q)$$(DIET) $$(CROSS)$$(LINKER) $$(LDFLAGS) -o $$@ $(MK_ALL) $$(LIBS) -lcheck ' ;\
 	  printf "`echo $(BD_LIB)|awk '{for (i=1;i<=NF;i++) printf " -l"$$i}'`\n" ;\
 	  printf '\t$$(Q)rm -Rf test-run && mkdir -p test-run && ./$$@\n\n' ;\
 	done >> $@

@@ -17,7 +17,7 @@ DYNAMIC_LIBRARY?=0
 
 # Set some default programs
 CC?=gcc
-LD?=gcc
+LINKER?=gcc
 AR?=ar
 RANLIB?=ranlib
 RM?=/bin/rm -f
