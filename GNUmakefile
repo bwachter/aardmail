@@ -50,8 +50,8 @@ CFLAGS=-g -Wall -W -Os $(INCLUDES)
 endif
 endif
 ifeq ($(shell uname),Darwin)
-CFLAGS+=-D_DARWIN_C_SOURCE -I/opt/homebrew/opt/openssl/include -I/usr/local/opt/openssl/include
-LDFLAGS=-L/opt/homebrew/opt/openssl/lib -L/usr/local/opt/openssl/lib
+CFLAGS+=-D_DARWIN_C_SOURCE -I/opt/homebrew/opt/openssl/include
+LDFLAGS=-L/opt/homebrew/opt/openssl/lib
 endif
 endif
 
