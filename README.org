@@ -1,0 +1,30 @@
+* aardmail                                                            :TOC_4:
+  - [[#introduction][Introduction]]
+  - [[#miniclient][miniclient]]
+  - [[#pop3c][pop3c]]
+  - [[#sendmail][sendmail]]
+  - [[#smtpc][smtpc]]
+
+** Introduction
+aardmail is a package with useful tools for different kinds of mail handling. All programs can be linked against [[https://www.fefe.de/dietlibc/][diet libc]] and should be working under UNIX and Windows. aardmail is known to compile and work under Linux, *BSD, IRIX, Solaris (gcc and Sun Studio), MacOS X and Windows (MingW and Borland C). The main project page is [[https://bernd.wachter.fi/projects/aardmail/][here]].
+
+** miniclient
+=aardmail-miniclient= provides a simple interactive client, intended to make mail debugging over encrypted connections easier. When encrypted connections to mail servers started to become more common =telnet= no longer was suitable for interacting with them, while =openssl s_client= is not very user friendly. This tool supports both encrypted and unencrypted connections, and is capable of negotiating a TLS connection via STARTTLS with a POP3 server.
+
+** pop3c
+=aardmail-pop3c= provides a simple [[https://en.wikipedia.org/wiki/POP3][POP3]] client. It can write directly into a Maildir, or spool into a local delivery agent like [[https://en.wikipedia.org/wiki/Procmail][procmail]] or [[https://en.wikipedia.org/wiki/Maildrop][Maildrop]].
+
+** sendmail
+=aardmail-sendmail= provides a [[https://en.wikipedia.org/wiki/Sendmail][sendmail]] style interface to spool into local Maildirs. Command line options implemented are based on what the majority of software spooling via sendmail seems to be using - many of them don't make much sense as the relevant functionality is in the SMTP client which later processes the spool, and therefore are just implemented to not throw an error, but don't do anything:
+
+- a no-sendmail option, used to specify an identity to spool into.
+- d set the debug level. Takes an integer as additional argument.
+- f set the from line. Ignored.
+- F set the full name. Ignored.
+- o set configuration options. The only option implemented is =i= to ignore single dots. Appending bool values is not implemented.
+- t send mail to everyone listed in To, CC and BCC. Ignored.
+- v sets verbose mode. This is equivalent to setting log level to 4.
+- V prints version information
+
+** smtpc
+=aardmail-smtpc= provides a simple [[https://en.wikipedia.org/wiki/SMTP][SMTP]] client, reading from a Maildir based spool.
